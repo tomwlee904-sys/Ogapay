@@ -50,6 +50,8 @@ type Mine = {
   workerHandle?: string | null
   // A second look the worker asked for after a rejection, and how it ended
   dispute?: { createdAt: string; outcome?: 'WORKER_WON' | 'POSTER_WON' | 'SPLIT' | null; resolution?: string | null; resolvedAt?: string | null } | null
+  // When a place you took and haven't sent work for is released (from GET /tasks/:id)
+  holdEndsAt?: string | null
 }
 // A rejection can be appealed for this long (the server's APPEAL_DAYS)
 const APPEAL_DAYS = 7
@@ -57,7 +59,6 @@ const APPEAL_DAYS = 7
 const MAX_FILES = 5
 // Sent work can be taken back to edit within this long, before it's reviewed (the server's TAKE_BACK_MINUTES)
 const TAKE_BACK_MINUTES = 60
-const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
 const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
 
 // /tasks/:id/submissions: posters review in Manage jobs
@@ -108,11 +109,30 @@ export default function SubmissionPage() {
     else clearDraft(draftKey, user?.id)
   }, [link, notes, restored])
 
-  const loadMine = async () => {
+  // Your place comes with the job (GET /tasks/:id), so the page no longer waits for
+  // your whole history (2026-11-08). The history only adds the details it alone
+  // has (a contest's result, a second look, the auto-approve time), in the
+  // background. A failed load keeps what's shown: it used to clear it and bring
+  // the empty form back as if nothing was sent.
+  const [detailed, setDetailed] = useState(false)
+  const loadDetails = async () => {
     try {
-      const d = await apiRequest<{ submissions: Mine[] }>('/tasks/my/submissions')
-      setMine((d?.submissions || []).find((s) => s.taskId === id) || null)
-    } catch { setMine(null) }
+      const d = await apiRequest<{ submissions: Mine[] }>('/tasks/my/submissions', { fresh: true })
+      const row = (d?.submissions || []).find((s) => s.taskId === id)
+      if (row) setMine((m) => ({ ...(m || {}), ...row }))
+      setDetailed(true)
+    } catch { /* keep what's shown */ }
+  }
+  const loadJob = async () => {
+    const d: any = await apiRequest<any>('/tasks/' + id, { fresh: true })
+    setTask(d?.task || d || null)
+    setApplication(d?.userApplication || null)
+    setMine((m) => d?.userSubmission ? { ...(m || {}), ...d.userSubmission } : (d && 'userSubmission' in d ? null : m ?? null))
+  }
+  // After sending, taking back or appealing: your place again, never blocking
+  const loadMine = async () => {
+    try { await loadJob() } catch { /* keep what's shown */ }
+    if (user) loadDetails()
   }
   // Sent back for changes: what they sent is put back in the form to edit
   const refilled = useRef('')
@@ -131,9 +151,9 @@ export default function SubmissionPage() {
   }, [mine])
   useEffect(() => {
     if (!id) return
-    apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch(() => setTask(null))
-    loadMine()
-  }, [id])
+    loadJob().catch(() => { setTask(null); setMine(null) })
+    if (user) loadDetails()
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (task === undefined || mine === undefined) {
     return <Layout><div className="ui-page sb-wrap"><div className="ui-sk" style={{ height: 40, width: 260 }} /><div className="sb-grid"><div className="ui-sk" style={{ height: 380 }} /><div className="ui-sk" style={{ height: 260 }} /></div></div></Layout>
@@ -154,7 +174,10 @@ export default function SubmissionPage() {
   // Anything else the poster wrote about proof (after "Screenshot required." when both)
   const proofNote = (task.proofRequired || '').replace(/^\s*screenshot required\.?\s*/i, '').replace(/^\s*screenshot\s*$/i, '').trim()
   const startUrl = !task.socialAction && typeof task.targetUrl === 'string' ? task.targetUrl : ''
-  const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status)
+  // A paused job (DRAFT) still takes work from people who already hold a place
+  // (2026-11-08); only new people can't take it
+  const paused = task.status === 'DRAFT'
+  const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status) && !(paused && !!mine && ['PENDING', 'SUBMITTED'].includes(mine.status))
   // Follow jobs: the platform whose username they must type (the server checks it too)
   const askHandle: string | null = typeof task.askHandle === 'string' && task.askHandle ? task.askHandle : null
   const handleName = handlePlatformName(askHandle)
@@ -173,7 +196,10 @@ export default function SubmissionPage() {
       setLink(mine.proof && /^https?:\/\//.test(mine.proof) ? mine.proof : '')
       setNotes(mine.workerNotes || '')
       setHandle(mine.workerHandle || '')
-      await loadMine()
+      setMine((m) => m ? { ...m, status: 'PENDING', submittedAt: null } : m)
+      setBusy('')
+      loadMine()
+      return
     } catch (e: any) {
       setError(e?.message || "Couldn't take your work back.")
     }
@@ -222,10 +248,15 @@ export default function SubmissionPage() {
       }
       // 3. Submit
       setBusy('Sending your work…')
-      await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }), ...(cleanName && { handle: cleanName }) }) })
+      const sent = await apiRequest<any>(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }), ...(cleanName && { handle: cleanName }) }) })
+      // Sent: show it at once from the answer, then load the rest in the background
+      // (the spinner used to wait for your whole history, 2026-11-08)
+      setMine((m) => ({ ...(m || {}), ...(sent && typeof sent === 'object' && sent.id ? sent : {}), status: 'SUBMITTED', submittedAt: sent?.submittedAt || new Date().toISOString(), taskId: task.id } as Mine))
       setLink(''); setNotes(''); setHandle(''); setFiles([]); setKept([])
       clearDraft(draftKey, user?.id)
-      await loadMine()
+      setBusy('')
+      loadMine()
+      return
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your work was not sent.')
       // New accounts accept the rules before taking a place: show them, then they send again (2026-11-01)
@@ -235,7 +266,7 @@ export default function SubmissionPage() {
   }
 
   // A second look at a rejection: an admin checks the work against the brief
-  const canAppeal = mine?.status === 'REJECTED' && !task.isContest && !mine.dispute && !['COMPLETED', 'CANCELLED'].includes(task.status)
+  const canAppeal = detailed && mine?.status === 'REJECTED' && !task.isContest && !mine.dispute && !['COMPLETED', 'CANCELLED'].includes(task.status)
     && (!mine.reviewedAt || Date.now() - new Date(mine.reviewedAt).getTime() < APPEAL_DAYS * 86400000)
   const appeal = async () => {
     if (!mine) return
@@ -245,7 +276,8 @@ export default function SubmissionPage() {
     try {
       await apiRequest(`/escrow/dispute/${mine.id}`, { method: 'POST', body: JSON.stringify({ reason: appealWhy.trim(), ...(appealLink.trim() && { workerEvidence: appealLink.trim() }) }) })
       setAppealOpen(false); setAppealWhy(''); setAppealLink('')
-      await loadMine()
+      setMine((m) => m ? { ...m, status: 'DISPUTED' } : m)
+      loadMine()
     } catch (e: any) {
       setError(e?.message || "Couldn't send it. Please try again.")
     }
@@ -318,7 +350,7 @@ export default function SubmissionPage() {
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picks the winners after the contest ends. You'll get a notification if your entry wins a place.</p>
                 <Sent m={mine!} platform={handleName} />
                 {canTakeBack && (
-                  <p className="sb-small">
+                  <p className="sb-small sb-block">
                     Sent it too early?{' '}
                     <button type="button" disabled={!!busy} onClick={takeBack} style={{ background: "none", border: 0, padding: "10px 0", font: "inherit", fontWeight: 600, color: "var(--text)", textDecoration: "underline", cursor: "pointer" }}>{busy || 'Take it back to edit'}</button>
                     {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
@@ -335,7 +367,7 @@ export default function SubmissionPage() {
                 {mine?.autoApproveAt && <p className="sb-small"><i className="ti ti-clock-check" /> If they don't review it, it's approved and you're paid automatically on {when(mine.autoApproveAt)}.</p>}
                 <Sent m={mine!} platform={handleName} />
                 {canTakeBack && (
-                  <p className="sb-small">
+                  <p className="sb-small sb-block">
                     Sent it too early?{' '}
                     <button type="button" disabled={!!busy} onClick={takeBack} style={{ background: "none", border: 0, padding: "10px 0", font: "inherit", fontWeight: 600, color: "var(--text)", textDecoration: "underline", cursor: "pointer" }}>{busy || 'Take it back to edit'}</button>
                     {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
@@ -347,7 +379,7 @@ export default function SubmissionPage() {
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic ok"><i className={`ti ${mine?.contestResult === 'WON' ? 'ti-trophy' : 'ti-check'}`} /></span>
                 <h2>{mine?.contestResult === 'WON' ? `You won ${ordinal(mine.place || 1)} place` : 'Approved and paid'}</h2>
-                <p>{money(paidAmount, cur)} went to your wallet.</p>
+                <p>{show(paidAmount, cur, { exact: true })} went to your wallet.</p>
                 <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open wallet</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
@@ -433,7 +465,8 @@ export default function SubmissionPage() {
                       ? 'Your link and note are below. Add your screenshots or files again: on watermarked jobs they have to be uploaded again. '
                       : 'What you sent is below. '}Edit it and send it again {task.isContest ? 'before entries close' : `within ${deliveryText(task)}`} to keep your place.</p>
                   </div>
-                ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
+                ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. {mine?.holdEndsAt ? `Send your work by ${when(mine.holdEndsAt)}, or the slot goes to someone else.` : "Send your work when it's done."}</p>}
+                {paused && <p className="sb-small"><i className="ti ti-player-pause" /> The poster paused this job, so new people can't take it. You keep your place and can still send your work.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />
                 {askHandle && (
                   <>

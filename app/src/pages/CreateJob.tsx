@@ -14,7 +14,7 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, DELIVERY_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, availableOf, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, DELIVERY_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
 import { rankName } from "../lib/requirements";
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
@@ -24,6 +24,7 @@ import { subMinPay } from '../lib/jobCategories'
 import InfoTip from '../components/InfoTip'
 import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
 import { MAX_PLACES } from '../lib/contestPrizes'
+import { newKey } from '../lib/wallet'
 import { HANDLE_PLATFORMS, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
@@ -633,9 +634,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const prizeNums = prizesInput.map(p => parseFloat(String(p).replace(/,/g, "")) || 0);
   const winners = isContest ? prizesInput.length : mode === "Selection" ? 1 : Math.min(1000, Math.max(0, parseInt(winnersInput) || 0));
   const rewardPool = isContest ? prizeNums.reduce((s, p) => s + p, 0) : parseFloat(String(bounty).replace(/,/g, "")) || 0;
-  const perWinner = isContest ? prizeNums[0] || 0 : winners > 0 ? rewardPool / winners : 0;
-  const platformFee = rewardPool * 0.10;
-  const totalToPay = rewardPool + platformFee;
+  // Each person's pay is rounded DOWN to the kobo (6 places for USDC/SOL) and the
+  // total worked out from it, as the server does (2026-11-08): ₦1,000 for 6 people
+  // was sent as ₦166.67 each and charged ₦1,100.02 against "Pay ₦1,100"
+  const dp = currency === "NGN" ? 2 : 6;
+  const toUnit = (n: number) => Math.round(n * 10 ** dp) / 10 ** dp;
+  const perWinner = isContest ? prizeNums[0] || 0 : winners > 0 ? Math.floor((rewardPool / winners) * 10 ** dp + 1e-6) / 10 ** dp : 0;
+  const workersGet = isContest ? toUnit(rewardPool) : toUnit(perWinner * winners);
+  const platformFee = toUnit(workersGet * 0.10);
+  const totalToPay = toUnit(workersGet + platformFee);
   // Its sub-category's minimum (the server checks the same numbers), contests aside
   const subMin = isContest ? 0 : subMinPay(subcategory, currency);
   const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0, subMin) : minReward(currency);
@@ -654,7 +661,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const alt = currency === "USDC"
     ? `≈ ₦${Math.round(convert(totalToPay, "USDC" as any, "NGN" as any)).toLocaleString("en-US")}`
     : `≈ $${convert(totalToPay, currency as any, "USDC" as any).toFixed(2)} USD`;
-  const balance = Number(walletBalances?.[currency]?.balance || 0);
+  // What's free to spend: money held for your other jobs doesn't count (2026-11-08)
+  const balance = availableOf(walletBalances?.[currency]);
+  // One key per visit: Pay again after a timeout can't post (and charge) twice
+  const payKey = useRef(newKey());
 
   // A job that sends people to a survey, form, site or app needs its link
   // (a worker took a survey job with no link to the survey); this stops posting
@@ -762,7 +772,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         description: brief,
         instructions: brief,
         category: CATEGORY_MAP[category] || "OTHER",
-        reward: Number(perWinner.toFixed(currency === "NGN" ? 2 : 6)),
+        reward: perWinner,
         currency,
         maxWorkers: winners,
         // Selection: people apply with a note and you pick one person (server: task.service.js)
@@ -793,7 +803,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(gender && { targetGender: gender }),
         ...(askHandle && { askHandle }),
         ...(checkable && { payoutCooldownMinutes: payoutCheck }),
-      });
+      }, payKey.current);
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
       refreshWalletBal();
       onCreate(taskId);
@@ -1154,7 +1164,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     {hideAfter && <div><span>When finished</span><b>Hidden from public lists</b></div>}
                     {checkable && <div><span>Payout check</span><b>{PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || "Instant"}</b></div>}
                     {files.length + templateFiles.length > 0 && <div><span>Attachments</span><b>{files.length + templateFiles.length} file{files.length + templateFiles.length > 1 ? "s" : ""}</b></div>}
-                    <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
+                    <div><span>Available in your {currency} wallet</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                   </div>
                   {balance < totalToPay && (
                     <div className="cw-banner" style={{ margin: 0 }}>
@@ -1553,7 +1563,7 @@ function PlatformDetail({ platform, onBack, onCreated }: any) {
       };
       // -- Check wallet balance before submitting --
       const walletEntry = walletBalances?.[currency];
-      const currentBalance = walletEntry ? (Number(walletEntry.balance) || 0) : 0;
+      const currentBalance = availableOf(walletEntry);
       if (currentBalance < computedBudget) {
         setSubmitError("");
         setShowFundModal(true);
@@ -1649,9 +1659,9 @@ function PlatformDetail({ platform, onBack, onCreated }: any) {
 {showFundModal && (
         <FundJobWalletModal
           currency={currency}
-          shortfall={Math.max(0, computedBudget - (walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0))}
+          shortfall={Math.max(0, computedBudget - (availableOf(walletBalances?.[currency])))}
           totalToPay={computedBudget}
-          balance={walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0}
+          balance={availableOf(walletBalances?.[currency])}
           onClose={() => setShowFundModal(false)}
           onFunded={() => {
             setShowFundModal(false);
@@ -1703,7 +1713,7 @@ function ServiceForm({ service, onBack, onCreated }: any) {
       };
       // -- Check wallet balance before submitting --
       const walletEntry = walletBalances?.[currency];
-      const currentBalance = walletEntry ? (Number(walletEntry.balance) || 0) : 0;
+      const currentBalance = availableOf(walletEntry);
       if (currentBalance < computedBudget) {
         setSubmitError("");
         setShowFundModal(true);
@@ -1795,9 +1805,9 @@ function ServiceForm({ service, onBack, onCreated }: any) {
 {showFundModal && (
         <FundJobWalletModal
           currency={currency}
-          shortfall={Math.max(0, computedBudget - (walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0))}
+          shortfall={Math.max(0, computedBudget - (availableOf(walletBalances?.[currency])))}
           totalToPay={computedBudget}
-          balance={walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0}
+          balance={availableOf(walletBalances?.[currency])}
           onClose={() => setShowFundModal(false)}
           onFunded={() => {
             setShowFundModal(false);

@@ -75,6 +75,10 @@
 .cf-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .cf-files span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2); font-size: 11.5px; }
 .cf-files button { background: none; border: 0; color: var(--text3); cursor: pointer; padding: 0; font-size: 14px; line-height: 1; }
+/* a 40px tap area round the ×, chip size unchanged (2026-11-08): a near miss
+   opened the file instead of removing it */
+.cf-files button { position: relative; }
+.cf-files button::after { content: ''; position: absolute; inset: -13px -14px; }
 
 /* Review list (payment step) */
 .cf-review { display: flex; flex-direction: column; }

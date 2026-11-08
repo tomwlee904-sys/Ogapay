@@ -5,7 +5,8 @@ import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { categoryLabel } from "../lib/categories";
-import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type TemplateData } from "../components/create/shared";
+import { listTemplates, saveTemplate, taskToTemplateData, isUnsure, MONEY_TIMEOUT_MS, type JobTemplate, type TemplateData } from "../components/create/shared";
+import { newKey } from "../lib/wallet";
 import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
@@ -52,6 +53,8 @@ type Sub = {
   worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
   // Follow jobs (task.askHandle): the username they typed, and when you reported an unfollow
   workerHandle?: string | null; unfollowedAt?: string | null
+  // What they were really paid (a raised pay doesn't change it); null if nothing was paid
+  paidAmount?: number | string | null
 }
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
@@ -76,6 +79,7 @@ type Task = {
   // Selection jobs: days the picked person has to send the work (null = 24 hours),
   // counted from the pick (cooldownStartedAt)
   deliveryDays?: number | null; cooldownStartedAt?: string | null
+  posterId?: string
   _count?: { submissions?: number; applications?: number }
 }
 type Application = {
@@ -111,6 +115,10 @@ const Pill = ({ status }: { status: string }) => {
   return <span className={`mj-pill ${s.cls}`}>{s.label}</span>;
 };
 
+// What approved work was really paid: the server's paidAmount, so raising the pay
+// doesn't re-price earlier approvals (2026-11-08); the job's pay if it isn't known
+const paidFor = (s: Sub, reward: number) => s.paidAmount != null && Number.isFinite(Number(s.paidAmount)) ? Number(s.paidAmount) : reward;
+
 // Per-job numbers from its submissions. A contest's winners were paid the prize
 // of the place each won, not its reward (the 1st prize) each (2026-11-01).
 function jobCounts(t: Task) {
@@ -118,7 +126,8 @@ function jobCounts(t: Task) {
   for (const s of t.submissions || []) c[s.status] = (c[s.status] || 0) + 1;
   const approved = c.APPROVED || 0, review = c.SUBMITTED || 0, working = c.PENDING || 0, disputed = c.DISPUTED || 0;
   const slots = t.maxWorkers || 1;
-  const paid = t.isContest ? contestPaidOut(t.prizes, t.submissions || [], Number(t.reward || 0), t.currency || "NGN") : approved * Number(t.reward || 0);
+  const paid = t.isContest ? contestPaidOut(t.prizes, t.submissions || [], Number(t.reward || 0), t.currency || "NGN")
+    : (t.submissions || []).filter((s) => s.status === "APPROVED").reduce((sum, s) => sum + paidFor(s, Number(t.reward || 0)), 0);
   return { approved, review, working, disputed, rejected: c.REJECTED || 0, slots, left: Math.max(0, slots - approved - review - working - disputed), paid };
 }
 
@@ -151,7 +160,9 @@ function Proof({ s }: { s: Sub }) {
 
 // ── Review drawer ─────────────────────────────────────────────────────────
 // focusId: an entry to scroll to and mark (the Read link on a contest's job page)
-function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: () => void }) {
+// onChanged: the job changed (only it is loaded again, not every job); onSubs: its
+// submissions as the drawer has them, so the job's card counts stay right (2026-11-08)
+function JobDrawer({ task, allTasks, focusId, onClose, onChanged, onSubs }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: () => void; onSubs?: (taskId: string, subs: Sub[]) => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   // These are the signed-in person's own jobs, so they are the poster
@@ -188,6 +199,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     } catch (e: any) { setSubs([]); toast(e?.message || "Couldn't load the submissions", "error"); }
   }, [task.id]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (subs && onSubs) onSubs(task.id, subs); }, [subs]); // eslint-disable-line react-hooks/exhaustive-deps
   // Once the entries are in, scroll to the one asked for (only the first time)
   const focused = useRef(false);
   useEffect(() => {
@@ -305,7 +317,9 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
   const setPaused = async (paused: boolean) => {
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify({ status: paused ? "DRAFT" : "OPEN" }) });
-      toast(paused ? "Job paused. Workers can't see it until you resume." : "Job resumed", "success");
+      // Pausing only stops new people taking places (2026-11-08): anyone already
+      // working on it keeps the place and can still send their work
+      toast(paused ? "Job paused. New people can't take it until you resume. People already working on it can still send their work." : "Job resumed", "success");
       onChanged(); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't change the job", "error"); }
   };
@@ -332,13 +346,20 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
     if (!window.confirm(`Raise the pay to ${money(to, cur)} per person?\n\n${money(extra, cur)} more is held for the ${places} places, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nWork you approve from now on is paid ${money(to, cur)}. Money for places nobody uses comes back when the job closes.`)) return;
     try {
-      await apiRequest(`/tasks/${task.id}/raise-pay`, { method: "POST", body: JSON.stringify({ reward: to }) });
+      await apiRequest(`/tasks/${task.id}/raise-pay`, { method: "POST", body: JSON.stringify({ reward: to }), timeoutMs: MONEY_TIMEOUT_MS });
       toast(`Pay raised to ${money(to, cur)} per person`, "success");
       onChanged(); onClose();
-    } catch (e: any) { toast(e?.message || "Couldn't raise the pay", "error"); }
+    } catch (e: any) {
+      // No answer: it may have gone through. Load the job again rather than invite a second try
+      if (isUnsure(e)) { toast("We couldn't confirm the pay was raised. Check the job's pay before you try again.", "error"); onChanged(); return; }
+      toast(e?.message || "Couldn't raise the pay", "error");
+    }
   };
   // Add places to an open job instead of posting it again (backend escrow.service addPlaces)
   const canAddPlaces = ["OPEN", "IN_PROGRESS", "COOLING_DOWN", "DRAFT"].includes(task.status) && !task.isContest && !task.isSelection && !task.hiredWorkerId && task.socialAction !== "RAID";
+  // One key per visit to this job's panel: Add places pressed again after a timeout
+  // returns the places already added instead of charging again (2026-11-08)
+  const placesKey = useRef(newKey());
   const addPlaces = async () => {
     const input = window.prompt(`How many places to add? (it has ${Number(task.maxWorkers) || 1} now, each pays ${money(reward, cur)})`, "10");
     if (input === null) return;
@@ -347,20 +368,40 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     const extra = reward * n;
     const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
     if (!window.confirm(`Add ${n} place${n === 1 ? "" : "s"} at ${money(reward, cur)} each?\n\n${money(extra, cur)} is held for them, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nMoney for places nobody uses comes back when the job closes.`)) return;
+    const before = Number(task.maxWorkers) || 0;
     try {
-      const r = await apiRequest<{ places: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n }) });
-      toast(`${n} place${n === 1 ? "" : "s"} added. The job now has ${r?.places ?? (Number(task.maxWorkers) || 0) + n}${r?.reopened ? " and is taking people again" : ""}.`, "success");
+      const r = await apiRequest<{ places: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n, idempotencyKey: placesKey.current }), timeoutMs: MONEY_TIMEOUT_MS });
+      placesKey.current = newKey();
+      toast(`${n} place${n === 1 ? "" : "s"} added. The job now has ${r?.places ?? before + n}${r?.reopened ? " and is taking people again" : ""}.`, "success");
       onChanged(); onClose();
-    } catch (e: any) { toast(e?.message || "Couldn't add places", "error"); }
+    } catch (e: any) {
+      if (!isUnsure(e)) { toast(e?.message || "Couldn't add places", "error"); return; }
+      // No answer: look at the job before saying anything
+      const now = await apiRequest<any>(`/tasks/${task.id}`, { fresh: true }).then((d) => Number((d?.task || d)?.maxWorkers)).catch(() => NaN);
+      if (Number.isFinite(now) && now > before) {
+        placesKey.current = newKey();
+        toast(`The places were added. The job now has ${now}.`, "success");
+        onChanged(); onClose();
+      } else if (Number.isFinite(now)) {
+        toast("The connection dropped before the places were added. Try again: you won't be charged twice.", "error");
+      } else {
+        toast("We couldn't confirm the places were added. Check the job's places before you try again. Trying again from here won't charge you twice.", "error");
+        onChanged();
+      }
+    }
   };
   // Stop job: pay the work waiting, release unused places and close (backend stopJob)
   const canStop = ["OPEN", "IN_PROGRESS", "COOLING_DOWN", "DRAFT"].includes(task.status) && !task.isContest;
   const stopJob = async () => {
     const subs = task.submissions || [];
     const waiting = subs.filter((s) => s.status === "SUBMITTED").length;
-    const holding = subs.filter((s) => s.status === "PENDING").length;
+    // Work you sent back for changes is paid as it was last sent (2026-11-08): it
+    // used to be released as an unused place, so the worker got nothing
+    const backOut = subs.filter((s) => s.status === "PENDING" && s.sentBackAt && !s.submittedAt).length;
+    const holding = subs.filter((s) => s.status === "PENDING").length - backOut;
     const lines = [
       waiting ? `${waiting} piece${waiting === 1 ? "" : "s"} of work waiting for review will be approved and paid (${money(reward * waiting, cur)}). Check them first if you haven't.` : "No work is waiting for review.",
+      backOut ? `${backOut} piece${backOut === 1 ? "" : "s"} of work you sent back for changes will be approved and paid as last sent (${money(reward * backOut, cur)}).` : "",
       holding ? `${holding} ${holding === 1 ? "person holding a place" : "people holding places"} without sending work will lose ${holding === 1 ? "it" : "them"}.` : "",
       "The money for places nobody used comes back to your wallet. This can't be undone.",
     ].filter(Boolean);
@@ -373,6 +414,9 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
   };
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
+  // The closing date as the form first showed it (your own date, not the UTC one):
+  // the date is only sent when you change it (2026-11-08)
+  const shownDate = (d?: string | null) => d ? new Date(d).toLocaleDateString("en-CA") : "";
   const [edGender, setEdGender] = useState<string>(task.targetGender || "");
   // Follow jobs: the platform whose username workers type ("" = don't ask)
   const [edHandle, setEdHandle] = useState<string>(task.askHandle || "");
@@ -392,7 +436,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     apiRequest<any[]>("/communities/mine/requirable").then((l) => setRequirable(Array.isArray(l) ? l : [])).catch(() => {});
   }, [editing, canNeedCommunity]);
   const startEdit = () => {
-    setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 10) : "" });
+    setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: shownDate(task.deadline) });
     setSimilar(task.excludesTaskIds || []);
     setReqCommunity(task.requiredCommunityId || "");
     setEdCountry(task.targetCountries?.[0] || "");
@@ -412,7 +456,15 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     if (linkNeeded) { setEdErr(missingLinkText(linkNeeded)); return; }
     const attachments = (task.description || "").includes("\n\n**Attachments**") ? (task.description || "").slice((task.description || "").indexOf("\n\n**Attachments**")) : "";
     const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments, excludesTaskIds: similar };
-    if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
+    // Only a changed date is sent, keeping the job's time of day (it was always sent
+    // as 23:59, which moved the end on every save and failed once it had passed)
+    if (ed.deadline && ed.deadline !== shownDate(task.deadline)) {
+      const was = task.deadline ? new Date(task.deadline) : null;
+      const [y, m, d] = ed.deadline.split("-").map(Number);
+      const next = was ? new Date(was) : new Date(ed.deadline + "T23:59:00");
+      if (was) next.setFullYear(y, m - 1, d);
+      body.deadline = next.toISOString();
+    }
     if (canNeedCommunity && reqCommunity !== (task.requiredCommunityId || "")) body.requiredCommunityId = reqCommunity || null;
     if (edCountry !== (task.targetCountries?.[0] || "")) body.targetCountries = edCountry ? [edCountry] : [];
     if (edGender !== (task.targetGender || "")) body.targetGender = edGender || null;
@@ -473,7 +525,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
               </select>
               <p className="mj-edit-note">Workers must type it to send their work. If someone unfollows after being paid, report it here: they get a warning and can't take follow jobs for {UNFOLLOW_BLOCK_DAYS} days.</p>
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
-              <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
+              <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toLocaleDateString("en-CA")} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
               {canNeedCommunity && (requirable.length > 0 || reqCommunity) && (
                 <>
                   <label className="ui-label" htmlFor="mj-ed-community">Community members only (optional)</label>
@@ -627,7 +679,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(contest && s.place && Number.isFinite(Number(task.prizes?.[s.place - 1])) ? Number(task.prizes![s.place - 1]) : reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}<HandleLine code={task.askHandle} s={s} /></div></div>{task.askHandle && (s.unfollowedAt
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(contest && s.place && s.paidAmount == null && Number.isFinite(Number(task.prizes?.[s.place - 1])) ? Number(task.prizes![s.place - 1]) : paidFor(s, reward), cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}<HandleLine code={task.askHandle} s={s} /></div></div>{task.askHandle && (s.unfollowedAt
                       ? <span className="mj-pill bad">Unfollow reported</span>
                       : <button className="ui-btn ui-btn-ghost mj-danger" disabled={busy === s.id} onClick={() => reportUnfollow(s)}><Icon n="user-minus" s={15} /> {busy === s.id ? "Reporting…" : "Report unfollow"}</button>)}{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
                   ))}</div>
@@ -820,7 +872,14 @@ const FILTERS: { id: string; label: string; test: (t: Task) => boolean }[] = [
   { id: "closed", label: "Closed", test: (t) => ["COMPLETED", "CANCELLED", "EXPIRED", "DISPUTED"].includes(t.status) },
 ];
 
-function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) {
+type ListProps = {
+  tasks: Task[]; refreshJob: (id: string) => void; onSubs: (id: string, subs: Sub[]) => void
+  // Older jobs come a page at a time (2026-11-08): only the newest 100 used to load
+  hasMore: boolean; loadingMore: boolean; loadMore: () => void
+  // A ?job= link to a job that isn't loaded yet: load just that job
+  ensureJob: (id: string) => void
+}
+function JobsListPage({ tasks, refreshJob, onSubs, hasMore, loadingMore, loadMore, ensureJob }: ListProps) {
   const [filter, setFilter] = useState("all");
   // ?job=<id> opens that job's drawer (links from Profile and /tasks/:id/submissions);
   // &entry=<id> also scrolls to that entry (the Read link on a contest's job page)
@@ -831,6 +890,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
     if (!v && (params.get("job") || params.get("entry"))) { params.delete("job"); params.delete("entry"); setParams(params, { replace: true }); }
   };
   const open = tasks.find((t) => t.id === openId) || null;
+  useEffect(() => { if (openId && !open) ensureJob(openId); }, [openId, open]); // eslint-disable-line react-hooks/exhaustive-deps
   // Rewards and "paid to workers" follow the display currency (naira, dollars or cedis)
   const show = useMoney();
   const { preferredCurrency, convert } = useCurrency();
@@ -875,6 +935,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         <div className="mj-sum"><b>{totals.approved}</b><span>pieces of work approved</span></div>
         <div className="mj-sum"><b>{totals.paidText}</b><span>paid to workers</span></div>
       </div>
+      {hasMore && <p className="mj-tool-p" style={{ margin: "0 0 12px" }}>These numbers count the {tasks.length} jobs loaded. Load older jobs at the bottom to count them too.</p>}
 
       <div className="mj-filters" role="tablist" aria-label="Filter jobs">
         {FILTERS.map((f) => {
@@ -923,25 +984,47 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
           );
         })}
       </div>
+      {hasMore && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+          <button className="ui-btn ui-btn-ghost" disabled={loadingMore} onClick={loadMore}>{loadingMore ? "Loading…" : "Load older jobs"}</button>
+        </div>
+      )}
 
-      {open && <JobDrawer task={open} allTasks={tasks} focusId={open.id === params.get("job") ? params.get("entry") : null} onClose={() => setOpenId(null)} onChanged={reload} />}
+      {open && <JobDrawer task={open} allTasks={tasks} focusId={open.id === params.get("job") ? params.get("entry") : null} onClose={() => setOpenId(null)} onChanged={() => refreshJob(open.id)} onSubs={onSubs} />}
     </>
   );
 }
 
 // ── MAIN PAGE ──────────────────────────────────────────────────────────────
+const JOBS_PAGE = 50;
 export default function MyJobs() {
   const { toast } = useToast();
   const { user, isAuthed } = useAuth();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [page, setPage] = useState("jobs");
+  // Jobs load a page at a time, newest first (2026-11-08)
+  const [pages, setPages] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const lastLoad = useRef(0);
+  const pagesRef = useRef(1);
+  pagesRef.current = pages;
 
+  // The newest page. On a refresh it replaces those jobs and keeps the older pages
+  // already loaded.
   const load = useCallback(async () => {
     if (!isAuthed) { setTasks([]); return; }
+    lastLoad.current = Date.now();
     try {
-      const data = await apiRequest<Task[] | { tasks: Task[] }>("/tasks/my/created?limit=100");
-      setTasks(Array.isArray(data) ? data : data?.tasks || []);
+      const data = await apiRequest<Task[] | { tasks: Task[] }>(`/tasks/my/created?limit=${JOBS_PAGE}&page=1`);
+      const rows = Array.isArray(data) ? data : data?.tasks || [];
+      setTasks((prev) => {
+        const ids = new Set(rows.map((t) => t.id));
+        return [...rows, ...(prev || []).filter((t) => !ids.has(t.id))];
+      });
+      // Once older pages are loaded, Load older jobs follows the last of them
+      setHasMore((h) => (pagesRef.current > 1 ? h : rows.length >= JOBS_PAGE));
       setLoadFailed(false);
     } catch {
       // Keep what's shown; never turn a failed load into "You haven't posted a job yet"
@@ -949,9 +1032,56 @@ export default function MyJobs() {
     }
   }, [isAuthed]);
 
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const data = await apiRequest<Task[] | { tasks: Task[] }>(`/tasks/my/created?limit=${JOBS_PAGE}&page=${pages + 1}`);
+      const rows = Array.isArray(data) ? data : data?.tasks || [];
+      setTasks((prev) => {
+        const ids = new Set((prev || []).map((t) => t.id));
+        return [...(prev || []), ...rows.filter((t) => !ids.has(t.id))];
+      });
+      setPages((n) => n + 1);
+      setHasMore(rows.length >= JOBS_PAGE);
+    } catch (e: any) { toast(e?.message || "Couldn't load older jobs", "error"); }
+    setLoadingMore(false);
+  };
+
+  // One job loaded again after a change in its panel (review, pause, edit...):
+  // the whole list with every job's submissions used to download again each time
+  const refreshJob = useCallback(async (id: string) => {
+    try {
+      const d = await apiRequest<any>(`/tasks/${id}`, { fresh: true });
+      const fresh = d?.task || d;
+      if (!fresh?.id) return;
+      setTasks((prev) => (prev || []).map((t) => {
+        if (t.id !== id) return t;
+        // The job page calls an open job past its end "Expired"; here it keeps the stored status
+        const status = fresh.status === "EXPIRED" && t.status !== "EXPIRED" ? t.status : fresh.status;
+        return { ...t, ...fresh, status, submissions: t.submissions, _count: t._count };
+      }));
+    } catch { /* the job shown stays as it was */ }
+  }, []);
+  // The drawer's submissions keep the job's card counts right without a reload
+  const onSubs = useCallback((id: string, subs: Sub[]) => {
+    setTasks((prev) => (prev || []).map((t) => (t.id === id ? { ...t, submissions: subs } : t)));
+  }, []);
+  // A ?job= link to one of your jobs that isn't loaded yet
+  const ensureJob = useCallback(async (id: string) => {
+    try {
+      const d = await apiRequest<any>(`/tasks/${id}`);
+      const t = d?.task || d;
+      if (!t?.id || t.posterId !== user?.id) return;
+      setTasks((prev) => (prev || []).some((x) => x.id === t.id) ? prev : [...(prev || []), { ...t, submissions: [] }]);
+    } catch { /* gone or not yours: nothing opens */ }
+  }, [user?.id]);
+
   useEffect(() => {
+    // Another account's jobs never stay on screen
+    setTasks(null); setPages(1); setHasMore(false);
     load();
-    const onFocus = () => load();
+    // Back on the tab: the newest jobs again, at most every 2 minutes
+    const onFocus = () => { if (Date.now() - lastLoad.current > 120000) load(); };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [user?.id, load]);
@@ -985,7 +1115,7 @@ export default function MyJobs() {
         {page === "jobs" && (tasks === null
           ? loadFailed ? <div style={{ marginTop: 20 }}><LoadError what="your jobs" onRetry={() => { setLoadFailed(false); load(); }} /></div>
           : <div style={{ display: "grid", gap: 10, marginTop: 20 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 120 }} />)}</div>
-          : <JobsListPage tasks={tasks} reload={load} />)}
+          : <JobsListPage tasks={tasks} refreshJob={refreshJob} onSubs={onSubs} hasMore={hasMore} loadingMore={loadingMore} loadMore={loadMore} ensureJob={ensureJob} />)}
         {page === "blacklist" && <div style={{ marginTop: 20 }}><BlacklistPage /></div>}
         {page === "templates" && <div style={{ marginTop: 20 }}><TemplatesPage /></div>}
       </div>

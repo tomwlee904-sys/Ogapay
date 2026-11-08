@@ -212,11 +212,54 @@ export async function uploadJobFile(file: File): Promise<string> {
   return json.data.url as string;
 }
 
+// ── Wallet ───────────────────────────────────────────────────────────────────
+/** What a job can be paid from: the balance minus money held for your other
+    jobs, the same number the server checks (2026-11-08). The total balance made
+    a poster with money held elsewhere look able to pay. */
+export function availableOf(b?: { balance?: number | string; lockedBalance?: number | string; available?: number | string } | null): number {
+  if (!b) return 0;
+  if (b.available !== undefined && b.available !== null) return Math.max(0, Number(b.available) || 0);
+  return Math.max(0, (Number(b.balance) || 0) - (Number(b.lockedBalance) || 0));
+}
+
 // ── Task creation ────────────────────────────────────────────────────────────
-export async function createTask(body: Record<string, any>): Promise<string> {
-  const result = await apiRequest<any>("/tasks", { method: "POST", body: JSON.stringify(body) });
-  const task = result?.data || result?.task || result;
-  return task?.id || "";
+/** No answer from the server (timed out or the connection dropped): the job or
+    change may have gone through anyway (2026-11-08) */
+export const isUnsure = (err: any) => !err?.status;
+// Paying for a job can take longer than an ordinary request on slow data
+export const MONEY_TIMEOUT_MS = 45000;
+
+/** Your newest jobs, to check whether a job was made after an unsure answer.
+    Gives the job's id, "" when it isn't there, null when we couldn't check. */
+export async function findJustCreated(title: string, since: number): Promise<string | null> {
+  try {
+    const data = await apiRequest<any>("/tasks/my/created?limit=10", { fresh: true });
+    const rows: any[] = Array.isArray(data) ? data : data?.tasks || [];
+    const want = title.trim();
+    const hit = rows.find((t) => String(t?.title || "").trim() === want && new Date(t?.createdAt || 0).getTime() >= since - 120000);
+    return hit?.id || "";
+  } catch { return null; }
+}
+
+/** Posts and pays for a job. key: made once per visit to the form, so pressing
+    Pay again after a timeout returns the job already made instead of charging
+    again (server: idempotencyKey). When no answer comes back, your jobs are
+    checked before anything is shown, instead of inviting a second payment
+    (2026-11-08). */
+export async function createTask(body: Record<string, any>, key?: string): Promise<string> {
+  const since = Date.now();
+  try {
+    const result = await apiRequest<any>("/tasks", { method: "POST", body: JSON.stringify({ ...body, ...(key && { idempotencyKey: key }) }), timeoutMs: MONEY_TIMEOUT_MS });
+    const task = result?.data || result?.task || result;
+    return task?.id || "";
+  } catch (err: any) {
+    if (!isUnsure(err) || !body?.title) throw err;
+    const found = await findJustCreated(String(body.title), since);
+    if (found) return found;
+    throw new Error(found === ""
+      ? "The connection dropped before your job was posted, and it isn't in your jobs. Try again: you won't be charged twice for this job."
+      : "The connection dropped, so we couldn't check if your job was posted. Look in Manage jobs before you pay again. Trying again from this page won't charge you twice.");
+  }
 }
 
 export function apiErrorText(err: any) {
@@ -383,10 +426,18 @@ export function taskToTemplateData(t: any): TemplateData {
     t?.audiencePlatform && Number(t?.minFollowers) > 0 ? ["audience", `${t.audiencePlatform}:${t.minFollowers}`] : ["none", ""];
   const reqRank = Math.min(5, Math.max(1, Number(t?.minRank) || 1));
   const reqId = t?.workerRequirement === "KYC" ? "kyc" : t?.workerRequirement === "KYC2" ? "kyc2" : t?.workerRequirement === "HUMAN" ? "human" : "none";
-  const winners = Math.max(1, Number(t?.maxWorkers) || 1);
-  const pool = Number(t?.reward || 0) * winners;
+  // The job type comes back too (2026-11-08): a contest or Selection job used to
+  // return as a Challenge, a contest with its 1st prize times the places as budget
+  const prizes: number[] = Array.isArray(t?.prizes) ? t.prizes.map(Number).filter((n: number) => Number.isFinite(n) && n > 0) : [];
+  const contest = !!t?.isContest && prizes.length > 0;
+  const selection = !contest && !!t?.isSelection;
+  const winners = contest ? prizes.length : selection ? 1 : Math.max(1, Number(t?.maxWorkers) || 1);
+  const pool = contest ? prizes.reduce((a, b) => a + b, 0) : Number(t?.reward || 0) * winners;
+  // Selection: how long applications were open, to the nearest choice on the form
+  const openHours = t?.applicationsCloseAt && t?.createdAt ? (new Date(t.applicationsCloseAt).getTime() - new Date(t.createdAt).getTime()) / 3600000 : 0;
+  const selectionHours = openHours > 0 ? SELECTION_TIMES.reduce((best, [h]) => Math.abs(Number(h) - openHours) < Math.abs(Number(best) - openHours) ? h : best, "24") : "";
   return {
-    mode: "Challenge",
+    mode: contest ? "Contest" : selection ? "Selection" : "Challenge",
     title: String(t?.title || "").slice(0, 200),
     // Attachment links are appended to the brief when posting; don't carry them over
     description: String(t?.description || "").split("\n\n**Attachments**")[0].slice(0, 10000),
@@ -395,9 +446,14 @@ export function taskToTemplateData(t: any): TemplateData {
     winners: String(winners),
     category: picked[0], subcategory: picked[1] || "",
     duration: "7 days", reqType, reqValue, reqRank, reqId,
-    screenshot: !!t?.proofRequired,
+    // Only the "Screenshot required" switch, not any proof text (2026-11-08):
+    // "Submit your username" came back as a screenshot every worker needed
+    screenshot: /screenshot required/i.test(String(t?.proofRequired || "")) || /^\s*screenshot\s*$/i.test(String(t?.proofRequired || "")),
     trackingCode: t?.trackingCode || "",
     ...(Number(t?.payoutCooldownMinutes) > 0 && { payoutCheck: String(t.payoutCooldownMinutes) }),
+    ...(selection && { ...(selectionHours && { selectionHours }), deliveryDays: String(DELIVERY_TIMES.some(([d]) => d === String(t?.deliveryDays)) ? t.deliveryDays : 1) }),
+    ...(t?.hideAfterComplete && { hideAfterComplete: true }),
+    ...(t?.watermark && { watermark: true }),
   };
 }
 

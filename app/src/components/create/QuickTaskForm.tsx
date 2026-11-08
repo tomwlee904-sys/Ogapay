@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FundJobWalletModal from "../FundJobWalletModal";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
-import { RequirementPicker, NO_REQS, type Reqs, money, minReward, reqFields, createTask, apiErrorText, deadlineFor } from "./shared";
+import { RequirementPicker, NO_REQS, type Reqs, money, minReward, reqFields, createTask, apiErrorText, deadlineFor, availableOf } from "./shared";
+import { newKey } from "../../lib/wallet";
 import { PayoutCheckPicker } from "../PayoutCheck";
 import { useSocialPrices, priceOf, isStaggered, batchSizeFor, ACTION_OF, PACK_NAMES, X_TARGET, RaidPack } from "./socialPrices";
 
@@ -68,7 +69,10 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
   const subtotal = Math.round(price * qty * 100) / 100;
   const total = Math.round(subtotal * 110) / 100;
   const staggered = !!social && isStaggered(prices, social, qty);
-  const balance = Number(walletBalances?.[cur]?.balance || 0);
+  // Free to spend: money held for your other jobs doesn't count (2026-11-08)
+  const balance = availableOf(walletBalances?.[cur]);
+  // One key per visit: Pay again after a timeout can't post (and charge) twice
+  const payKey = useRef(newKey());
   const proof = PROOF[action] || "a screenshot as proof";
 
   const submit = async () => {
@@ -101,7 +105,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
         proofRequired: `Submit ${proof}`,
         ...(deadline && { deadline: deadline.toISOString() }),
         ...reqFields(reqs),
-      });
+      }, payKey.current);
       refreshWallet();
       onCreated(taskId);
     } catch (err: any) {
@@ -196,7 +200,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
       </div>
 
       {isAuthed && (
-        <p className="cf-hint" style={{ margin: 0 }}>Paid from your {cur} balance: <b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, cur)}</b></p>
+        <p className="cf-hint" style={{ margin: 0 }}>Paid from your available {cur} balance: <b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, cur)}</b></p>
       )}
       {error && <div className="cf-error">{error}</div>}
 

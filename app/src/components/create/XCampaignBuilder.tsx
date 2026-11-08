@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../Layout";
 import FundJobWalletModal from "../FundJobWalletModal";
@@ -7,7 +7,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
 import { PayoutCheckPicker, PAYOUT_CHECKS } from "../PayoutCheck";
-import { OverviewCard, RequirementPicker, NO_REQS, type Reqs, reqsAny, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
+import { OverviewCard, RequirementPicker, NO_REQS, type Reqs, reqsAny, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText, availableOf } from "./shared";
+import { newKey } from "../../lib/wallet";
 import { useSocialPrices, priceOf, isStaggered, batchSizeFor, X_TARGET, SocialAction } from "./socialPrices";
 
 /* X campaign ("Start with your X post"): paste the post link, see the post,
@@ -97,7 +98,11 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   // The fee is worked out per job, to the kobo, as the server does
   const fee = lines.reduce((s, l) => s + Math.round(l.subtotal * 10) / 100, 0);
   const total = subtotal + fee;
-  const balance = Number(walletBalances?.[currency]?.balance || 0);
+  // Free to spend: money held for your other jobs doesn't count (2026-11-08)
+  const balance = availableOf(walletBalances?.[currency]);
+  // One key per visit, one job per action: Pay again after a timeout returns the
+  // jobs already made instead of charging for them twice
+  const payKey = useRef(newKey());
   const alt = `≈ $${convert(total, "NGN" as any, "USDC" as any).toFixed(2)} USD`;
 
   const checklist = [
@@ -145,7 +150,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           proofRequired: `Submit ${l.proof}`,
           ...(deadline && { deadline: deadline.toISOString() }),
           ...reqFields(reqs),
-        });
+        }, `${payKey.current}-${l.id}`);
         setCreated({ ...done });
       }
       refreshWallet();
@@ -289,7 +294,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
 
                   {step === 3 && (
                     <div className="cf-review">
-                      <div><span>Your {currency} balance</span><b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
+                      <div><span>Available in your {currency} wallet</span><b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                       {Object.keys(created).length > 0 && <div><span>Already published</span><b>{Object.keys(created).length} of {lines.length} actions</b></div>}
                     </div>
                   )}

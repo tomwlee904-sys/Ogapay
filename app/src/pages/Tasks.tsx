@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
 import { renderJobText } from '../lib/jobText'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Modal from '../components/Modal'
@@ -507,6 +507,9 @@ export function jobsView(s: JobsState, matching: number): 'loading' | 'error' | 
   return matching > 0 ? 'list' : 'empty'
 }
 
+// Jobs asked for at a time (the API's most)
+const LIST_PAGE = 100
+
 // ─── Tasks data with SWR ────────────────────────────────────────
 // limit=100 (the API's most): sorting and filters run on this list, and the
 // default page of 20 hid every job after the 20th
@@ -602,7 +605,31 @@ export default function Tasks() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [jobsState, setJobsState] = useState<JobsState>(JOBS_START)
-  const jobs = jobsState.jobs ?? NO_JOBS
+  // Older jobs, a page of 100 at a time (2026-11-08): only the newest 100 used to
+  // load, so older open jobs never showed under any filter. Kept apart from the
+  // newest page, which a refresh replaces.
+  const [older, setOlder] = useState<{ list: any[]; page: number; more: boolean; busy: boolean }>({ list: [], page: 1, more: true, busy: false })
+  const newest = jobsState.jobs ?? NO_JOBS
+  const jobs = useMemo(() => {
+    if (!older.list.length) return newest
+    const ids = new Set(newest.map((j: any) => j.id))
+    return [...newest, ...older.list.filter((j: any) => !ids.has(j.id))]
+  }, [newest, older.list])
+  // A full newest page means there may be more
+  const canLoadOlder = older.more && newest.length >= LIST_PAGE
+  const loadOlder = async () => {
+    if (older.busy) return
+    setOlder(o => ({ ...o, busy: true }))
+    try {
+      const next = older.page + 1
+      const data = await apiRequest<any>(`/tasks?limit=${LIST_PAGE}&page=${next}${user ? '&eligible=1' : ''}`, { auth: !!user })
+      const list: any[] = Array.isArray(data) ? data : data?.data || data?.tasks || []
+      setOlder(o => ({ list: [...o.list, ...list], page: next, more: list.length >= LIST_PAGE, busy: false }))
+    } catch (e: any) {
+      setOlder(o => ({ ...o, busy: false }))
+      showToast(e?.message || "Couldn't load older jobs", 'error')
+    }
+  }
   // "Try again" bumps this to load the list again without reloading the page
   const [attempt, setAttempt] = useState(0)
   const [search, setSearch] = useState(searchParams.get('search') || '')
@@ -620,6 +647,7 @@ export default function Tasks() {
   useEffect(() => {
     let alive = true
     setJobsState(JOBS_START)
+    setOlder({ list: [], page: 1, more: true, busy: false })
     // Signed in and the full list is slow: the public list shows meanwhile. Like a
     // refresh, it never replaces a list that says which jobs you can take
     const standIn = (res: TasksLoad) => { if (alive) setJobsState(prev => afterJobsLoad(prev, res, true)) }
@@ -784,6 +812,7 @@ export default function Tasks() {
             <b style={{ color: 'var(--text)' }}>No jobs match</b>
             <p style={{ margin: '6px 0 16px' }}>{availableOnly ? 'Turn off "Available for me" or change the filters.' : 'Try a different search or filter.'}</p>
             <button className="ui-btn ui-btn-ghost" onClick={clearAll}>Clear filters</button>
+            {canLoadOlder && <p style={{ margin: '14px 0 0' }}>Only the newest {jobs.length} jobs are loaded. <button type="button" className="ui-btn ui-btn-ghost" disabled={older.busy} onClick={loadOlder}>{older.busy ? 'Loading…' : 'Look in older jobs'}</button></p>}
           </div>
         ) : (
           <>
@@ -798,6 +827,9 @@ export default function Tasks() {
                 <span>Page {shown} of {totalPages}</span>
                 <button className="ui-btn ui-btn-ghost" disabled={shown === totalPages} onClick={() => goPage(shown + 1)}>Next<i className="ti ti-arrow-right" /></button>
               </nav>
+            )}
+            {canLoadOlder && shown === totalPages && (
+              <div className="ui-pager"><button className="ui-btn ui-btn-ghost" disabled={older.busy} onClick={loadOlder}>{older.busy ? 'Loading…' : 'Load older jobs'}</button></div>
             )}
           </>
         )}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useCurrency } from '../context/CurrencyContext'
@@ -26,32 +26,16 @@ import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../co
 import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
 import { openRules } from '../lib/welcome'
 import { jobsListPath } from '../lib/jobsList'
+import InfoTip from '../components/InfoTip'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
 // ── Info tooltip ─────────────────────────────────────────────────────
+// The site's InfoTip (2026-11-08): the old 240px box was centred on the icon, so
+// in the right-hand column on a phone its lines ran off the screen, and on touch
+// the first tap often opened and closed it at once
 function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
+  return <InfoTip label="More about this" size={13}><p>{text}</p></InfoTip>
 }
 
 
@@ -76,10 +60,23 @@ function useCountdown(deadline: number) {
   }
   const [t, setT] = useState(calc)
   useEffect(() => {
-    const id = setInterval(() => setT(calc()), 1000)
+    setT(calc())
+    // Nothing to count (no deadline, or it passed): no timer (2026-11-08)
+    if (!(deadline > Date.now())) return
+    const id = setInterval(() => {
+      setT(calc())
+      if (deadline <= Date.now()) clearInterval(id)
+    }, 1000)
     return () => clearInterval(id)
   }, [deadline])
   return t
+}
+
+// "3d 4h 05m 09s". Only this text ticks each second (2026-11-08): the whole job
+// page, brief and all, used to re-render every second
+function ClosesIn({ at }: { at: number }) {
+  const c = useCountdown(at)
+  return <>{c.d > 0 ? `${c.d}d ${c.h}h ${pad(c.m)}m ${pad(c.s)}s` : `${c.h}h ${pad(c.m)}m ${pad(c.s)}s`}</>
 }
 
 interface JobData {
@@ -203,11 +200,12 @@ export default function JobDetail() {
   const [reportDesc, setReportDesc] = useState('')
   const [reportMsg, setReportMsg] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
+  // The report was saved (the message is green only then)
+  const [reportOk, setReportOk] = useState(false)
 
   const { user: authUser, refreshUser } = useAuth()
   const [submissions, setSubmissions] = useState<any[]>([])
   const [subsLoading, setSubsLoading] = useState(false)
-  const countdown = useCountdown(job?.deadline || 0)
   // The job last loaded. Reloading the same job (after the poster awards or pays
   // contest places) keeps the page up instead of the loading skeleton, so any
   // message on it (like an award that failed) stays readable.
@@ -258,7 +256,8 @@ export default function JobDetail() {
     const token = localStorage.getItem('ogapay_access_token')
     if (!token) return
     setSubsLoading(true)
-    fetch(API_BASE + '/tasks/' + job.id + '/submissions', {
+    // Up to 500, like Manage jobs: the default 50 (newest first) hid older work waiting for review
+    fetch(API_BASE + '/tasks/' + job.id + '/submissions?limit=500', {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(r => r.json())
@@ -288,8 +287,8 @@ export default function JobDetail() {
       invalidateInFlight()
       const json = await res.json()
       if (json.success) {
-        const apiApprovedAt = json.data?.approvedAt || json.approvedAt
-        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', rating: rating || null, feedback: rating && feedback ? feedback : null, ratedById: rating ? job?.posterId ?? null : null, _approvedAt: apiApprovedAt || Date.now() } : s))
+        // Paid at once at the job's pay now (no payout wait, 2026-11-08)
+        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', paidAmount: s.paidAmount ?? Number(job?.reward || 0), rating: rating || null, feedback: rating && feedback ? feedback : null, ratedById: rating ? job?.posterId ?? null : null } : s))
         showToast(rating ? `Approved and paid. You gave ${rating}/5.` : 'Approved and paid.', 'success')
         refreshUser()
       } else {
@@ -318,6 +317,8 @@ export default function JobDetail() {
       if (json.success) {
         setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'REJECTED' } : s))
         refreshUser()
+        // A Selection job's rejected pick is unpicked: load the job again (2026-11-08)
+        if (job?.isSelection) setReloadKey((k) => k + 1)
       } else showToast(json.message || 'Failed to reject submission', 'error')
     } catch (e: any) { showToast(e?.message || 'Failed to reject submission', 'error') }
     setRejecting(null)
@@ -469,19 +470,19 @@ export default function JobDetail() {
     if (!reportCategory) { setReportMsg('Please select a category'); return }
     if (!reportDesc.trim()) { setReportMsg('Please describe the issue'); return }
     setReportMsg('')
+    setReportOk(false)
     setReportSubmitting(true)
     try {
-      await fetch(`${API_BASE}/reports`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('ogapay_access_token') || '') },
-        body: JSON.stringify({ category: reportCategory, description: reportDesc, targetType: 'task', targetId: job?.id }),
-      })
+      // apiRequest: refreshes an expired sign-in and throws when the server refuses
+      // (signed out, too many reports). It said "submitted" whatever happened (2026-11-08)
+      await apiRequest('/reports', { method: 'POST', body: JSON.stringify({ category: reportCategory, description: reportDesc, targetType: 'task', targetId: job?.id }) })
+      setReportOk(true)
       setReportMsg('Report submitted. Our team will review it within 24 hours.')
       setReportCategory('')
       setReportDesc('')
-      setTimeout(() => { setShowReportModal(false); setReportMsg('') }, 2500)
-    } catch {
-      setReportMsg('Failed to submit report')
+      setTimeout(() => { setShowReportModal(false); setReportMsg(''); setReportOk(false) }, 2500)
+    } catch (e: any) {
+      setReportMsg(`Your report wasn't sent. ${e?.message || 'Try again.'}`)
     }
     setReportSubmitting(false)
   }
@@ -514,7 +515,6 @@ export default function JobDetail() {
       fmt={fmt}
       convert={convert}
       navigate={navigate}
-      countdown={countdown}
       showSubs={showSubs}
       setShowSubs={setShowSubs}
       isOpen={isOpen}
@@ -547,6 +547,7 @@ export default function JobDetail() {
       setReportMsg={setReportMsg}
       reportSubmitting={reportSubmitting}
       handleSubmitReport={handleSubmitReport}
+      reportOk={reportOk}
       submissions={submissions}
       subsLoading={subsLoading}
       approving={approving}
@@ -643,11 +644,11 @@ function ErrorState({ notFound, onBack, onRetry }: { notFound: boolean; onBack: 
 /* ── Main View ── */
 function WurkJobDetailView(props: any) {
   const {
-    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, mySub, openMine, linkedJobs, needJoin, joinPath,
+    job, fmt, convert, navigate, showSubs, setShowSubs, isOpen, canManage, myLabel, mySub, openMine, linkedJobs, needJoin, joinPath,
     bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
-    reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
+    reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport, reportOk,
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
     contest, onContestPaid, community, onReload, eligibility, workspaceLink,
   } = props
@@ -661,6 +662,7 @@ function WurkJobDetailView(props: any) {
   const currencyMap: Record<string, string> = { USD: 'USDC', USDC: 'USDC', NGN: 'NGN', SOL: 'SOL' }
   const rewardCurrency = currencyMap[job.currency] || 'NGN'
   const description = job.description || job.instructions || 'No description provided.'
+  const descHtml = useMemo(() => renderJobText(description), [description])
   // Older jobs (and ones made through the API) keep instructions apart from the
   // description; show them when they say something the description doesn't.
   // The create forms send the same text twice, so those show it once.
@@ -742,9 +744,7 @@ function WurkJobDetailView(props: any) {
     ? closedEarlyText
     : deadline.state !== 'open'
     ? deadlineLabel(deadline)
-    : countdown.d > 0
-      ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
-      : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
+    : <ClosesIn at={Number(job.deadline) || 0} />
   const statusText = ({ open: 'Open', cooling_down: 'Full: waiting for work', completed: 'Completed', cancelled: 'Cancelled', draft: 'Paused', disputed: 'In dispute' } as Record<string, string>)[String(job.status || '').toLowerCase()] || (isOpen ? 'Open' : 'Closed')
 
   return (
@@ -812,6 +812,9 @@ function WurkJobDetailView(props: any) {
         .wjd-sub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
         .wjd-ok{height:30px;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;border:0;background:var(--green);color:#fff;font-family:inherit}
         .wjd-no{height:30px;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;border:0.5px solid var(--border,#e5e7eb);background:var(--card,#fff);color:#dc2626;font-family:inherit}
+        .wjd-ok,.wjd-no{position:relative}
+        .wjd-ok::after,.wjd-no::after{content:'';position:absolute;inset:-5px 0}
+        [data-theme="dark"] .wjd-ok{color:#052e1f}
         .wjd-empty{text-align:center;padding:28px 0;color:var(--text2,#64748b);font-size:14px}
 
         .wjd-action-bar{display:flex;gap:12px;padding:12px 0 0;border-top:0.5px solid var(--border,#e5e7eb);margin-top:18px}
@@ -1026,7 +1029,7 @@ function WurkJobDetailView(props: any) {
         .wjd-facts .is-open .wjd-dot{background:var(--money)}
         .wjd-headline-side{display:flex;flex-direction:column;align-items:flex-end;gap:var(--sp-3);flex-shrink:0}
         .wjd-headline-side .o-money{align-items:flex-end}
-        @media(max-width:767px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;align-items:center;justify-content:space-between}.wjd-headline-side .o-money{align-items:flex-start}}
+        @media(max-width:767px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;flex-shrink:1}.wjd-headline-side .o-money{align-items:flex-start;flex-shrink:0}.wjd-headline-side .ui-btn{white-space:normal;height:auto;min-height:var(--ctl-h);padding-top:8px;padding-bottom:8px;text-align:center;max-width:100%}}
         .wjd-agent{align-items:center;padding:18px 20px}
         .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--border)!important;background:var(--card2);font-size:15px}
         .wjd-avatar img{border-radius:12px}
@@ -1165,7 +1168,7 @@ function WurkJobDetailView(props: any) {
                 <span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8' }} />
                 {isOpen ? 'Open' : 'Closed'}
               </span>
-              <button className="wjd-link" type="button" onClick={() => setShowReportModal(true)}>
+              <button className="wjd-link" type="button" onClick={() => authUser ? setShowReportModal(true) : navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 Report
               </button>
@@ -1244,7 +1247,7 @@ function WurkJobDetailView(props: any) {
                 </>) : (<>
                 <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
                 {job.isSelection && <div className="wjd-row"><div className="wjd-label">Time to deliver</div><div className="wjd-value">The person picked has {deliveryText(job)} to deliver</div></div>}
-                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text={job.isSelection ? `The person the poster picks keeps the place for ${deliveryText(job)}. If they send nothing in time, their place opens again.` : "Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else."} /></div><div className="wjd-value">{job.capacity}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text={job.isSelection ? `The person the poster picks keeps the place for ${deliveryText(job)}. If they send nothing in time, their place opens again.` : "Taking a place reserves it for you. Send your work within 72 hours, or within 24 hours once every place is taken, or your place goes to someone else."} /></div><div className="wjd-value">{job.capacity}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
                 </>)}
                 <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
@@ -1274,7 +1277,7 @@ function WurkJobDetailView(props: any) {
               Description
             </div>
 
-            <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(description) }} />
+            <div className="wjd-body" dangerouslySetInnerHTML={{ __html: descHtml }} />
 
             {extraInstructions && (
               <>
@@ -1394,7 +1397,7 @@ function WurkJobDetailView(props: any) {
                   <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically.</small></li>
                 </>) : (<>
                   <li><b>Take a place.</b>{jobRequirements(job).filter(r => r.icon !== 'award').length ? <small>You need: {jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.</small> : <small>It's reserved for you while you do the job.</small>}</li>
-                  <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>Once every place is taken, you have 24 hours to send it.</small>}</li>
+                  <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>You have 72 hours to send it (24 hours once every place is taken).</small>}</li>
                   <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why. Fake, edited or copied proof gets a warning, and 3 warnings in 30 days stop you taking jobs.</small></li>
                 </>)}
                 <li><b>{contest ? 'The prize goes' : `${show(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
@@ -1441,7 +1444,7 @@ function WurkJobDetailView(props: any) {
                                     <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
                                   </>
                                 )}
-                                {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> Approved</span> : null}
+                                {sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> {sub.paidAmount != null ? `Paid ${formatMoney(Number(sub.paidAmount), rewardCurrency)}` : 'Approved and paid'}</span> : null}
                                 {sub.status === 'APPROVED' && sub.rating ? <span style={{ color: 'var(--text2,#475569)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><RatedStars value={sub.rating} /> {sub.rating}/5</span> : null}
                                 {sub.status === 'REJECTED' && <span style={{ color: '#dc2626', fontSize: 12, fontWeight: 700 }}><i className="ti ti-circle-x" /> Rejected</span>}
                                 {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
@@ -1526,7 +1529,7 @@ function WurkJobDetailView(props: any) {
                 <li>{job.isSelection
                   ? <><strong>Apply with a short note.</strong> The poster reads the notes and picks one person.{jobRequirements(job).filter(r => r.icon !== 'award').length ? ` You need: ${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.` : ''}</>
                   : <><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</>}</li>
-                <li><strong>Do the work and send it in</strong> with the proof the poster asked for. {job.isSelection ? `If you're picked, you have ${deliveryText(job)} to send it, or your place opens again.` : "Once every place is taken, you have 24 hours to send it, or your place goes to someone else."}</li>
+                <li><strong>Do the work and send it in</strong> with the proof the poster asked for. {job.isSelection ? `If you're picked, you have ${deliveryText(job)} to send it, or your place opens again.` : "You have 72 hours to send it (24 hours once every place is taken), or your place goes to someone else."}</li>
                 <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
               </ol>
@@ -1591,7 +1594,7 @@ function WurkJobDetailView(props: any) {
             </div>
             <div className="wjd-report-body">
               {reportMsg && (
-                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13, fontWeight: 700, background: reportMsg.includes('submitted') ? 'rgba(22,163,74,0.12)' : 'rgba(var(--red-rgb),0.1)', color: reportMsg.includes('submitted') ? 'var(--green)' : '#dc2626' }}>
+                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13, fontWeight: 700, background: reportOk ? 'rgba(22,163,74,0.12)' : 'rgba(var(--red-rgb),0.1)', color: reportOk ? 'var(--green)' : '#dc2626' }}>
                   {reportMsg}
                 </div>
               )}
@@ -1637,10 +1640,10 @@ function WurkJobDetailView(props: any) {
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Status</div>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14, color: selectedSub.status === 'APPROVED' ? 'var(--green)' : selectedSub.status === 'REJECTED' ? '#dc2626' : '#d97706' }}>{selectedSub.status}</div>
-              {selectedSub.status === 'APPROVED' && (selectedSub._approvedAt || selectedSub.approvedAt) && (
+              {selectedSub.status === 'APPROVED' && (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Payout</div>
-                  <PayoutCountdown approvedAt={selectedSub._approvedAt || selectedSub.approvedAt} />
+                  <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>{selectedSub.paidAmount != null ? `Paid ${formatMoney(Number(selectedSub.paidAmount), rewardCurrency)} to their wallet` : 'Paid to their wallet'}</span>
                 </div>
               )}
               {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}
@@ -1671,9 +1674,14 @@ function WurkJobDetailView(props: any) {
                     onRating={setRateStars} onNote={setRateNote} disabled={approving === selectedSub.id} />
                 </div>
               )}
+              {selectedSub.status === 'SUBMITTED' && contest && (
+                <div style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginBottom: 12 }}>
+                  <i className="ti ti-award" /> Contest entry: award places in the contest box on this page. Entries aren't approved one by one.
+                </div>
+              )}
               {selectedSub.status === 'SUBMITTED' && (
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                  <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id, contest ? 0 : rateStars, rateNote); setSelectedSub(null) }} disabled={approving === selectedSub.id || checkBlocksApprove(selectedSub, clock)}>{approving === selectedSub.id ? 'Approving...' : contest ? 'Approve' : `Approve and pay ${formatMoney(Number(job.reward || 0), rewardCurrency)}`}</button>
+                  {!contest && <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id, rateStars, rateNote); setSelectedSub(null) }} disabled={approving === selectedSub.id || checkBlocksApprove(selectedSub, clock)}>{approving === selectedSub.id ? 'Approving...' : `Approve and pay ${formatMoney(Number(job.reward || 0), rewardCurrency)}`}</button>}
                   <button className="wjd-no" type="button" onClick={() => { handleReject(selectedSub.id); setSelectedSub(null) }} disabled={rejecting === selectedSub.id}>{rejecting === selectedSub.id ? 'Rejecting...' : 'Reject'}</button>
                 </div>
               )}
@@ -1683,20 +1691,6 @@ function WurkJobDetailView(props: any) {
       )}
     </Layout>
   )
-}
-
-/* ── Payout Countdown ── */
-function PayoutCountdown({ approvedAt }: { approvedAt: number }) {
-  const endTime = Number(approvedAt) + 86400000
-  const { d, h, m } = useCountdown(endTime)
-  if (endTime - Date.now() <= 0) {
-    return <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>Payout available</span>
-  }
-  const parts: string[] = []
-  if (d > 0) parts.push(`${d}d`)
-  parts.push(`${h}h`)
-  parts.push(`${m}m`)
-  return <span style={{ color: '#d97706', fontSize: 12, fontWeight: 700 }}>Payout in {parts.join(' ')}</span>
 }
 
 /* ── Apply Modal ── */

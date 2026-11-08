@@ -89,8 +89,13 @@ button.mj-sum:hover { border-color: var(--text3); }
 @media (max-width: 767px) {
   .mj-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mj-job { padding: 16px; }
-  .mj-drawer { top: auto; width: 100%; max-height: 92vh; border-left: 0; border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; }
+  .mj-drawer { top: auto; width: 100%; max-height: 92vh; max-height: 92dvh; border-left: 0; border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; }
   .mj-dh, .mj-db, .mj-df { padding-left: 16px; padding-right: 16px; }
+  /* The job's buttons scroll with the work instead of staying fixed below it
+     (2026-11-08): up to 10 of them left a strip of about 150px for the work */
+  .mj-drawer { overflow-y: auto; overscroll-behavior: contain; }
+  .mj-db { flex: none; overflow: visible; }
+  .mj-dh { position: sticky; top: 0; z-index: 1; background: var(--card); border-radius: 20px 20px 0 0; }
 }
 
 /* Templates and Blacklist tabs */
@@ -109,6 +114,9 @@ button.mj-sum:hover { border-color: var(--text3); }
 .mj-tpl-rename .ui-input { max-width: 320px; }
 .mj-row > .ui-btn { flex-shrink: 0; }
 .mj-block { margin-left: auto; flex-shrink: 0; height: 26px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 500 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
+/* a 42px tap area, same look (2026-11-08) */
+.mj-block { position: relative; }
+.mj-block::after { content: ''; position: absolute; inset: -8px -4px; }
 .mj-block:hover { color: #dc2626; border-color: color-mix(in srgb, #dc2626 40%, var(--border)); }
 @media (max-width: 767px) {
   .mj-tool-form { grid-template-columns: 1fr; }
