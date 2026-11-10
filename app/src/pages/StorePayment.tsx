@@ -240,11 +240,12 @@ export default function StorePayment() {
   const alreadyHave = !!perk?.permanent && owned.includes(perk.kind)
   const needJob = perk?.kind === 'TASK_BOOST' && !jobId
   const canPay = !own && !soldOut && !alreadyHave && !needJob && !shipError && balanceKnown && short === 0 && !paying
-  const delivery = offer?.delivery || item.metadata?.delivery || '3 days'
+  // Only the seller's own terms (B19, 2026-11-10): no made-up "3 days" / "3 revisions"
+  const delivery = offer?.delivery || item.metadata?.delivery || 'Ask the seller'
   // F21: files the buyer can download as soon as they pay (never for a physical item)
   const instant = !item.official && !physical && (item.instantFiles || 0) > 0
   const instantLine = instant ? `${item.instantFiles === 1 ? 'Its file is' : `Its ${item.instantFiles} files are`} ready to download on your order as soon as you pay.` : ''
-  const revisions = item.metadata?.revisions ?? 3
+  const revisions = item.metadata?.revisions ?? null
   const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
 
   // Each file uploads on its own with its progress, two at a time. A failed one
@@ -420,7 +421,7 @@ export default function StorePayment() {
       {!item.official && (
         <div className="sc-facts">
           <div><span><i className="ti ti-clock" aria-hidden="true" /> Delivery</span><b>{delivery}</b></div>
-          {!physical && <div><span><i className="ti ti-refresh" aria-hidden="true" /> Revisions</span><b>{revisions >= 999 ? 'Unlimited' : revisions}</b></div>}
+          {!physical && revisions !== null && <div><span><i className="ti ti-refresh" aria-hidden="true" /> Revisions</span><b>{revisions >= 999 ? 'Unlimited' : revisions}</b></div>}
         </div>
       )}
       {(perk?.what || item.description) && (

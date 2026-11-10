@@ -119,6 +119,9 @@
 .hc-active span { width: 5px; height: 5px; border-radius: 50%; background: #17805c; }
 /* Sold out (stock 0): red, no dot (2026-11-08) */
 .hc-active.off { background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.25); color: #dc2626; }
+/* The card's fact (delivery time, Only N left) with a small icon, and the seller's verified mark (2026-11-10) */
+.hc-active i { font-size: 12px; }
+.hc-verified { margin-left: 4px; font-size: 14px; color: var(--green); }
 .hc-pbody { display: flex; flex-direction: column; gap: 10px; padding: 16px 4px 4px; flex: 1; }
 /* titles get two lines and descriptions two, so rows of cards line up */
 .hc-pbody h3 { margin: 0; font-size: var(--fs-card); font-weight: 600; letter-spacing: -.015em; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(var(--fs-card) * 1.35 * 2); }
