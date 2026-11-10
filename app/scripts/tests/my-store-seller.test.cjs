@@ -20,7 +20,7 @@ const puppeteer = require('puppeteer');
 const stubs = path.join(__dirname, 'my-store-seller.stubs.tsx');
 const stubPlugin = {
   name: 'stubs',
-  setup(b) { b.onResolve({ filter: /(components\/Layout|context\/AuthContext|context\/CurrencyContext|context\/ToastContext)$/ }, () => ({ path: stubs })) },
+  setup(b) { b.onResolve({ filter: /(components\/Layout|context\/AuthContext|context\/CurrencyContext|context\/ToastContext|components\/Toast)$/ }, () => ({ path: stubs })) },
 };
 
 let fails = 0;

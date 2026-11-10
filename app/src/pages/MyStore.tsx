@@ -23,7 +23,7 @@ import MyOffers from '../components/MyOffers'
 import DeliverableFiles, { useDeliverables } from '../components/DeliverableFiles'
 import MyStoreReviews from '../components/MyStoreReviews'
 import MyStoreEarnings from '../components/MyStoreEarnings'
-import { useToast } from '../context/ToastContext'
+import { useToast } from '../components/Toast' // the toasts App shows (context/ToastContext has no provider)
 import { useStoreCategories } from '../lib/storeCategories'
 
 // My Store tabs (?tab=orders|offers|reviews|earnings; products is the default)
@@ -226,7 +226,7 @@ export default function MyStore() {
       await navigator.clipboard.writeText(storeUrl)
       toast('Store link copied. Paste it on WhatsApp, X or anywhere.', 'success')
     } catch (e: any) {
-      if (e?.name !== 'AbortError') toast(`Couldn't copy the link. Your store link: ${storeUrl}`, 'error', 8000)
+      if (e?.name !== 'AbortError') toast(`Couldn't copy the link. Your store link: ${storeUrl}`, 'error')
     }
   }
 

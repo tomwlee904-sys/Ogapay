@@ -47,7 +47,8 @@ w.__signins = []
 w.__profileAnsweredAt = 0
 try { localStorage.clear(); if (c.me) localStorage.setItem('ogapay_access_token', 'tok-' + c.me.username) } catch { /* file page */ }
 window.addEventListener(SIGN_IN_EVENT, (e) => { w.__signins.push((e as CustomEvent).detail) })
-// Copying is blocked in this case
+// Copying is blocked in this case (the clipboard and ShareButton's older copy command too)
+if (name === 'copyfail') document.execCommand = () => false
 Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t: string) => (name === 'copyfail' ? Promise.reject(new Error('blocked')) : (w.__copied = t, Promise.resolve())) } })
 
 w.fetch = async (url: string, init: RequestInit = {}) => {

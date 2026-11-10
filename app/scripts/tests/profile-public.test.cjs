@@ -133,7 +133,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await clickText(p, '.up-writing', 'Try again');
     v = await until(p, (x) => /My first post/.test(x.writing));
     ok('pp-12 Try again loads the blogs', /My first post/.test(v.writing), v.writing);
-    ok('pp-12 ...asking for the blogs only (not the whole page again)', v.calls.filter((c) => c === '/users/ada').length === 1 && v.calls.filter((c) => /\/blogs$/.test(c)).length === 2, v.calls);
+    ok('pp-12 ...asking for the blogs only (not the whole page again)', v.calls.filter((c) => c === '/users/ada').length === 1 && v.calls.filter((c) => /\/blogs(\?|$)/.test(c)).length === 2, v.calls);
     await p.close();
 
     // ── pp-13 Reviews, 10 a page ──

@@ -16,5 +16,6 @@ export function useCurrency() {
 }
 
 export function useToast() {
-  return { show: () => {}, success: () => {}, error: () => {} }
+  // The app's useToast (components/Toast) gives { toast }; ShareButton uses it
+  return { toast: () => {}, show: () => {}, success: () => {}, error: () => {} }
 }
