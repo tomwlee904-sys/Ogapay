@@ -27,13 +27,20 @@ const VET_ME = { ogaScore: 61, signupIntent: 'EARN', workerProfile: { tasksCompl
 const VET_SUBS = [sub('s1', 'PENDING', { id: 't-w1', title: 'Write a review', reward: 800, currency: 'NGN', category: 'WRITING' }), sub('s2', 'SUBMITTED', { id: 't-w2', title: 'Logo idea', reward: 1200, currency: 'NGN', category: 'WRITING' })]
 // A new man in Ghana, Level 1 by the bank check only
 const KOFI = { id: 'u-kofi', username: 'kofi', firstName: 'Kofi', lastName: 'Mensah', avatar: null, isEmailVerified: true, kycStatus: 'APPROVED', kycTier: 1, role: 'WORKER' }
-const KOFI_ME = { ogaScore: 10, signupIntent: 'EARN', workerProfile: { tasksCompleted: 0, level: 'BEGINNER' }, kyc: { status: 'APPROVED', kycTier: 1, provider: 'bank-name', idType: 'BANK' } }
+const KOFI_ME = { ogaScore: 10, gender: 'M', signupIntent: 'EARN', workerProfile: { tasksCompleted: 0, level: 'BEGINNER' }, kyc: { status: 'APPROVED', kycTier: 1, provider: 'bank-name', idType: 'BANK' } }
 const KOFI_JOBS = [
   job('ng', { title: 'Nigeria only starter', featured: true, reward: 1500, eligible: false, whyNot: ['COUNTRY'] }),
   job('women', { title: 'Women only starter', featured: true, reward: 1400, eligible: false, whyNot: ['GENDER'] }),
   job('kyc2', { title: 'Level 2 starter', featured: true, reward: 900, workerRequirement: 'KYC2', eligible: false, whyNot: ['KYC2'] }),
   job('later', { title: 'After one job starter', featured: true, reward: 800, minJobsDone: 1, eligible: false, whyNot: ['JOBS'] }),
   job('easy', { title: 'Open starter', featured: true, reward: 300 }),
+  // Fixed in Settings: connect X or a wallet (shown, tagged "Set up")
+  job('xjob', { title: 'Connect X starter', featured: true, reward: 2000, eligible: false, whyNot: ['X'] }),
+  job('wjob', { title: 'Wallet starter', featured: true, reward: 700, eligible: false, whyNot: ['WALLET'] }),
+  // Not a quick fix: a blue tick, a higher OgaScore, more followers (hidden)
+  job('blue', { title: 'Blue tick starter', featured: true, reward: 600, eligible: false, whyNot: ['X_BLUE'] }),
+  job('score', { title: 'High score starter', featured: true, reward: 600, eligible: false, whyNot: ['OGASCORE'] }),
+  job('aud', { title: 'Big audience starter', featured: true, reward: 600, eligible: false, whyNot: ['AUDIENCE'] }),
   job('rank', { title: 'Rank 3 job', reward: 9000, eligible: false, whyNot: ['RANK'] }),
   job('plain', { title: 'Plain job', reward: 400 }),
 ]
@@ -73,6 +80,15 @@ const CASES: Record<string, Case> = {
   unverified: { me: { ...VET, kycStatus: null, kycTier: 0 }, profile: { ...VET_ME, kyc: null }, subs: VET_SUBS, created: [], jobs: VET_JOBS, pref: 'GHS', balances: { GHS: { balance: 25, lockedBalance: 0, available: 25 } } },
   poster: { me: { ...VET, id: 'u-boss' }, profile: VET_ME, subs: [], created: POSTER_JOBS, jobs: VET_JOBS, balances: {} },
   visitor: {},
+  // A new worker (no job done) whose one job in review is "Open starter": their
+  // work fails to load, so we can't tell which jobs they took
+  failnew: { me: { ...KOFI, id: 'u-ada', firstName: 'Ada' }, profile: { ...KOFI_ME, kyc: { status: 'APPROVED', kycTier: 1, provider: 'nin', idType: 'NIN' } }, subs: [sub('s9', 'SUBMITTED', { id: 'easy', title: 'Open starter', reward: 300, currency: 'NGN' })], created: [], jobs: KOFI_JOBS, balances: {}, failing: ['/tasks/my/submissions'] },
+  // Only the profile fails (OgaScore, first job tips)
+  mefail: { me: VET, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {}, failing: ['/users/me'] },
+  // Only the earnings fail
+  earnfail: { me: VET, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {}, failing: ['/users/me/earnings'] },
+  // A new member who hasn't said their gender: the women-only starter can be unlocked in Settings
+  nogender: { me: KOFI, profile: { ...KOFI_ME, gender: null }, subs: [], created: [], jobs: KOFI_JOBS, pref: 'GHS', balances: {} },
 }
 const name = new URLSearchParams(location.search).get('case') || 'vet'
 const c = CASES[name]

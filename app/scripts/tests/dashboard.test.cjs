@@ -12,6 +12,9 @@
 //  dash-7  the logo goes to the dashboard when signed in; Dashboard is first in the menu
 //  dash-9  the Balance card shows every currency held (cedis, USDC), not naira only
 //  dash-20 "Jobs for you" is jobs you can take, your kind of work first, then the best paid
+//  fix pass: a failed work list hides "Your first job" and starter jobs (they could
+//          offer a job you took); a failed profile or earnings load says so with
+//          Try again; starter jobs unlocked in Settings (X, wallet, gender) stay, tagged
 //   npm run test:dashboard
 const path = require('path');
 const fs = require('fs');
@@ -165,6 +168,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const titles = v.starter.map((s) => s.title);
   ok('6b dash-5: starter list hides jobs he can never take (country, gender)', !titles.includes('Nigeria only starter') && !titles.includes('Women only starter'), titles);
   ok('6c dash-5: jobs he can unlock stay, tagged (Level 2: Verify ID; after one job: Later)', v.starter.find((s) => s.title === 'Level 2 starter')?.tag === 'Verify ID' && v.starter.find((s) => s.title === 'After one job starter')?.tag === 'Later' && v.starter.find((s) => s.title === 'Open starter')?.tag === null, v.starter);
+  ok('6j jobs unlocked in Settings stay, tagged "Set up" (connect X, connect a wallet)', v.starter.find((s) => s.title === 'Connect X starter')?.tag === 'Set up' && /Connect your X account in Settings/.test(v.starter.find((s) => s.title === 'Connect X starter')?.sub || '') && v.starter.find((s) => s.title === 'Wallet starter')?.tag === 'Set up', v.starter);
+  ok('6k not a quick fix (blue tick, higher OgaScore, more followers): hidden', !titles.some((t) => /Blue tick|High score|Big audience/.test(t)), titles);
+  ok('6l "Your first job" never picks a job that needs setting up first', v.firstTitle !== 'Connect X starter', v.firstTitle);
   ok('6d a new member sees the two starter cards, not "Jobs for you"', v.starts.includes('Find your first job') && v.forYou.length === 0, v.starts);
   ok('6e dash-6: bank Level 1 is NOT shown as "ID verified"', !/Your ID is verified/.test(v.first) && !v.firstStep1Done && /Bank check done/.test(v.firstStep1) && /NIN or a photo of your ID/.test(v.firstStep1), v.firstStep1);
   ok('6f dash-6: the step offers Verify', /Verify$/.test(v.firstStep1), v.firstStep1);
@@ -197,6 +203,55 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   p = await open('visitor');
   v = await until(p, (s) => !!s.logo);
   ok('10a dash-7: signed out, the logo goes to the homepage', v.logo === '/' && v.logoMobile === '/', { logo: v.logo, mobile: v.logoMobile });
+  await p.close();
+
+  // 11. A new worker's work list fails: no first job or starter jobs (they could be the job they took)
+  p = await open('failnew');
+  v = await view(p);
+  ok('11a while loading: no "Your first job", no starter jobs', !v.first && !v.starterHead, { first: v.first, starter: v.starterHead });
+  v = await until(p, (s) => s.loadErr.length > 0, 9000);
+  ok('11b after the second try: "couldn\'t load your work"', /couldn't load your work/i.test(v.loadErr[0] || ''), v.loadErr);
+  ok('11c no "Your first job" card offering "Take this job"', !v.first && !/Take this job/.test(v.main), v.first);
+  ok('11d no starter jobs card', !v.starterHead, v.starterHead);
+  await p.evaluate(() => { window.__heal = true; });
+  await p.evaluate(() => document.querySelector('.db-load-err button').click());
+  v = await until(p, (s) => !!s.firstTitle);
+  ok('11e once their work loads: "Finish" the job they took, not "Take this job"', /Finish "Open starter"/.test(v.firstTitle) && !/Take this job/.test(v.first), v.firstTitle);
+  await p.evaluate(() => document.querySelector('.db-fold')?.click());
+  v = await until(p, (s) => s.starter.length > 0);
+  ok('11f the starter list leaves out the job they took', v.starter.length > 0 && !v.starter.some((s) => s.title === 'Open starter'), v.starter);
+  await p.close();
+
+  // 12. Only the profile fails: says so, Try again brings the OgaScore back
+  p = await open('mefail');
+  v = await until(p, (s) => s.loadErr.length > 0, 9000);
+  ok('12a "Couldn\'t load your OgaScore" with Try again', v.loadErr.length === 1 && /Couldn't load your OgaScore and first job tips/.test(v.loadErr[0]) && /Try again/.test(v.loadErr[0]), v.loadErr);
+  ok('12b the OgaScore tile stops showing "…"', v.stats.some((s) => /OgaScore–/.test(s)) && !v.stats.some((s) => /OgaScore…/.test(s)), v.stats);
+  ok('12c their work still shows', v.work.includes('Write a review'), v.work);
+  ok('12d /users/me was tried exactly twice', count(v, '/users/me') === 2, count(v, '/users/me'));
+  await p.evaluate(() => { window.__heal = true; });
+  await p.evaluate(() => document.querySelector('.db-load-err button').click());
+  v = await until(p, (s) => s.loadErr.length === 0);
+  ok('12e Try again loads the OgaScore (61) and asks only /users/me again', v.loadErr.length === 0 && v.stats.some((s) => /OgaScore61/.test(s)) && count(v, '/users/me') === 3 && count(v, '/tasks/my/submissions') === 1, { stats: v.stats, calls: v.calls.map((x) => x.path) });
+  await p.close();
+
+  // 13. Only the earnings fail
+  p = await open('earnfail');
+  v = await until(p, (s) => s.loadErr.length > 0, 9000);
+  ok('13a "Couldn\'t load your earnings" with Try again', v.loadErr.length === 1 && /Couldn't load your earnings/.test(v.loadErr[0]) && /Try again/.test(v.loadErr[0]), v.loadErr);
+  await p.evaluate(() => { window.__heal = true; });
+  await p.evaluate(() => document.querySelector('.db-load-err button').click());
+  v = await until(p, (s) => s.loadErr.length === 0 && /₦5,000 earned/.test(s.main));
+  ok('13b Try again shows "₦5,000 earned"', v.loadErr.length === 0 && /₦5,000 earned/.test(v.main), v.loadErr);
+  await p.close();
+
+  // 14. Gender not said yet: the women-only starter stays, tagged "Set up" (a man who said so doesn't see it, 6b)
+  p = await open('nogender');
+  v = await until(p, (s) => !!s.starterHead);
+  await p.evaluate(() => document.querySelector('.db-fold').click());
+  v = await until(p, (s) => s.starter.length > 0);
+  const wo = v.starter.find((s) => s.title === 'Women only starter');
+  ok('14a women-only starter: "Say your gender in Settings", tagged Set up; Nigeria-only still hidden', wo?.tag === 'Set up' && /Say your gender in Settings/.test(wo?.sub || '') && !v.starter.some((s) => s.title === 'Nigeria only starter'), v.starter);
   await p.close();
 
   ok('no request left the test page', outside.length === 0, outside);

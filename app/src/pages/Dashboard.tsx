@@ -31,7 +31,7 @@ const INTENT_OPTS: { value: Intent; label: string; icon: string }[] = [
   { value: 'HIRE', label: 'Hire people', icon: 'ti-briefcase' },
   { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
 ]
-type Me = { ogaScore?: number; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number; provider?: string | null; idType?: string | null } | null }
+type Me = { ogaScore?: number; gender?: string | null; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number; provider?: string | null; idType?: string | null } | null }
 type Sub = {
   id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
   task?: { id: string; title: string; reward: number | string; currency?: string; category?: string; expiresAt?: string | null; deadline?: string | null }
@@ -63,10 +63,10 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 const STARTER_UNTIL = 5
 const placesLeft = (j: Job) => Math.max(0, (Number(j.maxWorkers) || 1) - (Number(j.currentWorkers) || 0))
 // What stops a starter job that the person can fix themselves (verify, finish a
-// job first): those starter jobs still show, tagged. Anything else (lives in
-// another country, women-only, rank...) hides the job: taking it would be refused.
-const FIXABLE = new Set(['JOBS', 'KYC', 'KYC2', 'HUMAN'])
-const fixableOnly = (j: Job) => j.eligible !== false || (!!j.whyNot?.length && j.whyNot.every((c) => FIXABLE.has(c)))
+// job first, connect X or a wallet, say their gender): those starter jobs still
+// show, tagged. Anything else (lives in another country, women-only, rank, a
+// higher score or more followers...) hides the job: taking it would be refused.
+const FIXABLE = new Set(['JOBS', 'KYC', 'KYC2', 'HUMAN', 'X', 'WALLET'])
 // A failed load is tried once more after this long, then a Retry button shows
 const RETRY_MS = 4000
 type Part = 'me' | 'earned' | 'subs' | 'created' | 'jobs'
@@ -188,7 +188,10 @@ export default function Dashboard() {
     (jobs || []).some((o) => taken.has(o.id) && (o.excludesTaskIds || []).includes(j.id))
   const jobsDone = me?.workerProfile?.tasksCompleted ?? 0
   const open = (j: Job) => j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended'
-  const starter = me && jobsDone < STARTER_UNTIL
+  // GENDER can be fixed only by someone who hasn't said theirs yet
+  const fixableOnly = (j: Job) => j.eligible !== false || (!!j.whyNot?.length && j.whyNot.every((c) => FIXABLE.has(c) || (c === 'GENDER' && !me?.gender)))
+  // Not while your work failed to load: without it we can't tell which jobs you took
+  const starter = me && subs !== null && jobsDone < STARTER_UNTIL
     ? (jobs || []).filter((j) => j.featured && open(j) && fixableOnly(j))
     : []
   const starterIds = new Set(starter.map((j) => j.id))
@@ -216,6 +219,9 @@ export default function Dashboard() {
     if (why.includes('KYC2') && kycTier >= 2) return { text: 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
     if (why.includes('KYC') && kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
     if (why.includes('HUMAN') && me?.humanVerifiedAt) return { text: 'Get Human Verified first, it takes a minute', tag: 'Verify', order: 1 }
+    if (why.includes('X')) return { text: 'Connect your X account in Settings first', tag: 'Set up', order: 1 }
+    if (why.includes('WALLET')) return { text: 'Connect a Solana wallet in Settings first', tag: 'Set up', order: 1 }
+    if (why.includes('GENDER') && !me?.gender) return { text: 'Say your gender in Settings, Account first', tag: 'Set up', order: 1 }
     if (need > jobsDone) return { text: need === 1 ? 'Opens after your first approved job' : `Opens after ${need} approved jobs`, tag: 'Later', order: 2 }
     if (j.workerRequirement === 'KYC2' && kycTier < 2) return { text: 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
     if (j.workerRequirement === 'KYC' && !kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
@@ -234,7 +240,7 @@ export default function Dashboard() {
   const firstPick = (jobs || []).filter((j) => simple(j) && j.featured).sort(byPay)[0]
     || (jobs || []).filter((j) => simple(j) && Number(j.reward || 0) <= 2000).sort(byPay)[0]
   const firstActive = [...working, ...waiting][0]
-  const showFirstJob = !!me && jobsDone === 0 && (!!firstActive || !!firstPick)
+  const showFirstJob = !!me && subs !== null && jobsDone === 0 && (!!firstActive || !!firstPick)
 
   const loaded = subs !== null && created !== null
   // Your work or your jobs didn't load: never guess "new account" from that
@@ -242,6 +248,11 @@ export default function Dashboard() {
   const hires = mine.length > 0
   const works = (subs || []).length > 0
   const isNew = loaded && !hires && !works
+  // Your profile (OgaScore, first job tips) or earnings didn't load: say so too.
+  // When the work card above failed, its Try again already asks for the profile.
+  const meFailed = settled && !!failed.me && me === null
+  const earnFailed = settled && !!failed.earned && earned === null
+  const infoParts: Part[] = [...(meFailed && !workFailed ? ['me' as const] : []), ...(earnFailed ? ['earned' as const] : [])]
   const retryBtn = (parts: Part[]) => (
     <button type="button" className="db-step-btn" onClick={() => retry(parts)} disabled={retrying}>{retrying ? 'Trying again…' : 'Try again'}</button>
   )
@@ -521,8 +532,14 @@ export default function Dashboard() {
               <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
               <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, verify with NIN or ID'}` : 'Verify to withdraw and send money'}</small>
             </Link>
-            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
+            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? (meFailed ? '–' : '…')}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>
+          {infoParts.length > 0 && (
+            <div className="db-empty db-load-err" role="alert">
+              <span>{infoParts.length === 2 ? "Couldn't load your OgaScore and earnings." : infoParts[0] === 'me' ? "Couldn't load your OgaScore and first job tips." : "Couldn't load your earnings."} Check your connection.</span>
+              {retryBtn(infoParts)}
+            </div>
+          )}
 
           {/* a new member's two cards wait for /users/me too: their order depends on the answer */}
           {workFailed ? (
