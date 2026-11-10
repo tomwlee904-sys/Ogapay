@@ -7,6 +7,8 @@ import { renderBlog } from '../lib/blogMarkdown'
 import { useAuth } from '../context/AuthContext'
 import { orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
 import { useMoney } from '../lib/useMoney'
+import { useCurrency } from '../context/CurrencyContext'
+import { formatCedi } from '../lib/money'
 import '../styles/profile-public.css'
 import '../styles/hire.css'
 import '../styles/edit-profile.css'
@@ -20,7 +22,13 @@ type Product = {
   sales: number; orders: number; avgRating: number; reviewsCount: number; delivery?: string; revisions?: number; tags?: string[]
   priceOnRequest?: boolean; sampleFiles?: UploadedFile[]; searchTags?: string
   sellerReceives?: number; buyerPays?: number; feePercent?: number
+  // Orders still running (to deliver, delivered, reported): deleting doesn't cancel them
+  openOrders?: number
 }
+// What's missing before the seller can publish (server: EMAIL, LEVEL1)
+type Needs = string[]
+// The VERIFY_* codes a refused publish sends back
+const needsOf = (e: any): Needs => (Array.isArray(e?.errors) ? e.errors.map((x: any) => String(x?.code || '')).filter((c: string) => c.startsWith('VERIFY_')).map((c: string) => c.slice(7)) : [])
 const MAX_FILES = 5
 const FILE_ICON: Record<string, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf', text: 'ti-file-text' }
 // OgaPay takes no fee on store sales today (backend STORE_FEE_PERCENT = 0)
@@ -41,6 +49,34 @@ const money = (n: number, cur = 'NGN') =>
   cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
 const blank = { name: '', description: '', price: '', currency: 'NGN', category: CATEGORIES[0], subcategory: '', imageUrl: '', stock: '', delivery: '3 days', revisions: '2', tags: '', priceMode: 'fixed' }
 type Form = typeof blank
+const startForm = (product: Product | null): Form => product ? {
+  name: product.name, description: product.description, price: product.priceOnRequest ? '' : String(product.price), currency: product.currency,
+  category: product.category, subcategory: product.subcategory || '', imageUrl: product.imageUrl || '', stock: product.stock === null ? '' : String(product.stock),
+  delivery: product.delivery || '3 days', revisions: String(product.revisions ?? 2),
+  tags: product.searchTags || (product.tags || []).join(', '), priceMode: product.priceOnRequest ? 'request' : 'fixed',
+} : blank
+// Server field names to the form's (a refused save highlights the right field;
+// others are named in the message)
+const FIELD_OF: Record<string, string> = { name: 'name', description: 'description', price: 'price', currency: 'price', stock: 'stock', searchTags: 'tags', tags: 'tags', imageUrl: 'imageUrl', sampleFiles: 'files' }
+
+// Publishing needs a verified email and Level 1 (2026-11-10). Hidden products can
+// always be saved, and products already live stay up.
+function VerifyToSell({ needs }: { needs: Needs }) {
+  if (!needs.length) return null
+  const email = needs.includes('EMAIL'), level = needs.includes('LEVEL1')
+  return (
+    <div className="so-line ms2-verify" role="note">
+      <i className="ti ti-shield-check" aria-hidden="true" />
+      <div>
+        <span>To publish products, {email && level ? 'verify your email and your account (Level 1)' : email ? 'verify your email' : 'verify your account (Level 1)'}. This keeps fake sellers out of the store. Until then you can save products as hidden, and products already live stay up.</span>
+        <div className="acts">
+          {email && <Link className="up-btn" to="/settings/account">Verify email</Link>}
+          {level && <Link className="up-btn primary" to="/settings/verification">Verify account</Link>}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function MyStore() {
   // Prices and revenue in the display currency; order payments and refunds stay real
@@ -59,11 +95,23 @@ export default function MyStore() {
     const next = new URLSearchParams(params); next.delete('new'); setParams(next, { replace: true })
   }, [])
   const [busy, setBusy] = useState('')
+  const [notice, setNotice] = useState('')
+  // Verify links shown with the error when a publish was refused
+  const [errorNeeds, setErrorNeeds] = useState<Needs>([])
+  // From the server (fresh after verifying); the signed-in account until it answers
+  const [serverNeeds, setServerNeeds] = useState<Needs | null>(null)
+  const needs: Needs = serverNeeds ?? [
+    ...(user?.isEmailVerified ? [] : ['EMAIL']),
+    ...((user?.kycStatus === 'APPROVED' ? user.kycTier || 0 : 0) >= 1 ? [] : ['LEVEL1']),
+  ]
 
   const load = () => {
     // A failed load shows Try again, never "0 products" or "no orders"
     setFailed({ products: false, orders: false })
-    apiRequest<any>('/store/my-products').then((d) => setProducts(Array.isArray(d?.products) ? d.products : [])).catch(() => setFailed((f) => ({ ...f, products: true })))
+    apiRequest<any>('/store/my-products').then((d) => {
+      setProducts(Array.isArray(d?.products) ? d.products : [])
+      if (Array.isArray(d?.seller?.needs)) setServerNeeds(d.seller.needs)
+    }).catch(() => setFailed((f) => ({ ...f, products: true })))
     apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setFailed((f) => ({ ...f, orders: true })))
   }
   useEffect(load, [])
@@ -83,16 +131,27 @@ export default function MyStore() {
   const rated = (products || []).filter((p) => p.reviewsCount > 0)
   const avg = rated.length ? rated.reduce((s, p) => s + p.avgRating * p.reviewsCount, 0) / rated.reduce((s, p) => s + p.reviewsCount, 0) : 0
 
+  const ordersLine = (n: number) => `${n === 1 ? '1 order' : `${n} orders`} for it ${n === 1 ? 'is' : 'are'} still open`
   const setStatus = async (p: Product, active: boolean) => {
-    setBusy(p.id)
+    if (!active && !window.confirm(`Hide "${p.name}" from the store?${p.openOrders ? ` ${ordersLine(p.openOrders)}: they don't change.` : ''} ${needs.length ? "To publish it again you'll need to verify your account first." : 'You can publish it again any time.'}`)) return
+    setBusy(p.id); setError(''); setErrorNeeds([]); setNotice('')
     try { await apiRequest(`/store/products/${p.id}`, { method: 'PATCH', body: JSON.stringify({ status: active ? 'ACTIVE' : 'DRAFT' }) }); load() }
-    catch (e: any) { setError(e?.message || 'Could not update the product') }
+    catch (e: any) { setError(e?.message || 'Could not update the product'); setErrorNeeds(needsOf(e)) }
     setBusy('')
   }
   const remove = async (p: Product) => {
-    if (!window.confirm(`Delete "${p.name}"? It disappears from the store. Past orders are kept.`)) return
-    setBusy(p.id)
-    try { await apiRequest(`/store/products/${p.id}`, { method: 'DELETE' }); load() }
+    const open = p.openOrders || 0
+    const text = open
+      ? `Delete "${p.name}"? It disappears from the store.\n\n${ordersLine(open)}. Deleting doesn't cancel ${open === 1 ? 'it' : 'them'}: you still need to deliver from the Orders tab.`
+      : `Delete "${p.name}"? It disappears from the store. Past orders are kept.`
+    if (!window.confirm(text)) return
+    setBusy(p.id); setError(''); setErrorNeeds([]); setNotice('')
+    try {
+      const d = await apiRequest<{ openOrders?: number }>(`/store/products/${p.id}`, { method: 'DELETE' })
+      const left = Number(d?.openOrders) || 0
+      if (left) setNotice(`"${p.name}" is deleted. ${left === 1 ? '1 order is' : `${left} orders are`} still open: deliver ${left === 1 ? 'it' : 'them'} from the Orders tab.`)
+      load()
+    }
     catch (e: any) { setError(e?.message || 'Could not delete the product') }
     setBusy('')
   }
@@ -143,7 +202,9 @@ export default function MyStore() {
           </div>
         </div>
 
-        {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
+        {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => { setError(''); setErrorNeeds([]) }}>Dismiss</button></div>}
+        {notice && <div className="up-note ok" role="status" style={{ marginBottom: 12 }}>{notice} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setNotice('')}>OK</button></div>}
+        {tab === 'products' && products !== null && (needs.length > 0 || errorNeeds.length > 0) && <div style={{ marginBottom: 14 }}><VerifyToSell needs={needs.length ? needs : errorNeeds} /></div>}
 
         {tab === 'products' ? (
           products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
@@ -223,19 +284,18 @@ export default function MyStore() {
         )}
       </div>
 
-      {editing && <ProductEditor product={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load() }} />}
+      {editing && <ProductEditor product={editing === 'new' ? null : editing} needs={needs} ghana={user?.country === 'GH'} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setNotice(''); load() }} />}
     </Layout>
   )
 }
 
-function ProductEditor({ product, onClose, onSaved }: { product: Product | null; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState<Form>(() => product ? {
-    name: product.name, description: product.description, price: product.priceOnRequest ? '' : String(product.price), currency: product.currency,
-    category: product.category, subcategory: product.subcategory || '', imageUrl: product.imageUrl || '', stock: product.stock === null ? '' : String(product.stock),
-    delivery: product.delivery || '3 days', revisions: String(product.revisions ?? 2),
-    tags: product.searchTags || (product.tags || []).join(', '), priceMode: product.priceOnRequest ? 'request' : 'fixed',
-  } : blank)
+function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: Product | null; needs: Needs; ghana: boolean; onClose: () => void; onSaved: () => void }) {
+  const { convert } = useCurrency()
+  const [form, setForm] = useState<Form>(() => startForm(product))
   const [files, setFiles] = useState<UploadedFile[]>(product?.sampleFiles || [])
+  // What the form held when it opened: closing with changes asks first (2026-11-10)
+  const [initial] = useState(() => JSON.stringify([startForm(product), product?.sampleFiles || []]))
+  const dirty = JSON.stringify([form, files]) !== initial
   const [filesBusy, setFilesBusy] = useState(false)
   const [descTab, setDescTab] = useState<'write' | 'preview'>('write')
   const [tagsBusy, setTagsBusy] = useState(false)
@@ -245,16 +305,31 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
   const fee = Math.round(priceNum * STORE_FEE_PERCENT) / 100
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [msg, setMsg] = useState('')
+  const [saveNeeds, setSaveNeeds] = useState<Needs>([])
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof Form, v: string) => { setForm((f) => ({ ...f, [k]: v })); setErrors((e) => ({ ...e, [k]: '' })); setMsg('') }
+  // New products are priced in naira (2026-11-10). An older USDC or SOL product
+  // keeps its currency, or can move to naira.
+  const oldCrypto = !!product && product.currency !== 'NGN'
+  // Publishing needs verifying first; a product that is already live stays live
+  const publishBlocked = needs.length > 0 && !product?.isActive
+  // Ghana sellers can type the price in cedis: it's saved in naira (what buyers pay
+  // from their wallet) at today's rate. No rate yet: naira only.
+  const nairaPerCedi = ghana && form.currency === 'NGN' ? convert(1, 'GHS', 'NGN') : 0
+  const [cedis, setCedis] = useState('')
 
+  const tryClose = () => {
+    if (saving) return
+    if (dirty && !window.confirm('Discard your changes? What you typed here will be lost.')) return
+    onClose()
+  }
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !saving) onClose() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') tryClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, saving])
+  })
 
   const upload = async (f?: File) => {
     if (!f) return
@@ -268,14 +343,21 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
     if (!list?.length) return
     const room = MAX_FILES - files.length
     if (room <= 0) { setMsg(`Up to ${MAX_FILES} files`); return }
-    setFilesBusy(true); setMsg('')
-    try {
-      for (const f of Array.from(list).slice(0, room)) {
+    setFilesBusy(true); setMsg(''); setErrors((e) => ({ ...e, files: '' }))
+    // One file at a time: a file that fails doesn't stop the others (2026-11-10)
+    let added = 0
+    const failed: string[] = []
+    for (const f of Array.from(list).slice(0, room)) {
+      try {
         const up = await uploadFile(f, 'store-file')
         setFiles((cur) => [...cur, up].slice(0, MAX_FILES))
-      }
-      if (list.length > room) setMsg(`Only ${MAX_FILES} files per product. The rest were left out.`)
-    } catch (e: any) { setMsg(e?.message || 'Upload failed') }
+        added++
+      } catch (e: any) { failed.push(`${f.name} (${e?.message || 'upload failed'})`) }
+    }
+    const notes: string[] = []
+    if (failed.length) notes.push(`${added} uploaded, ${failed.length} failed: ${failed.join('; ')}.`)
+    if (list.length > room) notes.push(`Only ${MAX_FILES} files per product. The rest were left out.`)
+    if (notes.length) setMsg(notes.join(' '))
     setFilesBusy(false)
     if (sampleRef.current) sampleRef.current.value = ''
   }
@@ -293,14 +375,17 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
 
   const save = async (status: 'ACTIVE' | 'DRAFT') => {
     const errs: Record<string, string> = {}
-    const price = Number(form.price)
+    // Naira to the kobo (the server rounds the same way)
+    const price = form.currency === 'NGN' ? Math.round(Number(form.price) * 100) / 100 : Number(form.price)
     if (form.name.trim().length < 3) errs.name = 'At least 3 characters'
     if (form.description.trim().length < 10) errs.description = 'Describe what the buyer gets (10+ characters)'
     if (onRequest) { /* no price needed */ }
     else if (!(price > 0)) errs.price = 'Enter a price'
-    else if (form.currency === 'NGN' && price < MIN_NGN) errs.price = `Minimum ₦${MIN_NGN}`
+    // Like the server: an older product under ₦100 keeps its price until it changes
+    // or the product goes live again
+    else if (form.currency === 'NGN' && price < MIN_NGN && (!product || price !== product.price || product.currency !== 'NGN' || product.priceOnRequest || (status === 'ACTIVE' && !product.isActive))) errs.price = `Minimum ₦${MIN_NGN}`
     if (form.stock !== '' && !(Number.isInteger(Number(form.stock)) && Number(form.stock) >= 0)) errs.stock = 'Whole number, or leave empty'
-    if (Object.keys(errs).length) { setErrors(errs); return }
+    if (Object.keys(errs).length) { setErrors(errs); setMsg('Check the highlighted fields.'); return }
 
     const words = form.tags.split(',').map((t) => t.trim()).filter(Boolean)
     const body = {
@@ -312,24 +397,35 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
       revisions: Number(form.revisions), tags: words.filter((t) => t.length <= 30).slice(0, 8), searchTags: form.tags.trim().slice(0, 200) || null,
       sampleFiles: files, status,
     }
-    setSaving(true); setMsg('')
+    setSaving(true); setMsg(''); setSaveNeeds([])
     try {
       if (product) await apiRequest(`/store/products/${product.id}`, { method: 'PATCH', body: JSON.stringify(body) })
       else await apiRequest('/store/products', { method: 'POST', body: JSON.stringify(body) })
       onSaved()
     } catch (e: any) {
-      setMsg(e?.message === 'Validation failed' ? 'Check the highlighted fields.' : e?.message || 'Could not save')
+      // The server's field errors ([{ field, message }]) highlight those fields
+      const fieldErrs: Record<string, string> = {}
+      let unmapped = false
+      for (const x of Array.isArray(e?.errors) ? e.errors : []) {
+        if (!x?.field) continue
+        const k = FIELD_OF[String(x.field).split('.')[0]]
+        if (!k) unmapped = true
+        else if (x.message && !fieldErrs[k]) fieldErrs[k] = String(x.message).replace(/^String /, '')
+      }
+      setErrors(fieldErrs)
+      setMsg(Object.keys(fieldErrs).length && !unmapped ? 'Check the highlighted fields.' : e?.message || 'Could not save')
+      setSaveNeeds(needsOf(e))
     }
     setSaving(false)
   }
 
   const cats = CATEGORIES.includes(form.category) ? CATEGORIES : [form.category, ...CATEGORIES]
   return (
-    <div className="up-modal ms2-modal" onClick={() => !saving && onClose()}>
+    <div className="up-modal ms2-modal" onClick={tryClose}>
       <div role="dialog" aria-modal="true" aria-labelledby="ms2-h" onClick={(e) => e.stopPropagation()} className="ms2-form">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 id="ms2-h">{product ? 'Edit product' : 'Add product'}</h3>
-          <button className="x" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
+          <button className="x" aria-label="Close" onClick={tryClose}><i className="ti ti-x" /></button>
         </div>
 
         <label className="ep-field"><span>Title</span><input className="hr-input" maxLength={120} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Logo design: 3 concepts" aria-invalid={!!errors.name} />{errors.name && <em>{errors.name}</em>}</label>
@@ -358,14 +454,33 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
 
         <div className="hr-row">
           {!onRequest && (
-            <label className="ep-field"><span>Price</span>
+            <label className="ep-field"><span>{form.currency === 'NGN' ? 'Price (₦)' : 'Price'}</span>
               <div style={{ display: 'flex', gap: 6 }}>
-                <select value={form.currency} onChange={(e) => set('currency', e.target.value)} style={{ width: 92, flexShrink: 0 }} aria-label="Currency">
-                  <option value="NGN">₦ NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
-                </select>
-                <input className="hr-input" inputMode="decimal" value={form.price} onChange={(e) => set('price', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="5000" aria-invalid={!!errors.price} />
+                {oldCrypto && (
+                  <select value={form.currency} onChange={(e) => { set('currency', e.target.value); setCedis('') }} style={{ width: 92, flexShrink: 0 }} aria-label="Currency">
+                    <option value={product!.currency}>{product!.currency}</option><option value="NGN">₦ NGN</option>
+                  </select>
+                )}
+                <input className="hr-input" inputMode="decimal" value={form.price} onChange={(e) => {
+                  // Naira: up to 2 decimals (kobo)
+                  const v = e.target.value.replace(/[^0-9.]/g, '')
+                  set('price', form.currency === 'NGN' ? v.replace(/^(\d*\.?\d{0,2}).*$/, '$1') : v); setCedis('')
+                }} placeholder="5000" aria-invalid={!!errors.price} aria-label={form.currency === 'NGN' ? 'Price in naira' : `Price in ${form.currency}`} />
               </div>
-              {errors.price && <em>{errors.price}</em>}
+              {errors.price ? <em>{errors.price}</em>
+                : oldCrypto && form.currency !== 'NGN' ? <small>New products are priced in naira. You can keep this price in {form.currency}, or switch it to naira.</small>
+                  : STORE_FEE_PERCENT === 0 ? <small>OgaPay takes no fee on store sales: the buyer pays your price and you get all of it.</small> : null}
+            </label>
+          )}
+          {!onRequest && nairaPerCedi > 0 && (
+            <label className="ep-field"><span>Or type it in cedis (GH₵)</span>
+              <input className="hr-input" inputMode="decimal" value={cedis} placeholder={priceNum > 0 ? formatCedi(priceNum / nairaPerCedi).replace('GH₵', '') : '50'} aria-label="Price in cedis" onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.]/g, '').replace(/^(\d*\.?\d{0,2}).*$/, '$1')
+                setCedis(v)
+                // Saved in naira, rounded to the naira, at today's rate
+                set('price', Number(v) > 0 ? String(Math.round(Number(v) * nairaPerCedi)) : '')
+              }} />
+              <small>{priceNum > 0 ? `About ${formatCedi(priceNum / nairaPerCedi)} today. ` : ''}Buyers pay in naira from their OgaPay wallet, so the cedi amount moves a little with the rate.</small>
             </label>
           )}
           <label className="ep-field"><span>Category</span>
@@ -377,11 +492,13 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
         </div>
         {!onRequest && (
           <>
-            <div className="ms2-split" aria-live="polite">
-              <div><span>You receive per sale</span><b>{money(priceNum, form.currency)}</b></div>
-              <div><span>Buyer pays, incl. fee</span><b>{money(priceNum + fee, form.currency)}</b></div>
-              <small>OgaPay takes no fee on store sales right now, so the buyer pays your price and you get all of it.</small>
-            </div>
+            {/* With no fee both numbers were the same, so only the line under the price shows (2026-11-10) */}
+            {STORE_FEE_PERCENT > 0 && (
+              <div className="ms2-split" aria-live="polite">
+                <div><span>You receive per sale</span><b>{money(priceNum, form.currency)}</b></div>
+                <div><span>Buyer pays, incl. fee</span><b>{money(priceNum + fee, form.currency)}</b></div>
+              </div>
+            )}
             <label className="ep-field"><span>Subcategory (optional)</span><input className="hr-input" maxLength={60} value={form.subcategory} onChange={(e) => set('subcategory', e.target.value)} placeholder="e.g. Logos" /></label>
           </>
         )}
@@ -405,8 +522,8 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
             Search tags (optional)
             <button type="button" className="up-btn" style={{ height: 36 }} disabled={tagsBusy} onClick={makeTags}><i className="ti ti-sparkles" /> {tagsBusy ? 'Making…' : 'Generate tags with AI'}</button>
           </span>
-          <input className="hr-input" maxLength={200} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="logo, branding, flyer" aria-label="Search tags" />
-          <small>Words buyers might search for, separated by commas. {form.tags.length}/200</small>
+          <input className="hr-input" maxLength={200} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="logo, branding, flyer" aria-label="Search tags" aria-invalid={!!errors.tags} />
+          {errors.tags ? <em>{errors.tags}</em> : <small>Words buyers might search for, separated by commas. {form.tags.length}/200</small>}
         </div>
 
         <div className="ep-field">
@@ -428,26 +545,28 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
             </button>
             <input ref={sampleRef} type="file" multiple hidden accept="image/*,audio/*,video/mp4,video/webm,video/quicktime,application/pdf,.txt,.csv,.md,text/plain,text/csv,text/markdown" onChange={(e) => addFiles(e.target.files)} />
           </div>
-          <small>Up to {MAX_FILES} files, {MAX_FILE_MB} MB each: images, audio, video, PDF, TXT, CSV or Markdown. Buyers can open them before paying.</small>
+          {errors.files ? <em>{errors.files}</em> : <small>Up to {MAX_FILES} files, {MAX_FILE_MB} MB each: images, audio, video, PDF, TXT, CSV or Markdown. Buyers can open them before paying.</small>}
         </div>
 
         <div className="ep-field">
           <span>Thumbnail</span>
           <div className="ms2-img">
-            <div className="ms2-thumb">{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <i className="ti ti-photo" />}</div>
+            <div className="ms2-thumb">{form.imageUrl ? <img src={sized(form.imageUrl, 96)} alt="" /> : <i className="ti ti-photo" />}</div>
             <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : form.imageUrl ? 'Replace' : 'Upload image'}</button>
             {form.imageUrl && <button type="button" className="up-btn" onClick={() => set('imageUrl', '')}>Remove</button>}
           </div>
-          <small>Wide pictures work best (16:10). It shows on the product card.</small>
+          {errors.imageUrl ? <em>{errors.imageUrl}</em> : <small>Wide pictures work best (16:10). It shows on the product card.</small>}
           <div style={{ display: 'none' }}>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
           </div>
         </div>
 
         {msg && <div className="up-note err" role="alert">{msg}</div>}
+        {(publishBlocked || saveNeeds.length > 0) && <div style={{ marginTop: 12 }}><VerifyToSell needs={publishBlocked ? needs : saveNeeds} /></div>}
         <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-          <button className="up-btn" disabled={saving || uploading || filesBusy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
-          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
+          {/* Not while files upload or tags are being made: they'd be left out */}
+          <button className="up-btn" disabled={saving || uploading || filesBusy || tagsBusy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
+          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy || tagsBusy || publishBlocked} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
         </div>
       </div>
     </div>
