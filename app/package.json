@@ -21,7 +21,9 @@
     "test:tasks-load": "node scripts/tests/tasksload.test.cjs",
     "test:welcome": "node scripts/tests/welcome.test.cjs",
     "test:welcome-flow": "node scripts/tests/welcome-flow.test.cjs",
-    "test:support-ticket-link": "node scripts/tests/support-ticket-link.test.cjs"
+    "test:support-ticket-link": "node scripts/tests/support-ticket-link.test.cjs",
+    "test:profile-page": "node scripts/tests/profile-page.test.cjs",
+    "test:profile-meta": "node scripts/tests/profile-meta.test.mjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",

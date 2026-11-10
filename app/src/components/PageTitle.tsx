@@ -62,5 +62,13 @@ export default function PageTitle() {
       || (path.startsWith('/settings/') ? 'Settings' : path.startsWith('/admin/') ? 'Admin' : null)
     document.title = name ? `${name} | OgaPay` : HOME
   }, [pathname])
+  // The direct-hire form is a step, not a page to find in search (2026-11-10)
+  useEffect(() => {
+    if (!/^\/user\/[^/]+\/hire\/?$/.test(pathname)) return
+    const m = document.createElement('meta')
+    m.name = 'robots'; m.content = 'noindex'
+    document.head.appendChild(m)
+    return () => { m.remove() }
+  }, [pathname])
   return null
 }
