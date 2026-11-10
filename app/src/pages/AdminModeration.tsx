@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import OrderBrief from '../components/OrderBrief'
 import { apiRequest } from '../lib/api'
 import RateWork from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
@@ -233,6 +234,8 @@ export default function AdminModeration() {
                     {o.deliveredAt && <span><i className="ti ti-package" /> marked delivered</span>}
                   </div>
                   <p className="mod-reason">"{o.disputeReason}"</p>
+                  {/* What the buyer asked for, saved with the payment (2026-11-10) */}
+                  <OrderBrief brief={o.brief} files={o.briefFiles || []} />
                 </div>
                 <div className="mod-actions">
                   <button className="btn-approve" onClick={() => settle(o, 'RELEASE')} disabled={busy === o.id}>

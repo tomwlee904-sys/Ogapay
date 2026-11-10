@@ -9,7 +9,7 @@ import { useWalletBalance } from '../context/WalletBalanceContext'
 import { API_BASE, apiRequest, getAccessToken, invalidateInFlight } from '../lib/api'
 import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
 import { sized } from '../lib/img'
-import { uploadImage } from '../lib/upload'
+import { ORDER_FILE_ACCEPT, ORDER_FILE_MB, uploadOrderFile, type OrderFile } from '../lib/upload'
 import { newKey } from '../lib/wallet'
 import '../styles/checkout.css'
 
@@ -18,9 +18,10 @@ import '../styles/checkout.css'
 //    product, the seller and the order total.
 //  - Payment: from the buyer's OgaPay wallet in the item's currency (there's no
 //    other payment path); short of money, "Add money" opens the wallet top-up.
-// The brief and attachment links become the first message in the buyer's
-// private chat with the seller once the order is paid. OgaPay's own items (perks)
-// have no seller, so they skip straight to payment.
+// 2026-11-10: the brief and attachments are sent with Pay and saved on the order
+// in the same step as the payment (the server also posts them in the chat), so
+// they can't be lost. Attachments go to private storage, never public links.
+// OgaPay's own items (perks) have no seller, so they skip straight to payment.
 
 type Item = {
   id: string; title: string; description: string; price: number; currency: Currency
@@ -30,7 +31,8 @@ type Item = {
 }
 type Seller = { username: string; name: string; avatarUrl: string | null; bio: string | null; rating: number; reviews: number }
 type MyJob = { id: string; title: string; status: string; expiresAt?: string | null; hiredWorkerId?: string | null }
-type Upload = { name: string; url: string }
+// A file still uploading, or one that failed (kept so it can be tried again)
+type Pending = { id: string; file: File; pct: number; error?: string }
 
 // OgaPay's own items (no seller): what each one does, and what's permanent
 const PERKS: Record<string, { kind: string; what: string; permanent?: boolean }> = {
@@ -40,16 +42,21 @@ const PERKS: Record<string, { kind: string; what: string; permanent?: boolean }>
   BOOST: { kind: 'TASK_BOOST', what: 'Your chosen open job is listed first on the jobs page for 24 hours, with a Boosted tag.' },
 }
 
-const BRIEF_MAX = 4000 // the chat message holds 5,000 characters, links included
+const BRIEF_MAX = 10000 // saved on the order (2026-11-10)
 const MAX_FILES = 5
+const PARALLEL = 2 // uploads at a time
 
 const money = (n: number, c: Currency) =>
   `${CURRENCY_SYMBOLS[c] || ''}${n.toLocaleString('en-US', { minimumFractionDigits: c === 'NGN' ? 0 : 2, maximumFractionDigits: c === 'SOL' ? 4 : 2 })}${c === 'NGN' ? '' : ' ' + c}`
 
 // The brief survives a reload or a trip back to the product page
 const draftKey = (id: string) => `ogapay_order_draft_${id}`
-const readDraft = (id: string): { brief: string; files: Upload[] } => {
-  try { const d = JSON.parse(sessionStorage.getItem(draftKey(id)) || ''); return { brief: String(d.brief || ''), files: Array.isArray(d.files) ? d.files : [] } } catch { return { brief: '', files: [] } }
+// (files saved by an older version had public links and no path: dropped)
+const readDraft = (id: string): { brief: string; files: OrderFile[] } => {
+  try {
+    const d = JSON.parse(sessionStorage.getItem(draftKey(id)) || '')
+    return { brief: String(d.brief || ''), files: Array.isArray(d.files) ? d.files.filter((f: any) => typeof f?.path === 'string').slice(0, MAX_FILES) : [] }
+  } catch { return { brief: '', files: [] } }
 }
 
 function Steps({ step, itemId, official }: { step: 'details' | 'pay'; itemId: string; official?: boolean }) {
@@ -85,8 +92,8 @@ export default function StorePayment() {
   const [more, setMore] = useState(false)
   // Order details
   const [brief, setBrief] = useState(() => readDraft(id).brief)
-  const [files, setFiles] = useState<Upload[]>(() => readDraft(id).files)
-  const [uploading, setUploading] = useState(false)
+  const [files, setFiles] = useState<OrderFile[]>(() => readDraft(id).files)
+  const [pending, setPending] = useState<Pending[]>([])
   const [fileError, setFileError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   // OgaPay's own items
@@ -187,44 +194,51 @@ export default function StorePayment() {
   const revisions = item.metadata?.revisions ?? 3
   const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
 
-  const addFiles = async (list: FileList | null) => {
-    if (!list?.length) return
-    setFileError('')
-    const room = MAX_FILES - files.length
-    const pick = Array.from(list).slice(0, room)
-    if (list.length > room) setFileError(`Up to ${MAX_FILES} files.`)
-    setUploading(true)
-    for (const f of pick) {
-      if (f.size > 10 * 1024 * 1024) { setFileError(`${f.name} is over 10 MB.`); continue }
-      try {
-        const url = await uploadImage(f, 'task-attachments')
-        setFiles((prev) => [...prev, { name: f.name, url }])
-      } catch (e: any) {
-        setFileError(`${f.name}: ${e?.message || 'upload failed'}`)
+  // Each file uploads on its own with its progress, two at a time. A failed one
+  // stays in the list with its reason, to try again or remove (2026-11-10).
+  const uploading = pending.some((p) => !p.error)
+  const runUploads = async (jobs: Pending[]) => {
+    const queue = [...jobs]
+    const worker = async () => {
+      for (let job = queue.shift(); job; job = queue.shift()) {
+        const { id: jobId, file } = job
+        try {
+          const saved = await uploadOrderFile(file, (pct) => setPending((prev) => prev.map((p) => (p.id === jobId ? { ...p, pct } : p))))
+          setPending((prev) => prev.filter((p) => p.id !== jobId))
+          setFiles((prev) => (prev.length < MAX_FILES ? [...prev, saved] : prev))
+        } catch (e: any) {
+          setPending((prev) => prev.map((p) => (p.id === jobId ? { ...p, error: e?.message || 'Upload failed' } : p)))
+        }
       }
     }
-    setUploading(false)
+    await Promise.all(Array.from({ length: PARALLEL }, worker))
+  }
+  const addFiles = (list: FileList | null) => {
+    if (!list?.length) return
+    setFileError('')
+    const room = MAX_FILES - files.length - pending.length
+    const all = Array.from(list)
+    if (all.length > room) setFileError(`Up to ${MAX_FILES} files.`)
+    const big = all.slice(0, Math.max(0, room)).filter((f) => f.size > ORDER_FILE_MB * 1024 * 1024)
+    if (big.length) setFileError(`${big.map((f) => f.name).join(', ')} ${big.length === 1 ? 'is' : 'are'} over ${ORDER_FILE_MB} MB.`)
+    const jobs = all.slice(0, Math.max(0, room)).filter((f) => f.size <= ORDER_FILE_MB * 1024 * 1024)
+      .map((file) => ({ id: newKey(), file, pct: 0 }))
     if (fileRef.current) fileRef.current.value = ''
+    if (!jobs.length) return
+    setPending((prev) => [...prev, ...jobs])
+    runUploads(jobs)
+  }
+  const retry = (p: Pending) => {
+    const job = { ...p, pct: 0, error: undefined }
+    setPending((prev) => prev.map((x) => (x.id === p.id ? job : x)))
+    runUploads([job])
   }
 
-  // The brief and attachments, as the first message to the seller
-  const briefMessage = () => {
-    const parts = [`Order brief for "${item.title}":`]
-    if (brief.trim()) parts.push(brief.trim())
-    if (files.length) parts.push('Attachments:\n' + files.map((f) => `${f.name}: ${f.url}`).join('\n'))
-    return parts.join('\n\n')
-  }
-
-  // After a placed order: send the brief, then open the order page
+  // After a placed order: the brief went with it, so open the order page
   const finish = async (order: { id: string; conversationId?: string | null }) => {
     refresh()
-    // Send the brief; if that fails the order still stands and they can send it in the chat
-    let briefSent = true
-    if ((brief.trim() || files.length) && order.conversationId) {
-      briefSent = await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: order.conversationId, content: briefMessage() }) }).then(() => true, () => false)
-    }
     try { sessionStorage.removeItem(draftKey(item.id)) } catch { /* storage off */ }
-    navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId, briefSent: (brief.trim() || files.length) ? briefSent : undefined } })
+    navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId } })
   }
 
   // The price or currency changed since the page loaded (409 PRICE_CHANGED): nothing
@@ -297,7 +311,11 @@ export default function StorePayment() {
         setDone({ message: json.message || 'Done. It has taken effect.', taskId: json.data?.perk?.taskId })
         return
       }
-      const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, { method: 'POST', body: JSON.stringify({ quantity: 1, ...agreed }) })
+      // The brief and files are saved on the order with the payment (2026-11-10)
+      const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, {
+        method: 'POST',
+        body: JSON.stringify({ quantity: 1, ...agreed, ...(brief.trim() && { brief: brief.trim() }), ...(files.length && { attachments: files }) }),
+      })
       await finish(order)
     } catch (e: any) {
       if (e?.status === 409 && (e.code === 'PRICE_CHANGED' || e.data?.price != null)) { onPriceChanged(e.data); setPaying(false); return }
@@ -396,28 +414,40 @@ export default function StorePayment() {
                   <h2 className="sc-h2">Attachments</h2>
                   <span className="sc-opt">{files.length} / {MAX_FILES}</span>
                 </div>
-                <p className="sc-lead" style={{ marginTop: 4 }}>Up to {MAX_FILES} files, 10 MB each.</p>
+                <p className="sc-lead" style={{ marginTop: 4 }}>Up to {MAX_FILES} files, {ORDER_FILE_MB} MB each.</p>
                 <div className="sc-drop" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files) }}>
                   <i className="ti ti-upload" aria-hidden="true" />
                   <span>Drop files here or choose them from your device.</span>
-                  <button type="button" className="ui-btn ui-btn-ghost" disabled={uploading || files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}>
-                    <i className="ti ti-paperclip" aria-hidden="true" /> {uploading ? 'Uploading…' : 'Choose files'}
+                  <button type="button" className="ui-btn ui-btn-ghost" disabled={files.length + pending.length >= MAX_FILES} onClick={() => fileRef.current?.click()}>
+                    <i className="ti ti-paperclip" aria-hidden="true" /> Choose files
                   </button>
-                  <small>Images and PDF files.</small>
-                  <input ref={fileRef} type="file" hidden multiple accept="image/*,application/pdf" onChange={(e) => addFiles(e.target.files)} />
+                  <small>Photos, voice notes, videos, PDF, Word, Excel or text files.</small>
+                  <input ref={fileRef} type="file" hidden multiple accept={ORDER_FILE_ACCEPT} onChange={(e) => addFiles(e.target.files)} />
                 </div>
                 {fileError && <p className="sc-error" role="alert">{fileError}</p>}
-                {files.length > 0 && (
+                {(files.length > 0 || pending.length > 0) && (
                   <ul className="sc-files">
                     {files.map((f) => (
-                      <li key={f.url}>
+                      <li key={f.path}>
                         <i className="ti ti-file" aria-hidden="true" /><span>{f.name}</span>
-                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.url !== f.url))}><i className="ti ti-x" aria-hidden="true" /></button>
+                        <small className="sc-file-ok"><i className="ti ti-check" aria-hidden="true" /> Uploaded</small>
+                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.path !== f.path))}><i className="ti ti-x" aria-hidden="true" /></button>
+                      </li>
+                    ))}
+                    {pending.map((p) => (
+                      <li key={p.id} className={p.error ? 'err' : undefined}>
+                        <i className={`ti ${p.error ? 'ti-alert-circle' : 'ti-loader-2 sc-spin'}`} aria-hidden="true" />
+                        <span title={p.error || undefined}>{p.file.name}{p.error ? `: ${p.error}` : ''}</span>
+                        {p.error
+                          ? <button type="button" className="sc-file-retry" onClick={() => retry(p)}>Try again</button>
+                          : <small aria-live="polite">{p.pct}%</small>}
+                        {p.error && <button type="button" aria-label={`Remove ${p.file.name}`} onClick={() => setPending((x) => x.filter((y) => y.id !== p.id))}><i className="ti ti-x" aria-hidden="true" /></button>}
+                        {!p.error && <span className="sc-file-bar" aria-hidden="true"><span style={{ width: `${p.pct}%` }} /></span>}
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="sc-note"><i className="ti ti-lock" aria-hidden="true" /> Your brief and attachments go to the seller in your private chat once you pay.</p>
+                <p className="sc-note"><i className="ti ti-lock" aria-hidden="true" /> Your brief and attachments are saved privately on your order when you pay. Only you, the seller and OgaPay support can see them.</p>
               </section>
             </div>
 
@@ -430,7 +460,7 @@ export default function StorePayment() {
                 <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: OgaPay holds your payment until you confirm you received the order.</p>
                 {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
                 <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => setParams({ step: 'pay' })}>
-                  Proceed to payment <i className="ti ti-arrow-right" aria-hidden="true" />
+                  {uploading ? 'Uploading your files…' : <>Proceed to payment <i className="ti ti-arrow-right" aria-hidden="true" /></>}
                 </button>
               </section>
             </aside>

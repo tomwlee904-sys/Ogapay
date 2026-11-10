@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import OrderBrief, { type BriefFile } from '../components/OrderBrief'
 import { apiRequest } from '../lib/api'
 import { sized } from '../lib/img'
 import { canReviewOrder, orderBadge, orderMoney, type StoreOrder } from './StoreOrders'
@@ -12,12 +13,14 @@ import '../styles/my-store.css'
 // order itself is always loaded from the server, so a made-up or someone
 // else's id shows "Order not found" instead of a false confirmation. The order
 // keeps the product's name, price and picture, so it still shows what was
-// bought after the seller deletes the product.
-type Done = { title?: string; seller?: string; conversationId?: string; briefSent?: boolean }
+// bought after the seller deletes the product. 2026-11-10: the buyer's brief
+// and files are saved on the order, and shown here to the buyer and the seller.
+type Done = { title?: string; seller?: string; conversationId?: string }
 type Order = StoreOrder & {
   role: 'BUYER' | 'SELLER'
   seller: { username: string; name: string } | null
   buyer: { username: string; name: string } | null
+  briefFiles?: BriefFile[]
 }
 
 export default function OrderConfirmation() {
@@ -67,6 +70,7 @@ export default function OrderConfirmation() {
   const justPlaced = buyer && !!s.title && order.status === 'PENDING'
   const badge = orderBadge(order)
   const p = order.product
+  const hasBrief = !!order.brief || !!order.briefFiles?.length
 
   return (
     <Layout>
@@ -78,13 +82,10 @@ export default function OrderConfirmation() {
             <p className="ui-sub">
               {other ? <>@{other.username} has been told about your order.</> : <>The seller has been told about your order.</>}
               {' '}OgaPay holds your payment until you confirm you received it, or 3 days after the seller marks it delivered.
-              {s.briefSent === true ? ' Your brief and attachments are in your chat with them.' : ' Use the chat to share any details they need.'}
+              {hasBrief ? ' Your brief and files are saved on this order and sent to them in your chat.' : ' Use the chat to share any details they need.'}
             </p>
           ) : (
             <p className="ui-sub">Status: <span className={`ms2-badge ${badge.cls}`}>{badge.label}</span></p>
-          )}
-          {justPlaced && s.briefSent === false && (
-            <p className="sc-note warn" style={{ justifyContent: 'center' }}><i className="ti ti-info-circle" aria-hidden="true" /> We couldn't send your brief. Please paste it into the chat with the seller.</p>
           )}
 
           <div className="ui-card ui-card-pad">
@@ -103,6 +104,12 @@ export default function OrderConfirmation() {
             {/* available: false is also a product the seller only hid, so don't say removed (2026-11-08) */}
             {p.available === false && <p className="ui-sub" style={{ marginTop: 8, fontSize: 13 }}>This product isn't listed in the store right now. Your order and its payment protection are not affected.</p>}
           </div>
+
+          {hasBrief && (
+            <div style={{ marginTop: 12 }}>
+              <OrderBrief label={buyer ? 'Your brief' : "Buyer's brief"} brief={order.brief} files={order.briefFiles || []} />
+            </div>
+          )}
 
           <div className="ui-actions">
             <Link className="ui-btn ui-btn-dark ui-btn-lg" to={chat}><i className="ti ti-message-circle" aria-hidden="true" /> {other ? `Message @${other.username}` : 'Open messages'}</Link>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import OrderBrief from '../components/OrderBrief'
 import { apiRequest } from '../lib/api'
 import { uploadImage, uploadFile, MAX_FILE_MB, type UploadedFile } from '../lib/upload'
 import { renderBlog } from '../lib/blogMarkdown'
@@ -210,10 +211,13 @@ export default function MyStore() {
               {o.status === 'DISPUTED' && (
                 <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
               )}
+              {/* What the buyer asked for, saved with the payment (2026-11-10) */}
+              <OrderBrief brief={o.brief} fileCount={o.briefFileCount || 0} orderId={o.id} />
               <div className="row-acts">
                 <span className={`ms2-badge ${orderBadge(o).cls}`}>{orderBadge(o).label}</span>
                 <span style={{ flex: 1 }} />
                 {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
+                <Link className="up-btn" to={`/orders/${o.id}`}>Order details</Link>
                 {o.held && <button className="up-btn" disabled={busy === o.id} onClick={() => refundOrder(o)}>Cancel and refund</button>}
                 {o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'IN_PROGRESS')}>Start</button>}
                 {(o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}>Mark delivered</button>}

@@ -20,6 +20,8 @@ export type StoreOrder = {
   disputedAt: string | null; disputeReason: string | null
   // When an order still not marked delivered is refunded to the buyer (2026-11-08)
   autoRefundAt?: string | null
+  // The buyer's brief, saved with the payment, and how many files came with it (2026-11-10)
+  brief?: string | null; briefFileCount?: number
   // available: false once the seller deletes the product; the order keeps its name, price and picture
   product: { id: string; name: string; imageUrl: string | null; price?: number; available?: boolean }
   conversationId: string | null
@@ -77,9 +79,15 @@ export default function StoreOrders() {
     } catch (e: any) { setError(e?.message || 'Something went wrong. Try again.') }
     setBusy('')
   }
+  // 2026-11-10: only once the seller marks it delivered (the server checks too).
+  // On a reported order it drops the report and pays the seller.
   const confirmReceived = (o: Bought) => {
-    if (!window.confirm(`Release ${orderMoney(o.total, o.currency)} to @${o.seller?.username || 'the seller'}? Only confirm if you received what you paid for. This can't be undone.`)) return
-    act(o, 'confirm', 'Thanks. The payment is now with the seller.')
+    const to = `@${o.seller?.username || 'the seller'}`
+    const ask = o.status === 'DISPUTED'
+      ? `Withdraw your report and release ${orderMoney(o.total, o.currency)} to ${to}? Only do this if the problem is sorted. This can't be undone.`
+      : `Release ${orderMoney(o.total, o.currency)} to ${to}? Only confirm if you received what you paid for. This can't be undone.`
+    if (!window.confirm(ask)) return
+    act(o, 'confirm', o.status === 'DISPUTED' ? 'Report withdrawn. The payment is now with the seller.' : 'Thanks. The payment is now with the seller.')
   }
   const cancel = (o: Bought) => {
     if (!window.confirm(`Cancel your order for "${o.product.name}"? ${orderMoney(o.total, o.currency)} goes back to your wallet.`)) return
@@ -108,7 +116,7 @@ export default function StoreOrders() {
           <div>
             <b>How buyer protection works</b>
             <p>
-              The seller gets your payment when you press <b>Confirm received</b>, or 3 days after they mark the order delivered.
+              Once the seller marks your order delivered, they get your payment when you press <b>Confirm received</b>, or 3 days later.
               If something is wrong, report a problem before then and the payment stays on hold while OgaPay looks into it.
               {Object.keys(heldTotal).length > 0 && <> Held for you now: <b>{Object.entries(heldTotal).map(([c, v]) => orderMoney(v, c)).join(' · ')}</b>.</>}
             </p>
@@ -153,7 +161,7 @@ export default function StoreOrders() {
                   <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>The seller marked this delivered. Confirm you received it, or report a problem before <b>{orderWhen(o.releaseAt)}</b>. After that the payment goes to the seller.</span></p>
                 )}
                 {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
-                  <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>{o.status === 'PENDING' ? 'Waiting for the seller to start. You can still cancel.' : 'The seller is working on it.'} Your payment is held until you confirm.{o.autoRefundAt && <> If it isn't marked delivered by <b>{orderWhen(o.autoRefundAt)}</b>, your money comes back to you.</>}</span></p>
+                  <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>{o.status === 'PENDING' ? 'Waiting for the seller to start. You can still cancel.' : 'The seller is working on it.'} Your payment is held until you confirm.{o.autoRefundAt && <> If it isn't marked delivered by <b>{orderWhen(o.autoRefundAt)}</b>, your money comes back to you.</>} <b>Never confirm before you have your order, even if the seller asks.</b></span></p>
                 )}
                 {o.status === 'DISPUTED' && (
                   <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>You reported: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Keep talking to the seller in your chat.</span></p>
@@ -179,7 +187,9 @@ export default function StoreOrders() {
                     {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message seller</Link>}
                     {o.held && o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => cancel(o)}>Cancel order</button>}
                     {o.held && o.status !== 'DISPUTED' && <button className="up-btn" disabled={busy === o.id} onClick={() => { setReporting(o.id); setReason('') }}>Report a problem</button>}
-                    {o.held && <button className="up-btn primary" disabled={busy === o.id} onClick={() => confirmReceived(o)}><i className="ti ti-check" /> Confirm received</button>}
+                    <Link className="up-btn" to={`/orders/${o.id}`}>Order details</Link>
+                    {o.held && o.status === 'DELIVERED' && <button className="up-btn primary" disabled={busy === o.id} onClick={() => confirmReceived(o)}><i className="ti ti-check" /> Confirm received</button>}
+                    {o.held && o.status === 'DISPUTED' && <button className="up-btn" disabled={busy === o.id} onClick={() => confirmReceived(o)}>Withdraw report and pay seller</button>}
                     {canReviewOrder(o) && o.seller && <Link className="up-btn" to={`/store/${o.product.id}#review`}><i className="ti ti-star" /> Leave a review</Link>}
                   </div>
                 )}
