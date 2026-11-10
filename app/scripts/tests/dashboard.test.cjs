@@ -264,6 +264,53 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('14a women-only starter: "Say your gender in Settings", tagged Set up; Nigeria-only still hidden', wo?.tag === 'Set up' && /Say your gender in Settings/.test(wo?.sub || '') && !v.starter.some((s) => s.title === 'Nigeria only starter'), v.starter);
   await p.close();
 
+  // 15. dash-10: more than 100 open jobs, starter jobs asked for apart
+  p = await open('busy');
+  v = await until(p, (s) => !!s.starterHead && !!s.firstTitle);
+  const starterCall = v.calls.find((x) => x.path === '/tasks' && /featured=1/.test(x.query));
+  ok('15a starter jobs are asked for with ?featured=1&eligible=1, signed in', !!starterCall && /eligible=1/.test(starterCall.query) && starterCall.auth === 'Bearer tok-kofi', v.calls.filter((x) => x.path === '/tasks'));
+  ok('15b "Your first job" is still the starter job he can take', v.firstTitle === 'Open starter', v.firstTitle);
+  await p.evaluate(() => document.querySelector('.db-fold').click());
+  v = await until(p, (s) => s.starter.length > 0);
+  const busyTitles = v.starter.map((s) => s.title);
+  ok('15c the starter list shows although 100 newer jobs fill the main list', busyTitles.includes('Open starter') && busyTitles.includes('Level 2 starter') && busyTitles.includes('Connect X starter'), busyTitles);
+  ok('15d the same filters apply (no Nigeria-only or women-only for Kofi)', !busyTitles.includes('Nigeria only starter') && !busyTitles.includes('Women only starter'), busyTitles);
+  await p.close();
+
+  // 16. A worker with 40 jobs done never sees starter jobs: no extra request
+  p = await open('vet');
+  v = await until(p, (s) => s.forYou.length > 0);
+  await sleep(300);
+  v = await view(p);
+  ok('16a no ?featured=1 request for someone past the starter jobs', !v.calls.some((x) => /featured=1/.test(x.query)), v.calls.filter((x) => x.path === '/tasks'));
+  await p.close();
+
+  // 17. ?featured=1 fails: the starter jobs in the main list still show, no error
+  p = await open('starterfail');
+  v = await until(p, (s) => !!s.starterHead);
+  await p.evaluate(() => document.querySelector('.db-fold').click());
+  v = await until(p, (s) => s.starter.length > 0);
+  ok('17a starter list falls back to the main job list', v.starter.some((s) => s.title === 'Open starter') && v.loadErr.length === 0, { starter: v.starter, err: v.loadErr });
+  await p.close();
+
+  // 18. dash-23: step buttons are at least 44px tall on phones (36px on desktop)
+  const css = ':root{--ctl-h-sm:36px;--r-ctl:10px;--ctl-h:44px}' + fs.readFileSync(path.join(SRC, 'styles/dashboard.css'), 'utf8');
+  const heights = async (pg) => pg.evaluate(() => [...document.querySelectorAll('.db-step-btn')].map((b) => ({ t: b.textContent.trim(), h: Math.round(b.getBoundingClientRect().height) })));
+  for (const c of ['unverified', 'kofi']) {
+    p = await open(c);
+    await p.addStyleTag({ content: css });
+    v = await until(p, (s) => (c === 'kofi' ? !!s.firstTitle : s.attn.length > 0));
+    const hs = await heights(p);
+    ok(`18 ${c}: every step button on a phone is at least 44px tall`, hs.length > 0 && hs.every((x) => x.h >= 44), hs);
+    if (c === 'unverified') {
+      await p.setViewport({ width: 1280, height: 900 });
+      await sleep(100);
+      const hd = await heights(p);
+      ok('18 desktop keeps the compact 36px buttons', hd.length > 0 && hd.every((x) => x.h === 36), hd);
+    }
+    await p.close();
+  }
+
   ok('no request left the test page', outside.length === 0, outside);
   await browser.close();
   fs.rmSync(dir, { recursive: true, force: true });

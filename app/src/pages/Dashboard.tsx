@@ -137,6 +137,17 @@ export default function Dashboard() {
     sharedGet<any[]>('/wallet/banks', 5000).then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
     return () => clearTimeout(timer)
   }, [load])
+  // Starter jobs asked for apart (?featured=1), only for someone who still sees
+  // them: inside the newest 100 jobs they vanished once more were open (dash-10).
+  // If this fails, the starter jobs found in the main list still show.
+  const [starterJobs, setStarterJobs] = useState<Job[] | null>(null)
+  const wantsStarter = !!me && (me.workerProfile?.tasksCompleted ?? 0) < STARTER_UNTIL
+  useEffect(() => {
+    if (!wantsStarter) return
+    apiRequest<Job[] | { tasks: Job[] }>('/tasks?featured=1&eligible=1&limit=100')
+      .then((d: any) => setStarterJobs((Array.isArray(d) ? d : d?.tasks || []).filter((j: Job) => j.featured)))
+      .catch(() => {})
+  }, [wantsStarter])
   const retry = (parts: Part[]) => {
     setRetrying(true)
     load(parts.filter((k) => failed[k])).finally(() => setRetrying(false))
@@ -183,16 +194,19 @@ export default function Dashboard() {
   const active = [...working, ...waiting]
   // Not your own jobs, and not ones you've already taken part in
   const taken = new Set((subs || []).map((s) => s.taskId))
+  // The job list plus the starter jobs asked for apart, each once
+  const starterSeen = new Set((starterJobs || []).map((j) => j.id))
+  const pool = [...(starterJobs || []), ...(jobs || []).filter((j) => !starterSeen.has(j.id))]
   // A similar job you've done (linked either way) can't be taken too
   const similarTaken = (j: Job) => (j.excludesTaskIds || []).some((id) => taken.has(id)) ||
-    (jobs || []).some((o) => taken.has(o.id) && (o.excludesTaskIds || []).includes(j.id))
+    pool.some((o) => taken.has(o.id) && (o.excludesTaskIds || []).includes(j.id))
   const jobsDone = me?.workerProfile?.tasksCompleted ?? 0
   const open = (j: Job) => j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended'
   // GENDER can be fixed only by someone who hasn't said theirs yet
   const fixableOnly = (j: Job) => j.eligible !== false || (!!j.whyNot?.length && j.whyNot.every((c) => FIXABLE.has(c) || (c === 'GENDER' && !me?.gender)))
   // Not while your work failed to load: without it we can't tell which jobs you took
   const starter = me && subs !== null && jobsDone < STARTER_UNTIL
-    ? (jobs || []).filter((j) => j.featured && open(j) && fixableOnly(j))
+    ? pool.filter((j) => j.featured && open(j) && fixableOnly(j))
     : []
   const starterIds = new Set(starter.map((j) => j.id))
   // "Jobs for you": only jobs you can take now, the kinds of work you've done
@@ -238,7 +252,7 @@ export default function Dashboard() {
   const simple = (j: Job) => !j.isContest && !j.isSelection && !j.requiredCommunityId && !j.communityId && (j.currency || 'NGN') === 'NGN'
     && open(j) && j.eligible !== false && !stepFor(j)
   const byPay = (a: Job, b: Job) => Number(b.reward || 0) - Number(a.reward || 0)
-  const firstPick = (jobs || []).filter((j) => simple(j) && j.featured).sort(byPay)[0]
+  const firstPick = pool.filter((j) => simple(j) && j.featured).sort(byPay)[0]
     || (jobs || []).filter((j) => simple(j) && Number(j.reward || 0) <= 2000).sort(byPay)[0]
   const firstActive = [...working, ...waiting][0]
   const showFirstJob = !!me && subs !== null && jobsDone === 0 && (!!firstActive || !!firstPick)

@@ -171,3 +171,10 @@
 .db-load-err strong { font-size: 15px; }
 .db-load-err span { font-size: 13px; color: var(--text2); }
 .db-load-err .db-step-btn { margin-top: 0; min-height: 40px; }
+
+/* Phones: Review, Open, Verify, Try again and the other step buttons are an easy
+   thumb tap (they were 36px); last in the file so it wins over the 40px ones */
+@media (max-width: 767px) {
+  .db-step-btn, .db-first-steps .db-step-btn, .db-load-err .db-step-btn { height: auto; min-height: 44px; padding: 0 14px; font-size: 13px; }
+  .db-intent-skip { min-height: 44px; }
+}
