@@ -262,7 +262,7 @@ export default function Footer() {
         </div>
 
         <div className="of-bottom">
-          <span>© {new Date().getFullYear()} OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria</span>
+          <span>© {new Date().getFullYear()} OGA-P INTEGRATED SERVICES LIMITED, Nigeria</span>
           <span className="of-built"><SolanaMark /> Built on Solana</span>
         </div>
       </div>

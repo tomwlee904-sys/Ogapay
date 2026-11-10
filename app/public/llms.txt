@@ -3,8 +3,8 @@
 > A Nigerian marketplace for paid tasks and freelance services. People earn by completing tasks or selling services; businesses post jobs and pay only for work they approve. Payments in Naira or USDC, held in escrow.
 
 Website: https://ogapay.app
-Operator: OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria
-Contact: support@ogapay.app
+Operator: OGA-P INTEGRATED SERVICES LIMITED, Nigeria
+Contact: support@ogapay.app, phone 0903 009 7844 (+234 903 009 7844)
 Official channels: https://x.com/Ogapayhq, https://t.me/ogapayhq (no other accounts speak for OgaPay)
 
 ## How it works

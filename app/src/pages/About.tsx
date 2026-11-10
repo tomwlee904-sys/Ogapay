@@ -24,6 +24,7 @@ const LINKS = [
   { icon: 'brand-x', label: 'X (Twitter)', value: '@Ogapayhq', href: 'https://x.com/Ogapayhq' },
   { icon: 'brand-telegram', label: 'Telegram', value: 't.me/ogapayhq', href: 'https://t.me/ogapayhq' },
   { icon: 'mail', label: 'Email', value: 'support@ogapay.app', href: 'mailto:support@ogapay.app' },
+  { icon: 'phone', label: 'Phone', value: '0903 009 7844', href: 'tel:+2349030097844' },
 ]
 
 export default function About() {
@@ -138,7 +139,7 @@ export default function About() {
         </section>
 
         <div className="ui-card ab2-foot">
-          <p>OgaPay is operated by OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria.</p>
+          <p>OgaPay is operated by OGA-P INTEGRATED SERVICES LIMITED, Nigeria.</p>
           <div className="ui-actions">
             <Link className="ui-btn ui-btn-ghost" to="/terms">Terms</Link>
             <Link className="ui-btn ui-btn-ghost" to="/privacy">Privacy</Link>
