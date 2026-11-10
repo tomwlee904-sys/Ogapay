@@ -208,8 +208,9 @@ export default function Dashboard() {
   const kycOk = kycTier >= 1
   // Verified by NIN or ID (backend wallet.service verifiedById). The bank account
   // check is Level 1 too and lets you withdraw, but the ₦1,000 first job bonus and
-  // sending money need NIN or ID: bank Level 1 used to show "Your ID is verified"
-  const byId = kycOk && me?.kyc?.provider !== 'bank-name' && me?.kyc?.idType !== 'BANK'
+  // sending money need NIN or ID: bank Level 1 used to show "Your ID is verified".
+  // Level 2 always counts (a bank member who later sent an ID keeps idType 'BANK')
+  const byId = kycOk && (kycTier >= 2 || (me?.kyc?.provider !== 'bank-name' && me?.kyc?.idType !== 'BANK'))
   // What stands between you and a starter job (null: you can do it now)
   const stepFor = (j: Job): { text: string; tag: string; order: number } | null => {
     const need = Number(j.minJobsDone) || 0
@@ -364,7 +365,7 @@ export default function Dashboard() {
       <ol className="db-first-steps">
         <li className={byId ? 'done' : ''}>
           <i className={`ti ${byId ? 'ti-circle-check' : 'ti-circle-number-1'}`} aria-hidden="true" />
-          <span>{byId ? 'Verified with your NIN or ID' : kycOk ? 'Bank check done, so you can withdraw. For the bonus, also verify with your NIN or a photo of your ID' : 'Verify with your NIN or a photo of your ID (free)'}</span>
+          <span>{byId ? 'Verified with your NIN or ID' : kycOk ? 'Bank check done, so you can withdraw. For the bonus, also send a photo of your ID (Level 2)' : 'Verify with your NIN or a photo of your ID (free)'}</span>
           {!byId && <Link className="db-step-btn" to="/settings/verification">Verify</Link>}
         </li>
         <li>
@@ -530,7 +531,7 @@ export default function Dashboard() {
             <Link to="/wallet" className="db-stat">
               <span>Your level</span>
               <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, verify with NIN or ID'}` : 'Verify to withdraw and send money'}</small>
+              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, send a photo of your ID (Level 2)'}` : 'Verify to withdraw and send money'}</small>
             </Link>
             <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? (meFailed ? '–' : '…')}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>

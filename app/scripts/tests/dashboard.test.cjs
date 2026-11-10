@@ -172,10 +172,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('6k not a quick fix (blue tick, higher OgaScore, more followers): hidden', !titles.some((t) => /Blue tick|High score|Big audience/.test(t)), titles);
   ok('6l "Your first job" never picks a job that needs setting up first', v.firstTitle !== 'Connect X starter', v.firstTitle);
   ok('6d a new member sees the two starter cards, not "Jobs for you"', v.starts.includes('Find your first job') && v.forYou.length === 0, v.starts);
-  ok('6e dash-6: bank Level 1 is NOT shown as "ID verified"', !/Your ID is verified/.test(v.first) && !v.firstStep1Done && /Bank check done/.test(v.firstStep1) && /NIN or a photo of your ID/.test(v.firstStep1), v.firstStep1);
+  ok('6e dash-6: bank Level 1 is NOT shown as "ID verified"', !/Your ID is verified/.test(v.first) && !v.firstStep1Done && /Bank check done/.test(v.firstStep1) && /send a photo of your ID \(Level 2\)/.test(v.firstStep1) && !/NIN/.test(v.firstStep1), v.firstStep1);
   ok('6f dash-6: the step offers Verify', /Verify$/.test(v.firstStep1), v.firstStep1);
   ok('6g dash-6: the bonus note says NIN or ID, and that the bank check alone doesn\'t count', /verified with your NIN or ID/.test(v.firstNote) && /bank account check alone doesn't count/.test(v.firstNote), v.firstNote);
-  ok('6h dash-6: the level card says sending needs NIN or ID', v.stats.some((s) => /Level 1/.test(s) && /To send money, verify with NIN or ID/.test(s)), v.stats);
+  // A bank Level 1 member can't add a NIN afterwards (kyc.service refuses it), so
+  // the way on is the ID photo, the same as Verification's BANK_ONLY_NEXT
+  ok('6h dash-6: the level card says sending needs a photo of the ID', v.stats.some((s) => /Level 1/.test(s) && /To send money, send a photo of your ID \(Level 2\)/.test(s)), v.stats);
   ok('6i dash-9: the Balance card shows his GH₵40, not GH₵0', v.balance === 'GH₵40.00', v.balance);
   await p.close();
 
@@ -183,6 +185,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   p = await open('nin');
   v = await until(p, (s) => !!s.firstTitle);
   ok('7a NIN Level 1: step 1 is done, "Verified with your NIN or ID"', v.firstStep1Done && /Verified with your NIN or ID/.test(v.firstStep1) && !/Verify$/.test(v.firstStep1), v.firstStep1);
+  await p.close();
+
+  // 7b. Bank Level 1 later verified at Level 2 (idType still 'BANK'): counts as ID
+  // verified, like the server's verifiedById
+  p = await open('bank2');
+  v = await until(p, (s) => !!s.firstTitle && s.stats.some((x) => /Level 2/.test(x)));
+  ok('7b bank member at Level 2: "Verified with your NIN or ID", no Verify button', v.firstStep1Done && /Verified with your NIN or ID/.test(v.firstStep1) && !/Verify$/.test(v.firstStep1), v.firstStep1);
+  ok('7c bank member at Level 2: no "to send money" line on the level card', !v.stats.some((s) => /To send money/.test(s)), v.stats);
   await p.close();
 
   // 8. Not verified, money in cedis only

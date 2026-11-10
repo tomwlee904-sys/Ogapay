@@ -76,6 +76,8 @@ const CASES: Record<string, Case> = {
   kofi: { me: KOFI, profile: KOFI_ME, subs: [], created: [], jobs: KOFI_JOBS, pref: 'GHS', balances: { NGN: { balance: 0, lockedBalance: 0, available: 0 }, GHS: { balance: 40, lockedBalance: 0, available: 40 } } },
   // Verified by NIN, no job done yet
   nin: { me: { ...KOFI, id: 'u-ada', firstName: 'Ada' }, profile: { ...KOFI_ME, kyc: { status: 'APPROVED', kycTier: 1, provider: 'nin', idType: 'NIN' } }, subs: [], created: [], jobs: KOFI_JOBS, balances: { NGN: { balance: 0, lockedBalance: 0, available: 0 } } },
+  // Bank Level 1 who later passed the ID check: Level 2 but idType still 'BANK'
+  bank2: { me: { ...KOFI, id: 'u-bola', firstName: 'Bola', kycTier: 2 }, profile: { ...KOFI_ME, kyc: { status: 'APPROVED', kycTier: 2, provider: 'didit', idType: 'BANK' } }, subs: [], created: [], jobs: KOFI_JOBS, balances: { NGN: { balance: 0, lockedBalance: 0, available: 0 } } },
   // Not verified, money only in cedis: the verify row names the cedis
   unverified: { me: { ...VET, kycStatus: null, kycTier: 0 }, profile: { ...VET_ME, kyc: null }, subs: VET_SUBS, created: [], jobs: VET_JOBS, pref: 'GHS', balances: { GHS: { balance: 25, lockedBalance: 0, available: 25 } } },
   poster: { me: { ...VET, id: 'u-boss' }, profile: VET_ME, subs: [], created: POSTER_JOBS, jobs: VET_JOBS, balances: {} },
