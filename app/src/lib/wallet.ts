@@ -37,9 +37,12 @@ export function kycOf(user: any) {
   const tier = status === 'APPROVED' ? Number(user?.kycTier ?? user?.kyc?.kycTier ?? 0) : 0
   const verified = status === 'APPROVED' && tier >= 1
   // By NIN or ID, not only the bank check: sending money and the first job bonus
-  // need it (backend wallet.service verifiedById; /auth/me sends kyc.idVerified)
+  // need it (backend wallet.service verifiedById; /auth/me sends kyc.idVerified).
+  // Level 2 is always an ID check. Otherwise fail closed: a cached or just-logged-in
+  // user with no kyc details isn't ID-verified until /auth/me says so
   const kyc = user?.kyc || {}
-  const idVerified = verified && (typeof kyc.idVerified === 'boolean' ? kyc.idVerified : kyc.provider !== 'bank-name' && kyc.idType !== 'BANK')
+  const idVerified = verified && (typeof kyc.idVerified === 'boolean' ? kyc.idVerified
+    : tier >= 2 || (!!(kyc.provider || kyc.idType) && kyc.provider !== 'bank-name' && kyc.idType !== 'BANK'))
   return { approved: status === 'APPROVED', tier, verified, idVerified }
 }
 export const MIN_WITHDRAW_NGN = 5000

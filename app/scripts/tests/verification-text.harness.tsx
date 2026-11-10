@@ -19,15 +19,20 @@ const base = { id: 'u1', firstName: 'Ada', lastName: 'Obi', username: 'ada', ema
 const kyc = (status: string, kycTier: number, provider: string | null, idType: string | null) => ({ status, kycTier, provider, idType, rejectionReason: null })
 const WAITING = "VeryAI hasn't confirmed your scan yet. Tap Check again in a minute."
 const OLD_FAIL = "Your last check didn't go through: VeryAI said no. Tap Verify with VeryAI to start a new check."
+const OTHER_ACCOUNT = 'The palm scan saved in this browser was for a different OgaPay account. Sign in to that account here to finish it.'
 const SENT = "Sent. Our team checks your NIN, usually within a day. We'll notify you when it's done."
 
-type Case = { me?: any; providers?: any; user?: any; transfer?: any; very?: (n: number) => any }
+type Case = { me?: any; providers?: any; user?: any; transfer?: any; very?: (n: number) => any; manual?: any }
 const CASES: Record<string, Case> = {
   // Settings → Verification
   bank0: { me: { ...base, kyc: null }, providers: { bankKyc: true } },
   nin0: { me: { ...base, kyc: null }, providers: {} },
   bank1: { me: { ...base, kyc: kyc('APPROVED', 1, 'bank-name', 'BANK') }, providers: { bankKyc: true } },
   nin1: { me: { ...base, kyc: kyc('APPROVED', 1, 'admin', 'NIN') }, providers: { bankKyc: true } },
+  // bank Level 1 whose ID photo (Level 2) is already with our team
+  bank1Pending: { me: { ...base, kyc: kyc('APPROVED', 1, 'bank-name', 'BANK') }, providers: { bankKyc: true }, manual: { id: 'm1', status: 'PENDING', createdAt: '2026-11-10T09:00:00Z' } },
+  // VeryAI: this browser holds another account's claim (veryai.service claim 'other-account', tone 'info')
+  veryOther: { me: { ...base, kyc: null }, providers: { very: true }, very: () => ({ verified: false, claim: 'other-account', check: { status: 'NONE', message: '', tone: 'info' }, message: OTHER_ACCOUNT, tone: 'info' }) },
   // VeryAI: quiet look on opening, then "Check again"
   veryWait: { me: { ...base, kyc: null }, providers: { very: true }, very: () => ({ verified: false, check: { status: 'CODE_RECEIVED', message: WAITING, tone: 'waiting' }, message: WAITING, tone: 'waiting' }) },
   veryFail: { me: { ...base, kyc: null }, providers: { very: true }, very: (n) => n === 1
@@ -39,6 +44,9 @@ const CASES: Record<string, Case> = {
   sendBank: { user: { ...base, kycStatus: 'APPROVED', kycTier: 1, kyc: { status: 'APPROVED', kycTier: 1, idVerified: false } }, transfer: {} },
   sendNin: { user: { ...base, kycStatus: 'APPROVED', kycTier: 1, kyc: { status: 'APPROVED', kycTier: 1, idVerified: true } }, transfer: {} },
   sendNone: { user: { ...base, kycStatus: null, kycTier: 0, kyc: { status: null, kycTier: 0, idVerified: false } }, transfer: {} },
+  // The cached user (AuthContext getStoredUser) or the login user: kycStatus + kycTier, no kyc details
+  sendCachedL1: { user: { ...base, kycStatus: 'APPROVED', kycTier: 1 }, transfer: {} },
+  sendCachedL2: { user: { ...base, kycStatus: 'APPROVED', kycTier: 2 }, transfer: {} },
   tipWorkBank: { user: { ...base, kycStatus: 'APPROVED', kycTier: 1, kyc: { status: 'APPROVED', kycTier: 1, idVerified: false } }, transfer: { tip: true, submissionId: 's1', to: { id: 'u2', username: 'tunde', firstName: 'Tunde', lastName: 'Bello' } } },
 }
 const name = new URLSearchParams(location.search).get('case') || 'bank0'
@@ -47,12 +55,14 @@ w.__user = c.user || c.me
 w.__calls = []
 w.__veryN = 0
 w.__nin = 'sent'
+// The claim key VeryCallback leaves in this browser (Verification VERY_CLAIM_KEY)
+try { if (name === 'veryOther') localStorage.setItem('ogapay_very_claim', 'k'.repeat(43)); else localStorage.removeItem('ogapay_very_claim') } catch { /* no storage */ }
 
 w.fetch = async (url: string, init: RequestInit = {}) => {
   const p = new URL(String(url)).pathname.replace(/^\/api\/v1/, '')
   const method = String(init.method || 'GET').toUpperCase()
   w.__calls.push({ path: p, method, body: init.body })
-  if (p === '/kyc/level2/manual') return ok({ request: null })
+  if (p === '/kyc/level2/manual') return ok({ request: c.manual || null })
   if (p === '/wallet/banks/list') return ok([{ code: '058', name: 'GTBank' }])
   if (p === '/wallet/balance') return ok({ NGN: { available: 2500 } })
   if (p === '/kyc/submit' && method === 'POST') {

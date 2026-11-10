@@ -94,6 +94,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('1h NIN-verified Level 1: no bank-only notice (bad case: not shown to the wrong person)', !v.banners.some((b) => /Your bank account verified you/.test(b)), v.banners);
   await p.close();
 
+  p = await open('bank1Pending');
+  v = await until(p, (s) => /Your ID is with our team/.test(s.text));
+  ok('1i bank Level 1 with an ID photo waiting: told it is with our team', /Your ID is with our team/.test(v.text), v.text);
+  ok('1j ...and not also asked to send a photo of their ID', !v.banners.some((b) => /send a photo of your ID/.test(b)), v.banners);
+  await p.close();
+
   // ── ver-6: NIN sent to our team ──
   p = await open('nin0');
   await until(p, (s) => s.forms >= 2);
@@ -147,6 +153,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('3f the server unreachable on Check again: red', v.red.length === 1, v);
   await p.close();
 
+  p = await open('veryOther');
+  v = await until(p, (s) => /different OgaPay account/.test(s.text));
+  ok('3g a scan saved for another account: shown as information, not red', v.calm.some((t) => /different OgaPay account/.test(t)) && v.red.length === 0, v);
+  await p.close();
+
   // ── ver-3: Send money ──
   p = await open('sendBank');
   v = await until(p, (s) => /Send money/.test(s.text));
@@ -164,10 +175,25 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('4d not verified at all: told to verify, with no Level 1 promise', /Sending money and tips needs your NIN or ID\. Verify your identity first\./.test(v.text) && !/Available:/.test(v.text), v.text);
   await p.close();
 
+  p = await open('sendCachedL1');
+  v = await until(p, (s) => /Send money/.test(s.text));
+  ok('4f a cached Level 1 user with no kyc details (before /auth/me): fails closed, told sending needs a NIN or ID', /Sending money to other members needs your NIN or ID/.test(v.text) && !/Available:/.test(v.text), v.text);
+  await p.close();
+
+  p = await open('sendCachedL2');
+  v = await until(p, (s) => /Available:/.test(s.text));
+  ok('4g a cached Level 2 user: Level 2 is always an ID check, the form opens', /Available:/.test(v.text) && !/needs your NIN or ID/.test(v.text), v.text);
+  await p.close();
+
   p = await open('tipWorkBank');
   v = await until(p, (s) => /Available:/.test(s.text));
   ok('4e a poster tipping approved work on their own job (bank Level 1 is enough on the server): the form opens', /Tip @tunde/.test(v.text) && /Available:/.test(v.text), v.text);
   await p.close();
+
+  // The Terms say the same as SEND_RULE / BONUS_RULE (lib/levels.ts)
+  const terms = fs.readFileSync(path.join(SRC, 'pages/Terms.tsx'), 'utf8');
+  ok('5a Terms: sending money and the bonus need a NIN or ID; bank Level 1 alone only withdraws',
+    /Sending money to other members, and the ₦1,000 first job bonus, need your NIN or ID \(Level 1 by NIN, or Level 2\)\. Level 1 by bank account alone lets you withdraw, but not send money or get the bonus\./.test(terms), terms.match(/<section id="kyc">[\s\S]*?<\/section>/)?.[0]);
 
   ok('nothing left the page', outside.length === 0, outside);
   await browser.close();

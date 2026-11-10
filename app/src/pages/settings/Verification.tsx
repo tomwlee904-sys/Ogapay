@@ -467,7 +467,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           })}
         </div>
         <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>Any level lets you {UNLOCKS}. {SEND_RULE} Without a level you can still earn and add money by card or USSD.</p>
-        {bankOnly && tier === 1 && <div className="st2-banner"><i className="ti ti-info-circle" aria-hidden="true" /> {BANK_ONLY_NEXT}</div>}
+        {/* not while their ID photo is already with our team: the panel below says so */}
+        {bankOnly && tier === 1 && manualReq?.status !== 'PENDING' && <div className="st2-banner"><i className="ti ti-info-circle" aria-hidden="true" /> {BANK_ONLY_NEXT}</div>}
 
         {status === 'REJECTED' && tier === 0 && (
           <div className="st2-banner"><i className="ti ti-alert-circle" /> Your last attempt wasn't approved{me.kyc?.rejectionReason ? `: ${me.kyc.rejectionReason}` : ''}. You can try again below.</div>
