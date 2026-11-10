@@ -164,3 +164,10 @@
 .db-first-steps .db-step-btn { margin-top: 0; flex-shrink: 0; min-height: 40px; }
 .db-first-steps .db-step-btn.dark { background: var(--text); color: var(--bg); border-color: var(--text); }
 .db-first-note { margin: 12px 0 0; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+
+/* A list that didn't load (slow or no connection): says so, with Try again */
+.db-load-err { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; text-align: left; }
+.db-load-err > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.db-load-err strong { font-size: 15px; }
+.db-load-err span { font-size: 13px; color: var(--text2); }
+.db-load-err .db-step-btn { margin-top: 0; min-height: 40px; }
