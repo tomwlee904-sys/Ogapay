@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { apiRequest } from '../../lib/api'
+import { apiRequest, persistAuthSession, type AuthTokens } from '../../lib/api'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, PrefRow, Row, type SectionProps } from './ui'
@@ -153,7 +153,9 @@ function Password({ me, setMe }: SectionProps) {
     if (next !== again) return setErr("The new passwords don't match.")
     setBusy(true)
     try {
-      await apiRequest('/auth/change-password', { method: 'POST', body: JSON.stringify(has ? { currentPassword: cur, newPassword: next } : { newPassword: next }) })
+      const res = await apiRequest<{ tokens?: AuthTokens }>('/auth/change-password', { method: 'POST', body: JSON.stringify(has ? { currentPassword: cur, newPassword: next } : { newPassword: next }) })
+      // The change signs out every old session, this one too: keep the fresh one it sends back
+      if (res?.tokens?.accessToken) persistAuthSession({ tokens: res.tokens })
       toast(has ? 'Password changed. Other devices have been signed out.' : 'Password set. You can now sign in with your email too.', 'success')
       setMe((m) => ({ ...m, hasPassword: true }))
       setOpen(false); setCur(''); setNext(''); setAgain('')

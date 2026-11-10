@@ -2,6 +2,7 @@
 // SignInHost, SignInModal, AuthProvider and lib/api, in a real browser router.
 // Supabase (signin-google.stubs.tsx) and window.fetch are fakes, so nothing
 // leaves the page. The case (window.__case) is set before each page load.
+import { StrictMode, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 // @ts-ignore resolved by esbuild alias
@@ -16,6 +17,10 @@ import { AuthProvider } from 'auth-under-test'
 import { openSignIn } from 'signin-lib-under-test'
 // @ts-ignore resolved by esbuild alias
 import { apiRequest } from 'api-under-test'
+// @ts-ignore resolved by esbuild alias
+import Security from 'security-under-test'
+// @ts-ignore resolved by esbuild alias
+import { ToastProvider } from 'toast-under-test'
 
 const w = window as any
 const json = (status: number, body: any) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
@@ -45,10 +50,17 @@ w.fetch = async (url: string, init: RequestInit = {}) => {
     return json(401, { success: false, message: 'Invalid 2FA code' })
   }
   if (p === '/auth/login') return html(502)
+  // Changing the password ends every old session; the server sends this device a fresh one
+  if (p === '/auth/change-password') {
+    if (body?.currentPassword !== 'Old12345') return json(400, { success: false, message: 'Current password is incorrect' })
+    return json(200, { success: true, message: 'Password changed successfully', data: { message: 'Password changed successfully', tokens: { accessToken: 'fresh-access', refreshToken: 'fresh-refresh' } } })
+  }
   if (p === '/auth/me') return auth === 'Bearer app-access' ? json(200, { success: true, user: USER }) : json(401, { success: false, message: 'Invalid access token' })
   if (p === '/users/me') return json(200, { success: true, data: { ...USER, lastName: 'O', avatarUrl: 'x' } })
   return json(404, { success: false, message: 'not stubbed: ' + p })
 }
+
+const ME = { ...USER, lastName: 'O', avatarUrl: null, isPublic: true, isTwoFactorEnabled: false, hasPassword: true, humanVerifiedAt: null, ogaScore: 0, preferences: { loginAlerts: true }, kyc: null, connections: {} }
 
 function Where() {
   const loc = useLocation()
@@ -65,8 +77,11 @@ function Opener() {
   )
 }
 
+// sessionStorage strict=1: React StrictMode (effects run twice, as in dev)
+const Wrap = ({ children }: { children: ReactNode }) => (sessionStorage.getItem('strict') === '1' ? <StrictMode>{children}</StrictMode> : <>{children}</>)
+
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
+  <Wrap><BrowserRouter>
     <AuthProvider>
       <Where />
       <SignInHost />
@@ -76,8 +91,9 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/join" element={<LoginPage />} />
         <Route path="/ref/:code" element={<LoginPage />} />
         <Route path="/dashboard" element={<p id="dash">Dashboard</p>} />
+        <Route path="/settings" element={<ToastProvider><Security me={ME} setMe={() => {}} reload={async () => {}} /></ToastProvider>} />
         <Route path="*" element={<Opener />} />
       </Routes>
     </AuthProvider>
-  </BrowserRouter>,
+  </BrowserRouter></Wrap>,
 )

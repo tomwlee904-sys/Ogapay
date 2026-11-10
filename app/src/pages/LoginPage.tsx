@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn, safeRedirect, SIGN_IN_ERROR_KEY } from '../lib/signin'
@@ -12,14 +12,12 @@ const ERRORS: Record<string, string> = {
   google_failed: "Google sign-in didn't finish. Please try again.",
 }
 
-// The reason a Google sign-in failed (AuthCallback), shown once
-const takeSignInError = () => {
-  try {
-    const v = sessionStorage.getItem(SIGN_IN_ERROR_KEY)
-    sessionStorage.removeItem(SIGN_IN_ERROR_KEY)
-    return v ? v.slice(0, 300) : ''
-  } catch { return '' }
+// The reason a Google sign-in failed (AuthCallback), shown once: read when the
+// page mounts, removed after the dialog opens
+const peekSignInError = () => {
+  try { return (sessionStorage.getItem(SIGN_IN_ERROR_KEY) || '').slice(0, 300) } catch { return '' }
 }
+const clearSignInError = () => { try { sessionStorage.removeItem(SIGN_IN_ERROR_KEY) } catch { /* private mode */ } }
 
 // Set by AuthContext when a session couldn't be renewed; shown for a minute
 const takeSessionNotice = () => {
@@ -39,6 +37,9 @@ export default function LoginPage() {
   const redirect = safeRedirect(params.get('redirect'))
   const { code: refCode } = useParams<{ code?: string }>()
   const isReferral = pathname === '/join' || pathname.startsWith('/ref/')
+  // Kept in state: StrictMode runs the initialiser and the effect below twice,
+  // and reading-and-deleting there lost the reason (generic text instead)
+  const [googleError] = useState(() => (params.get('error') === 'google_failed' ? peekSignInError() : ''))
 
   useEffect(() => {
     const ref = (refCode || params.get('ref') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
@@ -50,10 +51,11 @@ export default function LoginPage() {
     openSignIn({
       view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options',
       code: params.get('code') || '',
-      notice: (params.get('error') === 'google_failed' && takeSignInError()) || ERRORS[params.get('error') || ''] || takeSessionNotice(),
+      notice: googleError || ERRORS[params.get('error') || ''] || takeSessionNotice(),
       redirect,
       closeTo: '/',
     })
+    clearSignInError()
   }, [isLoading, isAuthed, pathname])
 
   if (!isLoading && isAuthed) return <Navigate to={redirect || '/dashboard'} replace />

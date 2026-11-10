@@ -47,6 +47,8 @@ const UA_CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 13; SM-A135F) AppleWebKit
       'auth-under-test': path.join(SRC, 'context/AuthContext.tsx'),
       'signin-lib-under-test': path.join(SRC, 'lib/signin.ts'),
       'api-under-test': path.join(SRC, 'lib/api.ts'),
+      'security-under-test': path.join(SRC, 'pages/settings/Security.tsx'),
+      'toast-under-test': path.join(SRC, 'components/Toast.tsx'),
     },
     define: { 'import.meta.env': '{"VITE_API_BASE_URL":"/api/v1"}', 'process.env.NODE_ENV': '"development"' },
     logLevel: 'error',
@@ -163,6 +165,27 @@ const UA_CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 13; SM-A135F) AppleWebKit
     await p.ctx.close();
   }
 
+  // 2s. React StrictMode (dev) runs the dialog effect twice when /login opens
+  // inside the app (auth already loaded): the reason must survive. It used to
+  // be taken on the first run, so the second showed the generic text
+  p = await open('ok');
+  await p.goto(origin + '/');
+  await p.evaluate(() => sessionStorage.setItem('strict', '1'));
+  await p.goto(origin + '/');
+  await until(p, (s) => s.loc === '/');
+  await sleep(300);
+  await p.evaluate(() => {
+    sessionStorage.setItem('ogapay_signin_error', 'Account has been banned. Contact support.');
+    history.pushState({}, '', '/login?error=google_failed');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
+  v = await until(p, (s) => s.loc.startsWith('/login') && !!s.title, 9000);
+  await sleep(300);
+  v = await state(p);
+  ok('2s StrictMode: a closed account still sees the reason, not the generic text', v.loc === '/login?error=google_failed' && /Account has been banned/.test(v.modal) && !/didn't finish/.test(v.modal), { loc: v.loc, modal: v.modal });
+  ok("2s ...and it's still shown once only", (await p.evaluate(() => sessionStorage.getItem('ogapay_signin_error'))) === null);
+  await p.ctx.close();
+
   // 3. A normal Google sign-in still works
   p = await open('ok');
   await p.goto(origin + '/auth/callback');
@@ -240,6 +263,32 @@ const UA_CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 13; SM-A135F) AppleWebKit
   await sleep(300);
   const raw = await p.evaluate(() => window.__raw);
   ok('6 an HTML 502 page reads "OgaPay is busy", not "Unexpected token <"', raw === 'OgaPay is busy right now. Please try again in a minute.|502', raw);
+  await p.ctx.close();
+
+  // 7. Changing the password keeps this device signed in with the fresh session
+  // the server sends back (every old token stops working on the server)
+  p = await open('ok');
+  await p.goto(origin + '/');
+  await p.evaluate(() => { localStorage.setItem('ogapay_access_token', 'app-access'); localStorage.setItem('ogapay_refresh_token', 'app-refresh'); });
+  await p.goto(origin + '/settings');
+  await p.waitForSelector('.up-btn');
+  const fill = async (el, val) => { await el.evaluate((i) => { i.focus(); i.select(); }); await p.keyboard.press('Backspace'); await el.type(val); };
+  const pwForm = async (cur, next) => {
+    await p.evaluate(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Change'); if (b) b.click(); });
+    await p.waitForSelector('input[autocomplete="current-password"]');
+    await fill(await p.$('input[autocomplete="current-password"]'), cur);
+    for (const el of await p.$$('input[autocomplete="new-password"]')) await fill(el, next);
+    await p.evaluate(() => [...document.querySelectorAll('button')].find((x) => /^Change password$/.test(x.textContent.trim())).click());
+  };
+  const toks = () => p.evaluate(() => [localStorage.getItem('ogapay_access_token'), localStorage.getItem('ogapay_refresh_token'), document.querySelector('.st2-err')?.textContent || ''].join('|'));
+  await pwForm('Wrong1234', 'New12345');
+  await sleep(400);
+  let t = await toks();
+  ok('7a a wrong current password shows the error and keeps the old session', t === 'app-access|app-refresh|Current password is incorrect', t);
+  await pwForm('Old12345', 'New12345');
+  await sleep(400);
+  t = await toks();
+  ok('7b the right one saves the fresh session the server sends back', t.startsWith('fresh-access|fresh-refresh|'), { t, sent: (await state(p)).calls.filter((c) => c.path === '/auth/change-password').map((c) => c.body) });
   await p.ctx.close();
 
   ok('no request left the test server', outside.length === 0, outside);
