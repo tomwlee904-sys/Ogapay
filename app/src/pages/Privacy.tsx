@@ -170,7 +170,7 @@ export default function Privacy() {
               <h2><span>12</span>Contact us</h2>
               <ul>
                 <li>Privacy questions and requests: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a></li>
-                <li>Everything else: <a href="mailto:support@ogapay.app">support@ogapay.app</a> or the <Link to="/support">help centre</Link></li>
+                <li>Everything else: <a href="mailto:support@ogapay.app">support@ogapay.app</a>, <a href="tel:+2349030097844">0903 009 7844</a> or the <Link to="/support">help centre</Link></li>
                 <li>OGA-P INTEGRATED SERVICES LIMITED, Nigeria</li>
               </ul>
             </section>

@@ -337,10 +337,11 @@ export default function FAQ() {
             <div className="ui-card fq-help">
               <div>
                 <b style={{ fontSize: 14 }}>Still stuck?</b>
-                <p className="ui-sub" style={{ margin: '4px 0 0' }}>Message the team on Telegram or email support@ogapay.app.</p>
+                <p className="ui-sub" style={{ margin: '4px 0 0' }}>Message the team on Telegram, email support@ogapay.app or call 0903 009 7844.</p>
               </div>
               <div className="ui-actions">
                 <a className="ui-btn ui-btn-ghost" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Telegram</a>
+                <a className="ui-btn ui-btn-ghost" href="tel:+2349030097844"><i className="ti ti-phone" /> Call us</a>
                 <a className="ui-btn ui-btn-dark" href="mailto:support@ogapay.app"><i className="ti ti-mail" /> Email us</a>
               </div>
             </div>

@@ -228,7 +228,7 @@ export default function Terms() {
               <ul>
                 <li>We may update these terms and our fees. We'll show the date at the top and tell you about important changes before they take effect. Fees always show before you pay.</li>
                 <li>These terms are governed by the laws of the Federal Republic of Nigeria, and the courts of Nigeria can hear any dispute. Please contact us first; most problems are quickest to solve that way.</li>
-                <li>Questions: <a href="mailto:support@ogapay.app">support@ogapay.app</a> or the <Link to="/support">help centre</Link>. Privacy: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a>.</li>
+                <li>Questions: <a href="mailto:support@ogapay.app">support@ogapay.app</a>, <a href="tel:+2349030097844">0903 009 7844</a> or the <Link to="/support">help centre</Link>. Privacy: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a>.</li>
               </ul>
             </section>
           </article>

@@ -242,6 +242,7 @@ export default function Support() {
         <div className="up-sec-h sp2-h"><h2>Contact us</h2></div>
         <div className="sp2-contact">
           <a className="up-card sp2-c" href="mailto:support@ogapay.app"><i className="ti ti-mail" /><div><strong>Email</strong><span>support@ogapay.app · replies within 24 hours</span></div></a>
+          <a className="up-card sp2-c" href="tel:+2349030097844"><i className="ti ti-phone" /><div><strong>Phone</strong><span>0903 009 7844 · call us</span></div></a>
           <a className="up-card sp2-c" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /><div><strong>Telegram</strong><span>Our channel: announcements and new jobs</span></div></a>
           <a className="up-card sp2-c" href="https://x.com/Ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-x" /><div><strong>X (Twitter)</strong><span>@Ogapayhq · status updates</span></div></a>
         </div>
