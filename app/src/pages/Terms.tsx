@@ -56,7 +56,7 @@ export default function Terms() {
           <div className="up-eyebrow">Legal</div>
           <h1>Terms of Service</h1>
           <p>Last updated: 3 November 2026</p>
-          <p className="lg-lead">These terms are the agreement between you and OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
+          <p className="lg-lead">These terms are the agreement between you and OGA-P INTEGRATED SERVICES LIMITED, Nigeria ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
         </header>
 
         <div className="lg-body">
