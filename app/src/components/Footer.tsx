@@ -18,7 +18,7 @@ const socials = [
 
 const columns = [
   { title: 'Explore', links: [['Create a job', '/create'], ['Browse jobs', '/tasks'], ['Creator store', '/store'], ['For businesses', '/hire'], ['Vault', '/vault'], ['Blog', '/blog']] },
-  { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Socials', '/socials'], ['Brand kit', '/brand-kit'], ['Join the test team', '/join-test-team'], ['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']] },
+  { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['FAQ', '/faq'], ['Support', '/support'], ['Brand kit', '/brand-kit'], ['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']] },
 ]
 
 /* ─── Dotted globe ─────────────────────────────────────────────────────────────
