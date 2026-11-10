@@ -138,7 +138,7 @@ export default function About() {
         </section>
 
         <div className="ui-card ab2-foot">
-          <p>OgaPay is operated by OgaPay Technologies Ltd.</p>
+          <p>OgaPay is operated by OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria.</p>
           <div className="ui-actions">
             <Link className="ui-btn ui-btn-ghost" to="/terms">Terms</Link>
             <Link className="ui-btn ui-btn-ghost" to="/privacy">Privacy</Link>

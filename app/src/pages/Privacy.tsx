@@ -47,7 +47,7 @@ export default function Privacy() {
           <div className="up-eyebrow">Legal</div>
           <h1>Privacy policy</h1>
           <p>Last updated: 3 November 2026</p>
-          <p className="lg-lead">OgaPay Technologies Ltd. ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</p>
+          <p className="lg-lead">OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</p>
         </header>
 
         <div className="lg-body">
@@ -171,7 +171,7 @@ export default function Privacy() {
               <ul>
                 <li>Privacy questions and requests: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a></li>
                 <li>Everything else: <a href="mailto:support@ogapay.app">support@ogapay.app</a> or the <Link to="/support">help centre</Link></li>
-                <li>OgaPay Technologies Ltd., Lagos, Nigeria</li>
+                <li>OGA-P INTEGRATED SERVICES LIMITED, Lagos, Nigeria</li>
               </ul>
             </section>
           </article>

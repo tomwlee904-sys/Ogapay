@@ -50,7 +50,7 @@ export default function License() {
         <section className="lc-sec">
           <h2>1. OgaPay's software</h2>
           <p>
-            The OgaPay website, app and API, and the code behind them, are owned by OgaPay Technologies Ltd. They are not open
+            The OgaPay website, app and API, and the code behind them, are owned by OGA-P INTEGRATED SERVICES LIMITED. They are not open
             source: you may use OgaPay as a service, but copying, modifying or redistributing its code isn't allowed without our
             written permission. Using the service is covered by the <Link to="/terms">Terms</Link>.
           </p>

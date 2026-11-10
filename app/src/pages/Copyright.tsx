@@ -24,8 +24,8 @@ export default function Copyright() {
         <section className="cr-sec">
           <h2>1. What OgaPay owns</h2>
           <p>
-            Copyright © 2026 OgaPay Technologies Ltd. The OgaPay name and logo, the design of the website and app, and the text
-            and images we publish (including our guides, FAQ and blog posts written by OgaPay) belong to OgaPay Technologies Ltd.
+            Copyright © 2026 OGA-P INTEGRATED SERVICES LIMITED. The OgaPay name and logo, the design of the website and app, and the text
+            and images we publish (including our guides, FAQ and blog posts written by OgaPay) belong to OGA-P INTEGRATED SERVICES LIMITED.
           </p>
         </section>
 
