@@ -6,7 +6,7 @@ import OrderActions from '../components/OrderActions'
 import { apiRequest } from '../lib/api'
 import { sized } from '../lib/img'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { decisionText, orderBadge, orderMoney, orderWhen, type StoreOrder } from './StoreOrders'
+import { addressLine, decisionText, orderBadge, orderMoney, orderWhen, requestLines, shippedWith, type StoreOrder } from './StoreOrders'
 import '../styles/checkout.css'
 import '../styles/my-store.css'
 import '../styles/order-brief.css'
@@ -23,6 +23,8 @@ import '../styles/order-brief.css'
 // problem and OgaPay's decision, and the same steps as the lists (OrderActions):
 // the buyer confirms, reports, withdraws, reviews and compliments; the seller
 // starts, delivers, refunds and replies to a report.
+// 2026-11-10: a physical item's delivery address (buyer and seller only), the
+// courier and tracking number, changes asked for, and cancel requests.
 type Done = { title?: string; seller?: string; conversationId?: string }
 type Order = StoreOrder & {
   role: 'BUYER' | 'SELLER'
@@ -37,7 +39,10 @@ function timeline(o: Order) {
   const done = ([
     [o.createdAt, 'ti-receipt', 'Ordered'],
     [o.startedAt, 'ti-player-play', 'Seller started'],
+    [o.shippedAt, 'ti-send', 'Shipped'],
     [o.deliveredAt, 'ti-package', 'Marked delivered'],
+    [o.revisionRequestedAt, 'ti-refresh', 'Changes asked for'],
+    [o.cancelRequestedAt, 'ti-receipt-refund', 'Asked to cancel'],
     [o.disputedAt, 'ti-alert-triangle', 'Problem reported'],
     [o.sellerRespondedAt, 'ti-message', 'Seller replied to the report'],
     [o.disputeWithdrawnAt, 'ti-arrow-back-up', 'Report withdrawn'],
@@ -47,10 +52,10 @@ function timeline(o: Order) {
     .filter(([at]) => !!at)
     .map(([at, icon, label]) => ({ at: at as string, icon, label }))
     .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
-  const next = o.held && o.releaseAt && o.status === 'DELIVERED'
+  const next = o.cancelRequestedAt ? null : o.held && o.releaseAt && (o.status === 'DELIVERED' || o.status === 'SHIPPED')
     ? { at: o.releaseAt, icon: 'ti-clock', label: buyer ? 'Payment goes to the seller unless you confirm sooner or report a problem' : 'Payment comes to you, unless the buyer confirms sooner' }
     : o.held && o.autoRefundAt
-      ? { at: o.autoRefundAt, icon: 'ti-clock', label: buyer ? 'Your money comes back if it isn\'t marked delivered by then' : 'The buyer is refunded if it isn\'t marked delivered by then' }
+      ? { at: o.autoRefundAt, icon: 'ti-clock', label: buyer ? `Your money comes back if it isn't marked ${o.kind === 'PHYSICAL' ? 'shipped' : 'delivered'} by then` : `The buyer is refunded if it isn't marked ${o.kind === 'PHYSICAL' ? 'shipped' : 'delivered'} by then` }
       : null
   return { done, next }
 }
@@ -124,7 +129,7 @@ export default function OrderConfirmation() {
           {justPlaced ? (
             <p className="ui-sub">
               {other ? <>@{other.username} has been told about your order.</> : <>The seller has been told about your order.</>}
-              {' '}OgaPay holds your payment until you confirm you received it, or 3 days after the seller marks it delivered.
+              {' '}OgaPay holds your payment until you confirm you received it, or {order.holdDays || 3} days after the seller marks it {order.kind === 'PHYSICAL' ? 'shipped' : 'delivered'}.
               {hasBrief ? ' Your brief and files are saved on this order and sent to them in your chat.' : ' Use the chat to share any details they need.'}
             </p>
           ) : (
@@ -153,6 +158,8 @@ export default function OrderConfirmation() {
             {order.quantity > 1 && p.price != null && <div className="sc-line"><span>Price each</span><span>{orderMoney(p.price, order.currency)} × {order.quantity}</span></div>}
             {other && <div className="sc-line"><span>{buyer ? 'Seller' : 'Buyer'}</span><span><Link className="tap" to={`/user/${other.username}`} style={{ color: 'inherit' }}>@{other.username}</Link></span></div>}
             {order.delivery && <div className="sc-line"><span>Promised delivery</span><span>{order.delivery}</span></div>}
+            {order.courier && <div className="sc-line"><span>Shipped with</span><span>{shippedWith(order)}</span></div>}
+            {(order.revisionsAllowed || 0) > 0 && <div className="sc-line"><span>Revisions</span><span>{order.revisionsLeft == null ? 'Unlimited' : `${order.revisionsLeft} of ${order.revisionsAllowed} left`}</span></div>}
             {order.refundedPart != null && <div className="sc-line"><span>{buyer ? 'Refunded to you' : 'Went back to the buyer'}</span><span>{orderMoney(order.refundedPart, order.currency)}</span></div>}
             <div className="sc-line" style={{ borderBottom: 0 }}><span>Ordered</span><span>{new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
             {/* available: false is also a product the seller only hid, so don't say removed (2026-11-08) */}
@@ -174,6 +181,14 @@ export default function OrderConfirmation() {
           </div>
 
           <div className="oc-blocks">
+            {/* Only this order's buyer and seller (and OgaPay) ever see the address (B7) */}
+            {order.shipping && (
+              <div className="ob">
+                <span className="ob-label"><i className="ti ti-map-pin" aria-hidden="true" /> {buyer ? 'Your delivery address' : 'Deliver to'}</span>
+                <p className="ob-text open">{order.shipping.name} · {order.shipping.phone}<br />{addressLine(order.shipping)}</p>
+              </div>
+            )}
+            {requestLines(order, order.role).map((l) => <p key={l.icon} className={`so-line${l.bad ? ' bad' : ''}`}><i className={`ti ${l.icon}`} aria-hidden="true" /><span>{l.text}</span></p>)}
             {hasBrief && <OrderBrief label={buyer ? 'Your brief' : "Buyer's brief"} brief={order.brief} files={order.briefFiles || []} />}
             <OrderBrief label={buyer ? 'What the seller delivered' : 'What you delivered'} more="Read more" brief={order.deliveryNote} files={order.deliveryFiles || []} />
             {order.disputeReason && (order.status === 'DISPUTED' || order.disputedAt) && (
