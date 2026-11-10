@@ -155,7 +155,7 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
         {item.stock === 0 ? <span className="hc-active off">Sold out</span> : <span className="hc-active"><span />Active</span>}
       </div>
       <div className="hc-pbody">
-        <span className="hc-type">{itemCategoryLabel(item.category, item.title)}</span>
+        <span className="hc-type">{itemCategoryLabel(item.category, item.title)}{item.createdVia === "API" ? " · Listed by an agent" : ""}</span>
         <h3>{item.title}</h3>
         {/* The list sends a 200-character plain excerpt (2026-11-10); older answers had the description */}
         <p className="hc-pdesc">{plain(item.excerpt ?? item.description)}</p>

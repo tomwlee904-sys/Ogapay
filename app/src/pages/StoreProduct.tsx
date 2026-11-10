@@ -24,6 +24,9 @@ interface ReviewItem {
   rating: number
   comment: string | null
   createdAt: string
+  // The seller's answer (2026-11-10)
+  sellerReply?: string | null
+  sellerRepliedAt?: string | null
 }
 
 interface StoreProductData {
@@ -46,6 +49,7 @@ interface StoreProductData {
   createdAt: string
   metadata?: Record<string, any>
   official?: boolean // sold by OgaPay itself (perks)
+  createdVia?: string | null // 'API': listed by an agent with an API key (2026-11-10)
   priceOnRequest?: boolean
   sampleFiles?: { url: string; name: string; type: string; size: number | null }[]
   // The seller card. bio and the job numbers come with it (2026-11-10: they took a
@@ -148,6 +152,11 @@ const SP_CSS = `
         .sp-reviews{padding:22px;margin-top:14px}
         .sp-review{border-top:1px solid var(--border);padding:14px 0}
         .sp-review:first-of-type{border-top:0}
+        .sp-reply{margin:10px 0 0 38px;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border)}
+        .sp-reply span{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text2)}
+        .sp-reply p{margin:4px 0 0;font-size:13px;line-height:1.6;color:var(--text);overflow-wrap:anywhere;white-space:pre-line}
+        @media(max-width:767px){.sp-reply{margin-left:0}}
+        .sp-agent{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--card2);font-size:11px;font-weight:600;color:var(--text2);vertical-align:middle}
         .sp-trust{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text2)}
         .sp-trust li{display:flex;align-items:center;gap:8px}.sp-trust i{font-size:15px;color:var(--text3)}
         .sp-new{display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--border);color:var(--text)!important;font-weight:500}
@@ -446,6 +455,7 @@ export default function StoreProduct() {
         </div>
         <span className="ui-eyebrow">{crumb}</span>
         <h1 className="ui-title">{p.title}</h1>
+        {p.createdVia === 'API' && <p style={{ margin: '6px 0 0' }}><span className="sp-agent" title="The seller listed this with an AI agent through the OgaPay API"><i className="ti ti-robot" aria-hidden="true" /> Listed by an agent</span></p>}
 
         <div className="sp-layout">
           <div>
@@ -497,6 +507,12 @@ export default function StoreProduct() {
                     <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>{timeAgo(r.createdAt)}</span>
                   </div>
                   {r.comment && <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0', lineHeight: 1.6 }}>{r.comment}</p>}
+                  {r.sellerReply && (
+                    <div className="sp-reply">
+                      <span><i className="ti ti-message-reply" aria-hidden="true" /> Reply from {p.seller}{r.sellerRepliedAt ? ` · ${timeAgo(r.sellerRepliedAt)}` : ''}</span>
+                      <p>{r.sellerReply}</p>
+                    </div>
+                  )}
                 </div>
               ))}
 
