@@ -1044,10 +1044,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   {checkable && (
                     <div className="cf-field">
                       <span className="cf-lbl">Payout check <InfoTip label="What is a payout check?" title="Payout check">
-                        <p>Work can't be paid until the time you pick has passed since it was sent. Then we look at the worker's X post again: it must still be up, be from their connected X account, and still reply to or quote your post.</p>
-                        <p>Posts that fail are flagged for you and not paid automatically. Likes and follows can't be checked automatically; you review them.</p>
+                        <p>Work can't be paid until the time you pick has passed since it was sent.</p>
+                        <p>On X we then look at the worker's post again: it must still be up, be from their connected X account, and still reply to or quote your post. Posts that fail are flagged for you and not paid automatically.</p>
+                        <p>Likes, follows and other platforms (Instagram, TikTok, YouTube and so on) can't be checked automatically: use the wait to check the proof yourself.</p>
                       </InfoTip></span>
-                      <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
+                      <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} platform={subcategory && subcategory !== "X / Twitter" ? subcategory : "X"} />
                     </div>
                   )}
 

@@ -198,8 +198,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
 
       <div className="cf-field">
         <span className="cf-lbl">Payout check</span>
-        <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
-        {platform.id !== "x" && payoutCheck > 0 && <p className="cf-hint">Only X posts can be checked automatically. On {platform.name} the wait still applies, and you review the proof.</p>}
+        <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} platform={platform.name} />
       </div>
 
       {isAuthed && (

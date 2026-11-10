@@ -23,21 +23,36 @@ export const windowName = (mins: number) => (mins < 60 ? `${mins}-minute` : `${m
 // "5 minutes", "1 hour", "24 hours"
 export const durationName = (mins: number) => (mins < 60 ? `${mins} minute${mins === 1 ? '' : 's'}` : `${mins / 60} hour${mins === 60 ? '' : 's'}`)
 
-export function PayoutCheckPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+// On other platforms nothing can be re-checked: the wait only gives the poster time to look
+const OTHER_HINTS: Record<number, string> = {
+  5: 'A short wait before work can be paid.',
+  30: 'Time to look at the proof first.',
+  60: 'Gives you an hour to check the proof.',
+  360: 'Check the proof any time that day.',
+  1440: 'A full day to check the proof.',
+}
+
+// platform: the job's platform name ("Instagram"). Only X posts are re-checked
+// automatically (payoutCheck.service.js); anywhere else the wait still applies
+// and the poster checks the proof by hand, so the words say that.
+export function PayoutCheckPicker({ value, onChange, platform = 'X' }: { value: number; onChange: (v: number) => void; platform?: string }) {
+  const isX = /^(x|twitter|x \/ twitter)$/i.test(platform.trim())
   return (
     <div>
       <div className="pc-pick" role="radiogroup" aria-label="Payout check">
         {PAYOUT_CHECKS.map((c) => (
           <button key={c.minutes} type="button" role="radio" aria-checked={value === c.minutes}
             className={`pc-opt${value === c.minutes ? ' is-on' : ''}`} onClick={() => onChange(c.minutes)}>
-            <b>{c.label}</b><span>{c.hint}</span>
+            <b>{c.label}</b><span>{isX || !c.minutes ? c.hint : OTHER_HINTS[c.minutes]}</span>
           </button>
         ))}
       </div>
       <p className="pc-help">
-        {value > 0
-          ? `Work can't be paid until ${durationName(value)} after it's sent. Then we check the worker's X post is still up, is theirs, and still replies to or quotes your post. Likes and follows can't be checked automatically; you review them.`
-          : 'Work can be approved as soon as it comes in, as today.'}
+        {!value
+          ? 'Work can be approved as soon as it comes in, as today.'
+          : isX
+            ? `Work can't be paid until ${durationName(value)} after it's sent. Then we check the worker's X post is still up, is theirs, and still replies to or quotes your post. Likes and follows can't be checked automatically; you review them.`
+            : `Work can't be paid until ${durationName(value)} after it's sent. ${platform} can't be checked automatically, so use the wait to open the proof and check the like, follow or comment is still there before you approve.`}
       </p>
     </div>
   )
