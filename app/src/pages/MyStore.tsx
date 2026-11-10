@@ -24,6 +24,7 @@ import DeliverableFiles, { useDeliverables } from '../components/DeliverableFile
 import MyStoreReviews from '../components/MyStoreReviews'
 import MyStoreEarnings from '../components/MyStoreEarnings'
 import { useToast } from '../context/ToastContext'
+import { useStoreCategories } from '../lib/storeCategories'
 
 // My Store tabs (?tab=orders|offers|reviews|earnings; products is the default)
 const TABS = ['products', 'orders', 'offers', 'reviews', 'earnings'] as const
@@ -57,6 +58,8 @@ type OrderFilter = 'open' | 'completed' | 'disputed' | 'cancelled' | 'all'
 const ORDER_FILTERS: [OrderFilter, string][] = [['open', 'Open'], ['completed', 'Completed'], ['disputed', 'Problems'], ['cancelled', 'Refunded'], ['all', 'All']]
 type SellerSummary = { revenue: Record<string, number>; held: Record<string, number>; toDeliver: number }
 
+// Shown until the store's category list (GET /store/categories, with
+// subcategories and physical goods) has loaded
 const CATEGORIES = [
   'Graphics & Design', 'Writing & Translation', 'Social Media & Growth', 'Video & Animation', 'Web & App Development',
   'Marketing & Ads', 'Music & Audio', 'Photography', 'Data & Research', 'Tutoring & Coaching', 'Digital Products', 'Other',
@@ -105,7 +108,7 @@ const startForm = (product: Product | null): Form => product ? {
 } : blank
 // Server field names to the form's (a refused save highlights the right field;
 // others are named in the message)
-const FIELD_OF: Record<string, string> = { name: 'name', description: 'description', price: 'price', currency: 'price', stock: 'stock', searchTags: 'tags', tags: 'tags', imageUrl: 'imageUrl', sampleFiles: 'files', productKind: 'productKind' }
+const FIELD_OF: Record<string, string> = { name: 'name', description: 'description', price: 'price', currency: 'price', stock: 'stock', searchTags: 'tags', tags: 'tags', imageUrl: 'imageUrl', sampleFiles: 'files', productKind: 'productKind', category: 'category', subcategory: 'subcategory' }
 
 // Publishing needs a verified email and Level 1 (2026-11-10). Hidden products can
 // always be saved, and products already live stay up.
@@ -440,6 +443,7 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof Form, v: string) => { setForm((f) => ({ ...f, [k]: v })); setErrors((e) => ({ ...e, [k]: '' })); setMsg('') }
+  const storeCats = useStoreCategories()
   // New products are priced in naira (2026-11-10). An older USDC or SOL product
   // keeps its currency, or can move to naira.
   const oldCrypto = !!product && product.currency !== 'NGN'
@@ -598,7 +602,12 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     setSaving(false)
   }
 
-  const cats = CATEGORIES.includes(form.category) ? CATEGORIES : [form.category, ...CATEGORIES]
+  // The store's fixed categories (2026-11-10). An older product's unlisted
+  // category or subcategory stays selectable until it's changed.
+  const catNames = storeCats.length ? storeCats.map((c) => c.name) : CATEGORIES
+  const cats = catNames.includes(form.category) ? catNames : [form.category, ...catNames]
+  const subs = storeCats.find((c) => c.name === form.category)?.subcategories || []
+  const subOptions = form.subcategory && !subs.includes(form.subcategory) ? [form.subcategory, ...subs] : subs
   return (
     <div className="up-modal ms2-modal" onClick={tryClose}>
       <div role="dialog" aria-modal="true" aria-labelledby="ms2-h" onClick={(e) => e.stopPropagation()} className="ms2-form">
@@ -684,12 +693,19 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
               <small>{priceNum > 0 ? `About ${formatCedi(priceNum / nairaPerCedi)} today. ` : ''}Buyers pay in naira from their OgaPay wallet, so the cedi amount moves a little with the rate.</small>
             </label>
           )}
+        </div>
+        <div className="hr-row">
           <label className="ep-field"><span>Category</span>
-            <select value={form.category} onChange={(e) => set('category', e.target.value)}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+            <select value={form.category} aria-invalid={!!errors.category} onChange={(e) => { set('category', e.target.value); set('subcategory', '') }}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+            {errors.category && <em>{errors.category}</em>}
           </label>
-          {onRequest && (
-            <label className="ep-field"><span>Subcategory (optional)</span><input className="hr-input" maxLength={60} value={form.subcategory} onChange={(e) => set('subcategory', e.target.value)} placeholder="e.g. Logos" /></label>
-          )}
+          <label className="ep-field"><span>Subcategory (optional)</span>
+            <select value={form.subcategory} aria-invalid={!!errors.subcategory} disabled={!subOptions.length} onChange={(e) => set('subcategory', e.target.value)}>
+              <option value="">{subOptions.length ? 'Choose one' : 'None for this category'}</option>
+              {subOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {errors.subcategory && <em>{errors.subcategory}</em>}
+          </label>
         </div>
         {!onRequest && (
           <>
@@ -700,7 +716,6 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
                 <div><span>Buyer pays, incl. fee</span><b>{money(priceNum + fee, form.currency)}</b></div>
               </div>
             )}
-            <label className="ep-field"><span>Subcategory (optional)</span><input className="hr-input" maxLength={60} value={form.subcategory} onChange={(e) => set('subcategory', e.target.value)} placeholder="e.g. Logos" /></label>
           </>
         )}
 

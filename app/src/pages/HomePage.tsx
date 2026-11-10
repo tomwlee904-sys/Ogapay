@@ -561,7 +561,8 @@ export default function HomePage() {
   const jobs = useMemo(() => listOf(jobsRes).filter((j: any) => jobDeadline(j).state !== "ended"), [jobsRes]);
   const jobsLoading = !jobsRes && !jobsErr;
   // The discovery panels that pass over the ecosystem helix (only those with content)
-  const storeRes = useJson<any>("/store?limit=9&sort=newest");
+  // Featured products first, then the store's Recommended order (2026-11-10: it was the 9 newest)
+  const storeRes = useJson<any>("/store?limit=9&sort=recommended");
   const blogRes = useJson<any>("/blog?limit=9");
   // page=1 makes the server send just 12 (without it, every public community came back) (2026-11-08)
   const commRes = useJson<any>("/communities?page=1&limit=12");
