@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
 import ItemCover from '../components/ItemCover'
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import Layout from "../components/Layout"
 import InviteToCommunity from "../components/profile/InviteToCommunity"
 import TransferModal from "../components/TransferModal"
@@ -72,7 +72,10 @@ export default function UserProfile() {
   const [portfolio, setPortfolio] = useState<any[]>([])
   const [blogs, setBlogs] = useState<any[]>([])
   const [communities, setCommunities] = useState<any[]>([])
-  const [tab, setTab] = useState<Tab>("store")
+  // /user/<name>?tab=store opens that tab (Share my store, 2026-11-10)
+  const [params] = useSearchParams()
+  const askedTab = (["store", "portfolio", "reviews", "communities"] as Tab[]).find((t) => t === params.get("tab")) || null
+  const [tab, setTab] = useState<Tab>(askedTab || "store")
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tipOpen, setTipOpen] = useState(false)
   const [shared, setShared] = useState(false)
@@ -105,7 +108,7 @@ export default function UserProfile() {
           setBlogs(Array.isArray(bl) ? bl : [])
           setCommunities(Array.isArray(cm) ? cm : [])
           // Open on the first tab that has something to show
-          if (!(Array.isArray(pr) && pr.length)) {
+          if (!askedTab && !(Array.isArray(pr) && pr.length)) {
             if (Array.isArray(pf) && pf.length) setTab("portfolio")
             else if (r?.total) setTab("reviews")
           }

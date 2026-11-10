@@ -17,6 +17,13 @@ import '../styles/edit-profile.css'
 import '../styles/my-store.css'
 import { sized } from '../lib/img'
 import LoadError from '../components/LoadError'
+import MyStoreReviews from '../components/MyStoreReviews'
+import MyStoreEarnings from '../components/MyStoreEarnings'
+import { useToast } from '../context/ToastContext'
+
+// My Store tabs (?tab=orders|reviews|earnings; products is the default)
+const TABS = ['products', 'orders', 'reviews', 'earnings'] as const
+type TabName = (typeof TABS)[number]
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
@@ -25,6 +32,8 @@ type Product = {
   delistedAt?: string | null; delistReason?: string | null
   sales: number; orders: number; avgRating: number; reviewsCount: number; delivery?: string; revisions?: number; tags?: string[]
   priceOnRequest?: boolean; sampleFiles?: UploadedFile[]; searchTags?: string
+  // What is sold (null: an older product, treated as a service); 'API': listed by an agent
+  productKind?: Kind | null; createdVia?: string | null
   sellerReceives?: number; buyerPays?: number; feePercent?: number
   // Orders still running (to deliver, delivered, reported): deleting doesn't cancel them
   openOrders?: number
@@ -48,20 +57,46 @@ const CATEGORIES = [
 // the delivery time on the order), so '2 weeks' is safe to promise
 const DELIVERY = ['Instant (digital)', '1 day', '2 days', '3 days', '5 days', '1 week', '2 weeks']
 const MIN_NGN = 100
+// Product type (2026-11-10). Physical items are paid out 7 days after delivery, the rest after 3
+type Kind = 'DIGITAL' | 'SERVICE' | 'PHYSICAL'
+const KINDS: [Kind, string, string][] = [
+  ['DIGITAL', 'Digital', 'Files or access the buyer gets online: e-books, templates, courses.'],
+  ['SERVICE', 'Service', 'Work you do for the buyer: design, writing, lessons.'],
+  ['PHYSICAL', 'Physical', "An item you send or hand over. You're paid 7 days after you mark it delivered."],
+]
+// Descriptions up to 10,000 characters (server: validate.js)
+const DESC_MAX = 10000
+// Search tags: chips, up to 30 characters each and 200 characters in all (saved as "a, b, c")
+const TAG_MAX = 30
+const TAGS_MAX = 200
+const splitTags = (s: string) => s.split(',').map((t) => t.trim().replace(/\s+/g, ' ')).filter(Boolean)
+// Adds tags (any capitals count as the same tag) while they fit; returns the list and how many were added
+const mergeTags = (have: string[], more: string[]) => {
+  const out = [...have]
+  const seen = new Set(have.map((t) => t.toLowerCase()))
+  let added = 0
+  for (const raw of more) {
+    const t = raw.trim().replace(/\s+/g, ' ').slice(0, TAG_MAX)
+    if (!t || seen.has(t.toLowerCase()) || [...out, t].join(', ').length > TAGS_MAX) continue
+    out.push(t); seen.add(t.toLowerCase()); added++
+  }
+  return { list: out, added }
+}
 
 const money = (n: number, cur = 'NGN') =>
   cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
-const blank = { name: '', description: '', price: '', currency: 'NGN', category: CATEGORIES[0], subcategory: '', imageUrl: '', stock: '', delivery: '3 days', revisions: '2', tags: '', priceMode: 'fixed' }
+const blank = { name: '', description: '', price: '', currency: 'NGN', category: CATEGORIES[0], subcategory: '', imageUrl: '', stock: '', delivery: '3 days', revisions: '2', tags: '', priceMode: 'fixed', productKind: 'SERVICE' as Kind }
 type Form = typeof blank
 const startForm = (product: Product | null): Form => product ? {
   name: product.name, description: product.description, price: product.priceOnRequest ? '' : String(product.price), currency: product.currency,
   category: product.category, subcategory: product.subcategory || '', imageUrl: product.imageUrl || '', stock: product.stock === null ? '' : String(product.stock),
   delivery: product.delivery || '3 days', revisions: String(product.revisions ?? 2),
   tags: product.searchTags || (product.tags || []).join(', '), priceMode: product.priceOnRequest ? 'request' : 'fixed',
+  productKind: product.productKind || 'SERVICE',
 } : blank
 // Server field names to the form's (a refused save highlights the right field;
 // others are named in the message)
-const FIELD_OF: Record<string, string> = { name: 'name', description: 'description', price: 'price', currency: 'price', stock: 'stock', searchTags: 'tags', tags: 'tags', imageUrl: 'imageUrl', sampleFiles: 'files' }
+const FIELD_OF: Record<string, string> = { name: 'name', description: 'description', price: 'price', currency: 'price', stock: 'stock', searchTags: 'tags', tags: 'tags', imageUrl: 'imageUrl', sampleFiles: 'files', productKind: 'productKind' }
 
 // Publishing needs a verified email and Level 1 (2026-11-10). Hidden products can
 // always be saved, and products already live stay up.
@@ -89,7 +124,8 @@ export default function MyStore() {
   // Buyers can't see a private profile's or a checked account's products (B17, 2026-11-10)
   const [visibility, setVisibility] = useState<{ visible: boolean; reason: 'private' | 'review' | null } | null>(null)
   const [params, setParams] = useSearchParams()
-  const tab = params.get('tab') === 'orders' ? 'orders' : 'products'
+  const tab: TabName = TABS.find((t) => t === params.get('tab')) || 'products'
+  const { toast } = useToast()
   const [products, setProducts] = useState<Product[] | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
@@ -141,6 +177,23 @@ export default function MyStore() {
   const rated = (products || []).filter((p) => p.reviewsCount > 0)
   const avg = rated.length ? rated.reduce((s, p) => s + p.avgRating * p.reviewsCount, 0) / rated.reduce((s, p) => s + p.reviewsCount, 0) : 0
 
+  // Share my store (F27, 2026-11-10): the public profile opened on its Store tab.
+  // Phones get the share sheet; elsewhere the link is copied.
+  const storeUrl = user?.username ? `${window.location.origin}/user/${encodeURIComponent(user.username)}?tab=store` : ''
+  const shareStore = async () => {
+    if (!storeUrl) return
+    try {
+      if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+        await navigator.share({ title: `${user?.firstName || user?.username}'s store on OgaPay`, text: 'Check out my store on OgaPay', url: storeUrl })
+        return
+      }
+      await navigator.clipboard.writeText(storeUrl)
+      toast('Store link copied. Paste it on WhatsApp, X or anywhere.', 'success')
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') toast(`Couldn't copy the link. Your store link: ${storeUrl}`, 'error', 8000)
+    }
+  }
+
   const ordersLine = (n: number) => `${n === 1 ? '1 order' : `${n} orders`} for it ${n === 1 ? 'is' : 'are'} still open`
   const setStatus = async (p: Product, active: boolean) => {
     if (!active && !window.confirm(`Hide "${p.name}" from the store?${p.openOrders ? ` ${ordersLine(p.openOrders)}: they don't change.` : ''} ${needs.length ? "To publish it again you'll need to verify your account first." : 'You can publish it again any time.'}`)) return
@@ -178,7 +231,8 @@ export default function MyStore() {
             <p>Sell services and digital products. Buyers pay from their OgaPay wallet; the money comes to you when they confirm delivery, or 3 days after you mark it delivered.</p>
           </div>
           <div className="acts">
-            {user?.username && <Link className="up-btn" to={`/user/${user.username}`}><i className="ti ti-eye" /> View public store</Link>}
+            {user?.username && <Link className="up-btn" to={`/user/${user.username}?tab=store`}><i className="ti ti-eye" /> View public store</Link>}
+            {user?.username && <button className="up-btn" onClick={shareStore}><i className="ti ti-share" /> Share my store</button>}
             <button className="up-btn primary" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button>
           </div>
         </div>
@@ -203,6 +257,8 @@ export default function MyStore() {
           <div className="up-tabs" role="tablist">
             <button role="tab" aria-selected={tab === 'products'} className={`up-tab ${tab === 'products' ? 'on' : ''}`} onClick={() => setParams({})}><i className="ti ti-package" /> Products {products?.length ? <em>{products.length}</em> : null}</button>
             <button role="tab" aria-selected={tab === 'orders'} className={`up-tab ${tab === 'orders' ? 'on' : ''}`} onClick={() => setParams({ tab: 'orders' })}><i className="ti ti-receipt" /> Orders {open ? <em>{open} open</em> : null}</button>
+            <button role="tab" aria-selected={tab === 'reviews'} className={`up-tab ${tab === 'reviews' ? 'on' : ''}`} onClick={() => setParams({ tab: 'reviews' })}><i className="ti ti-star" /> Reviews</button>
+            <button role="tab" aria-selected={tab === 'earnings'} className={`up-tab ${tab === 'earnings' ? 'on' : ''}`} onClick={() => setParams({ tab: 'earnings' })}><i className="ti ti-chart-bar" /> Earnings</button>
           </div>
         </div>
 
@@ -211,7 +267,7 @@ export default function MyStore() {
         {notice && <div className="up-note ok" role="status" style={{ marginBottom: 12 }}>{notice} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setNotice('')}>OK</button></div>}
         {tab === 'products' && products !== null && (needs.length > 0 || errorNeeds.length > 0) && <div style={{ marginBottom: 14 }}><VerifyToSell needs={needs.length ? needs : errorNeeds} /></div>}
 
-        {tab === 'products' ? (
+        {tab === 'reviews' ? <MyStoreReviews /> : tab === 'earnings' ? <MyStoreEarnings /> : tab === 'products' ? (
           products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
           : products.length === 0 ? (
             <div className="up-empty">
@@ -235,6 +291,8 @@ export default function MyStore() {
                 <h3>{p.name}</h3>
                 <div className="meta">
                   <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.delistedAt ? 'Removed by OgaPay' : p.isActive ? 'Live' : 'Hidden'}</span>
+                  {p.createdVia === 'API' && <span className="ms2-badge" title="Listed through the OgaPay API with one of your keys"><i className="ti ti-robot" aria-hidden="true" /> Agent</span>}
+                  {p.productKind && <span>{KINDS.find((k) => k[0] === p.productKind)?.[1]}</span>}
                   <span><b>{p.priceOnRequest ? 'Price on request' : show(p.price, p.currency)}</b></span>
                   {!!p.sampleFiles?.length && <span><i className="ti ti-paperclip" aria-hidden="true" /> {p.sampleFiles.length}</span>}
                   <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
@@ -307,6 +365,10 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
   const [filesBusy, setFilesBusy] = useState(false)
   const [descTab, setDescTab] = useState<'write' | 'preview'>('write')
   const [tagsBusy, setTagsBusy] = useState(false)
+  // The tag being typed (Enter or a comma turns it into a chip), and what "Generate" added
+  const [tagDraft, setTagDraft] = useState('')
+  const [tagNote, setTagNote] = useState('')
+  const descRef = useRef<HTMLTextAreaElement>(null)
   const sampleRef = useRef<HTMLInputElement>(null)
   const onRequest = form.priceMode === 'request'
   const priceNum = Number(form.price) || 0
@@ -370,13 +432,54 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     if (sampleRef.current) sampleRef.current.value = ''
   }
 
-  // Search words from the title, category and description (the store's AI helper)
+  // Formatting buttons (F23): bold and italic wrap the selection, list and heading
+  // start each selected line. The cursor comes back on the same text.
+  const format = (kind: 'bold' | 'italic' | 'list' | 'heading') => {
+    const ta = descRef.current
+    if (!ta) return
+    const v = form.description, s = ta.selectionStart, e = ta.selectionEnd
+    let next: string, from: number, to: number
+    if (kind === 'bold' || kind === 'italic') {
+      const mark = kind === 'bold' ? '**' : '*'
+      const text = v.slice(s, e) || (kind === 'bold' ? 'bold text' : 'italic text')
+      next = v.slice(0, s) + mark + text + mark + v.slice(e)
+      from = s + mark.length; to = from + text.length
+    } else {
+      const prefix = kind === 'list' ? '- ' : '## '
+      const lineStart = v.lastIndexOf('\n', s - 1) + 1
+      const lines = v.slice(lineStart, e).split('\n').map((l) => (l.startsWith(prefix) ? l : prefix + l.replace(/^(#{1,6} |- )/, '')))
+      const block = lines.join('\n')
+      next = v.slice(0, lineStart) + block + v.slice(e)
+      from = block === prefix ? lineStart + prefix.length : lineStart; to = lineStart + block.length
+    }
+    if (next.length > DESC_MAX) { setErrors((x) => ({ ...x, description: `Up to ${DESC_MAX.toLocaleString('en-US')} characters` })); return }
+    set('description', next)
+    requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(from, to) })
+  }
+
+  // Tag chips (F24): typed tags, Enter or comma to add, × to remove
+  const tagList = splitTags(form.tags)
+  const setTags = (list: string[]) => { set('tags', list.join(', ')); setTagNote('') }
+  const addDraft = (text = tagDraft) => {
+    const words = splitTags(text)
+    if (!words.length) { setTagDraft(''); return }
+    const { list, added } = mergeTags(tagList, words)
+    setTags(list)
+    setTagDraft('')
+    if (added < words.filter((w) => !tagList.some((t) => t.toLowerCase() === w.toLowerCase())).length) setErrors((x) => ({ ...x, tags: `Tags fit ${TAGS_MAX} characters in all, ${TAG_MAX} each. Remove one to add more.` }))
+  }
+
+  // More search words from the title, category and description (AI when it's set
+  // up on the server). They're added to the seller's tags, never replacing them.
   const makeTags = async () => {
     if (form.name.trim().length < 3) { setErrors((e) => ({ ...e, name: 'Add a title first' })); return }
-    setTagsBusy(true)
+    setTagsBusy(true); setTagNote('')
     try {
-      const d = await apiRequest<{ tags: string }>('/ai/search-tags', { method: 'POST', body: JSON.stringify({ name: form.name, category: form.category, subcategory: form.subcategory, description: form.description }) })
-      if (d?.tags) set('tags', d.tags.slice(0, 200))
+      const have = mergeTags(tagList, splitTags(tagDraft)).list
+      const d = await apiRequest<{ tags: string; list?: string[] }>('/ai/search-tags', { method: 'POST', body: JSON.stringify({ name: form.name, category: form.category, subcategory: form.subcategory, description: form.description, existing: have }) })
+      const { list, added } = mergeTags(have, d?.list || splitTags(d?.tags || ''))
+      set('tags', list.join(', ')); setTagDraft('')
+      setTagNote(added ? `${added === 1 ? '1 tag' : `${added} tags`} added. Check them before saving.` : list.join(', ').length >= TAGS_MAX - 10 ? 'Your tags are full. Remove some to add others.' : 'No new tags to add.')
     } catch (e: any) { setMsg(e?.message || "Couldn't make tags") }
     setTagsBusy(false)
   }
@@ -387,6 +490,7 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     const price = form.currency === 'NGN' ? Math.round(Number(form.price) * 100) / 100 : Number(form.price)
     if (form.name.trim().length < 3) errs.name = 'At least 3 characters'
     if (form.description.trim().length < 10) errs.description = 'Describe what the buyer gets (10+ characters)'
+    else if (form.description.trim().length > DESC_MAX) errs.description = `Up to ${DESC_MAX.toLocaleString('en-US')} characters`
     if (onRequest) { /* no price needed */ }
     else if (!(price > 0)) errs.price = 'Enter a price'
     // Like the server: an older product under ₦100 keeps its price until it changes
@@ -395,15 +499,16 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     if (form.stock !== '' && !(Number.isInteger(Number(form.stock)) && Number(form.stock) >= 0)) errs.stock = 'Whole number, or leave empty'
     if (Object.keys(errs).length) { setErrors(errs); setMsg('Check the highlighted fields.'); return }
 
-    const words = form.tags.split(',').map((t) => t.trim()).filter(Boolean)
+    // A tag still being typed is kept too
+    const words = mergeTags(tagList, splitTags(tagDraft)).list
     const body = {
       name: form.name.trim(), description: form.description.trim(), currency: form.currency, category: form.category,
       ...(onRequest ? { priceOnRequest: true } : { priceOnRequest: false, price }),
       subcategory: form.subcategory.trim() || null,
       imageUrl: form.imageUrl || null, stock: form.stock === '' ? null : Number(form.stock), delivery: form.delivery,
       // The first few words show on the product card; all of them are searched
-      revisions: Number(form.revisions), tags: words.filter((t) => t.length <= 30).slice(0, 8), searchTags: form.tags.trim().slice(0, 200) || null,
-      sampleFiles: files, status,
+      revisions: Number(form.revisions), tags: words.filter((t) => t.length <= TAG_MAX).slice(0, 8), searchTags: words.join(', ').slice(0, TAGS_MAX) || null,
+      sampleFiles: files, status, productKind: form.productKind,
     }
     setSaving(true); setMsg(''); setSaveNeeds([])
     try {
@@ -445,10 +550,32 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
               <button type="button" role="tab" aria-selected={descTab === 'preview'} className={descTab === 'preview' ? 'on' : ''} onClick={() => setDescTab('preview')}>Preview</button>
             </span>
           </span>
-          {descTab === 'write'
-            ? <textarea className="hr-input hr-area" style={{ minHeight: 140 }} maxLength={5000} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder={'Deliverables, format, what you need from the buyer.\n\n## What you get\n- 3 logo ideas\n- **PNG and SVG** files'} aria-invalid={!!errors.description} aria-label="What the buyer gets" />
-            : <div className="ms2-preview" dangerouslySetInnerHTML={{ __html: renderBlog(form.description) || '<p style="color:var(--text3)">Nothing to preview yet.</p>' }} />}
-          {errors.description ? <em>{errors.description}</em> : <small>Formatting: ## heading, **bold**, *italic*, - list, 1. list, [link](https://…), | table |.</small>}
+          {descTab === 'write' ? (
+            <>
+              <div className="ms2-tools" role="toolbar" aria-label="Formatting">
+                <button type="button" onClick={() => format('bold')} aria-label="Bold" title="Bold"><i className="ti ti-bold" /></button>
+                <button type="button" onClick={() => format('italic')} aria-label="Italic" title="Italic"><i className="ti ti-italic" /></button>
+                <button type="button" onClick={() => format('list')} aria-label="List" title="List"><i className="ti ti-list" /></button>
+                <button type="button" onClick={() => format('heading')} aria-label="Heading" title="Heading"><i className="ti ti-heading" /></button>
+              </div>
+              <textarea ref={descRef} className="hr-input hr-area" style={{ minHeight: 160 }} maxLength={DESC_MAX} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder={'Deliverables, format, what you need from the buyer.\n\n## What you get\n- 3 logo ideas\n- **PNG and SVG** files'} aria-invalid={!!errors.description} aria-label="What the buyer gets" />
+            </>
+          ) : <div className="ms2-preview" dangerouslySetInnerHTML={{ __html: renderBlog(form.description) || '<p style="color:var(--text3)">Nothing to preview yet.</p>' }} />}
+          {errors.description && <em>{errors.description}</em>}
+          <small className={`ms2-count ${form.description.length >= DESC_MAX ? 'over' : ''}`} aria-live="polite">
+            <span>Select words and tap a button, or type ## heading, **bold**, *italic*, - list, [link](https://…). Preview shows how buyers see it.</span>
+            <b>{form.description.length.toLocaleString('en-US')} / {DESC_MAX.toLocaleString('en-US')}</b>
+          </small>
+        </div>
+
+        <div className="ep-field">
+          <span>Product type</span>
+          <div className="ms2-seg ms2-seg-wide" role="radiogroup" aria-label="Product type">
+            {KINDS.map(([k, label]) => (
+              <button key={k} type="button" role="radio" aria-checked={form.productKind === k} className={form.productKind === k ? 'on' : ''} onClick={() => set('productKind', k)}>{label}</button>
+            ))}
+          </div>
+          {errors.productKind ? <em>{errors.productKind}</em> : <small>{KINDS.find((k) => k[0] === form.productKind)?.[2]}</small>}
         </div>
 
         <div className="ep-field">
@@ -528,10 +655,36 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
         <div className="ep-field">
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             Search tags (optional)
-            <button type="button" className="up-btn" style={{ height: 36 }} disabled={tagsBusy} onClick={makeTags}><i className="ti ti-sparkles" /> {tagsBusy ? 'Making…' : 'Generate tags with AI'}</button>
+            <button type="button" className="up-btn" disabled={tagsBusy} onClick={makeTags}><i className="ti ti-sparkles" /> {tagsBusy ? 'Making…' : 'Generate with AI'}</button>
           </span>
-          <input className="hr-input" maxLength={200} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="logo, branding, flyer" aria-label="Search tags" aria-invalid={!!errors.tags} />
-          {errors.tags ? <em>{errors.tags}</em> : <small>Words buyers might search for, separated by commas. {form.tags.length}/200</small>}
+          <div className="ms2-chips" onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus()}>
+            {tagList.map((t, i) => (
+              <span key={`${i}-${t}`} className="ms2-chip">
+                <span>{t}</span>
+                <button type="button" aria-label={`Remove tag ${t}`} onClick={(e) => { e.stopPropagation(); setTags(tagList.filter((_, j) => j !== i)) }}><i className="ti ti-x" /></button>
+              </span>
+            ))}
+            <input
+              value={tagDraft}
+              onChange={(e) => {
+                const v = e.target.value
+                setErrors((x) => ({ ...x, tags: '' }))
+                // A comma (typed or pasted) adds what's before it
+                if (v.includes(',')) { const parts = v.split(','); addDraft(parts.slice(0, -1).join(',')); setTagDraft(parts[parts.length - 1].trimStart()) }
+                else setTagDraft(v.slice(0, TAG_MAX))
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); addDraft() }
+                else if (e.key === 'Backspace' && !tagDraft && tagList.length) setTags(tagList.slice(0, -1))
+              }}
+              onBlur={() => addDraft()}
+              placeholder={tagList.length ? 'Add a tag' : 'logo, branding, flyer'}
+              aria-label="Add a search tag"
+              aria-invalid={!!errors.tags}
+            />
+          </div>
+          {errors.tags ? <em>{errors.tags}</em>
+            : <small>{tagNote ? <b style={{ color: 'var(--text)' }}>{tagNote} </b> : null}Words buyers might search for. Press Enter or type a comma after each. {tagList.join(', ').length}/{TAGS_MAX}</small>}
         </div>
 
         <div className="ep-field">
