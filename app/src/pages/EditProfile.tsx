@@ -92,9 +92,12 @@ export default function EditProfile() {
     if (form.categories.join('|') !== base.categories.join('|')) body.categories = form.categories
     if (form.isAvailable !== base.isAvailable) body.isAvailable = form.isAvailable
     if (form.isPublic !== base.isPublic) body.isPublic = form.isPublic
-    if (form.showEarnings !== base.showEarnings || form.showRank !== base.showRank) {
-      body.preferences = { ...(me.preferences || {}), showEarnings: form.showEarnings, showRank: form.showRank }
-    }
+    // Only the switches that changed: sending every preference back failed the
+    // whole save for anyone who never chose job alerts (2026-11-10)
+    const prefs: Record<string, boolean> = {}
+    if (form.showEarnings !== base.showEarnings) prefs.showEarnings = form.showEarnings
+    if (form.showRank !== base.showRank) prefs.showRank = form.showRank
+    if (Object.keys(prefs).length) body.preferences = prefs
     return body
   }
   const dirty = !!photo || Object.keys(changes()).length > 0

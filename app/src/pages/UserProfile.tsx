@@ -238,7 +238,7 @@ export default function UserProfile() {
   const stats: { icon: string; label: string; value: string; sub?: string; tip?: ReactNode }[] = [
     { icon: "ti-heart", label: "Compliments", value: String(compliments ?? 0),
       tip: <p>How many people complimented this profile. Anyone signed in can give one compliment per profile, and take it back.</p> },
-    { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted ? `${Math.round(wp.successRate || 0)}% success rate` : undefined,
+    { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted && wp.successRate != null ? `${Math.round(wp.successRate)}% success rate` : undefined,
       tip: <p>Jobs this person was paid for. The success rate is the share of their work that was approved (approved ÷ approved and rejected).</p> },
     ...(profile?.preferences?.showRank ? [{ icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}`,
       tip: <>
