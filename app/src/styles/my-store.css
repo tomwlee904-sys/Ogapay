@@ -90,3 +90,7 @@
 .ms2-files li { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 4px 4px 4px 10px; min-width: 0; }
 .ms2-files a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 13px; }
 .ms2-files .up-btn { height: 36px; min-width: 36px; padding: 0 8px; }
+/* Verify before publishing (2026-11-10) */
+.ms2-verify > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ms2-verify .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ms2-verify .acts .up-btn { min-height: 40px; }
