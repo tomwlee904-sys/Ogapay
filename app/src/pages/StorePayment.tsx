@@ -22,12 +22,30 @@ import '../styles/checkout.css'
 // in the same step as the payment (the server also posts them in the chat), so
 // they can't be lost. Attachments go to private storage, never public links.
 // OgaPay's own items (perks) have no seller, so they skip straight to payment.
+// 2026-11-10 (B7, F15): a physical item asks for the delivery details (sent with
+// Pay and saved on the order, seen only by the buyer, the seller and OgaPay) and
+// lets the buyer pick a quantity, up to the stock left (100 at most).
 
 type Item = {
   id: string; title: string; description: string; price: number; currency: Currency
   seller: string; sellerId?: string; sellerAvatar: string | null; image: string
   stock: number | null; isActive?: boolean; category?: string; official?: boolean
   metadata?: { delivery?: string; revisions?: number; subcategory?: string }
+  productKind?: 'DIGITAL' | 'SERVICE' | 'PHYSICAL' | null
+}
+type Shipping = { name: string; phone: string; address: string; city: string; state: string; country: 'NG' | 'GH' }
+// The same checks as the server (storeOrder.service cleanShipping)
+const SHIP_FIELDS: [keyof Omit<Shipping, 'country'>, string, number, number, string][] = [
+  ['name', 'Full name', 2, 80, 'name'], ['phone', 'Phone number', 7, 20, 'tel'], ['address', 'Address', 5, 200, 'street-address'],
+  ['city', 'City or town', 2, 60, 'address-level2'], ['state', 'State or region', 2, 60, 'address-level1'],
+]
+const shippingProblem = (a: Shipping) => {
+  for (const [key, label, min, max] of SHIP_FIELDS) {
+    const v = a[key].trim()
+    if (v.length < min || v.length > max) return `Enter your ${label.toLowerCase()}.`
+  }
+  if (!/^\+?[\d\s()-]+$/.test(a.phone.trim()) || a.phone.replace(/\D/g, '').length < 7) return 'Enter a phone number the courier can call.'
+  return ''
 }
 type Seller = { username: string; name: string; avatarUrl: string | null; bio: string | null; rating: number; reviews: number }
 type MyJob = { id: string; title: string; status: string; expiresAt?: string | null; hiredWorkerId?: string | null }
@@ -108,6 +126,10 @@ export default function StorePayment() {
   // the buyer has to tap Pay again to agree to it
   const [priceChanged, setPriceChanged] = useState<string | null>(null)
   const [checking, setChecking] = useState(false)
+  // Physical items: how many, and where to send them
+  const [qty, setQty] = useState(1)
+  const [ship, setShip] = useState<Shipping>(() => ({ name: [user?.firstName, user?.lastName].filter(Boolean).join(' '), phone: '', address: '', city: '', state: '', country: user?.country === 'GH' ? 'GH' : 'NG' }))
+  const [shipTried, setShipTried] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -184,12 +206,17 @@ export default function StorePayment() {
   // "Not enough" until it's known (2026-11-08)
   const balanceKnown = balances != null
   const available = balances?.[item.currency]?.available ?? 0
-  const short = balanceKnown ? Math.max(0, item.price - available) : 0
+  const physical = item.productKind === 'PHYSICAL' && !item.official
+  const maxQty = physical ? Math.max(1, Math.min(item.stock ?? 100, 100)) : 1
+  const quantity = Math.min(qty, maxQty)
+  const total = Math.round(item.price * quantity * 1e8) / 1e8
+  const shipError = physical ? shippingProblem(ship) : ''
+  const short = balanceKnown ? Math.max(0, total - available) : 0
   const own = !!user && !item.official && item.sellerId === user.id
   const soldOut = item.isActive === false || item.stock === 0
   const alreadyHave = !!perk?.permanent && owned.includes(perk.kind)
   const needJob = perk?.kind === 'TASK_BOOST' && !jobId
-  const canPay = !own && !soldOut && !alreadyHave && !needJob && balanceKnown && short === 0 && !paying
+  const canPay = !own && !soldOut && !alreadyHave && !needJob && !shipError && balanceKnown && short === 0 && !paying
   const delivery = item.metadata?.delivery || '3 days'
   const revisions = item.metadata?.revisions ?? 3
   const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
@@ -238,7 +265,7 @@ export default function StorePayment() {
   const finish = async (order: { id: string; conversationId?: string | null }) => {
     refresh()
     try { sessionStorage.removeItem(draftKey(item.id)) } catch { /* storage off */ }
-    navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId } })
+    navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total, currency: item.currency, conversationId: order.conversationId } })
   }
 
   // The price or currency changed since the page loaded (409 PRICE_CHANGED): nothing
@@ -314,7 +341,10 @@ export default function StorePayment() {
       // The brief and files are saved on the order with the payment (2026-11-10)
       const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, {
         method: 'POST',
-        body: JSON.stringify({ quantity: 1, ...agreed, ...(brief.trim() && { brief: brief.trim() }), ...(files.length && { attachments: files }) }),
+        body: JSON.stringify({
+          quantity, ...agreed, ...(brief.trim() && { brief: brief.trim() }), ...(files.length && { attachments: files }),
+          ...(physical && { shipping: { ...ship, name: ship.name.trim(), phone: ship.phone.trim(), address: ship.address.trim(), city: ship.city.trim(), state: ship.state.trim() } }),
+        }),
       })
       await finish(order)
     } catch (e: any) {
@@ -363,7 +393,7 @@ export default function StorePayment() {
       {!item.official && (
         <div className="sc-facts">
           <div><span><i className="ti ti-clock" aria-hidden="true" /> Delivery</span><b>{delivery}</b></div>
-          <div><span><i className="ti ti-refresh" aria-hidden="true" /> Revisions</span><b>{revisions}</b></div>
+          {!physical && <div><span><i className="ti ti-refresh" aria-hidden="true" /> Revisions</span><b>{revisions >= 999 ? 'Unlimited' : revisions}</b></div>}
         </div>
       )}
       {(perk?.what || item.description) && (
@@ -398,6 +428,28 @@ export default function StorePayment() {
         {step === 'details' ? (
           <div className="sc-grid">
             <div className="sc-main">
+              {physical && (
+                <section className="ui-card ui-card-pad">
+                  <div className="sc-sec-head">
+                    <h1 className="sc-h"><i className="ti ti-map-pin" aria-hidden="true" /> Delivery details</h1>
+                  </div>
+                  <p className="sc-lead">Where should the seller send it? Only the seller and OgaPay support see this.</p>
+                  {SHIP_FIELDS.map(([key, label, min, max, auto]) => (
+                    <div key={key}>
+                      <label className="sc-label" htmlFor={`sc-ship-${key}`}>{label}</label>
+                      <input id={`sc-ship-${key}`} className="ui-input" maxLength={max} autoComplete={auto} type={key === 'phone' ? 'tel' : 'text'} value={ship[key]}
+                        aria-invalid={shipTried && ship[key].trim().length < min ? true : undefined}
+                        onChange={(e) => setShip({ ...ship, [key]: e.target.value })} />
+                    </div>
+                  ))}
+                  <label className="sc-label" htmlFor="sc-ship-country">Country</label>
+                  <select id="sc-ship-country" className="ui-select" value={ship.country} onChange={(e) => setShip({ ...ship, country: e.target.value === 'GH' ? 'GH' : 'NG' })}>
+                    <option value="NG">Nigeria</option>
+                    <option value="GH">Ghana</option>
+                  </select>
+                  {shipTried && shipError && <p className="sc-error" role="alert">{shipError}</p>}
+                </section>
+              )}
               <section className="ui-card ui-card-pad">
                 <div className="sc-sec-head">
                   <h1 className="sc-h"><i className="ti ti-file-pencil" aria-hidden="true" /> Message to the seller</h1>
@@ -455,11 +507,21 @@ export default function StorePayment() {
               {ProductCard}
               <section className="ui-card ui-card-pad">
                 <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-receipt" aria-hidden="true" /> Order summary</h2>
-                <div className="sc-line total" style={{ marginTop: 6 }}><span>Order total</span><span>{money(item.price, item.currency)}</span></div>
+                {physical && (
+                  <div className="sc-line" style={{ alignItems: 'center' }}>
+                    <label htmlFor="sc-qty">Quantity{item.stock != null ? ` (${item.stock} left)` : ''}</label>
+                    <select id="sc-qty" className="ui-select" style={{ width: 96 }} value={quantity} onChange={(e) => setQty(Number(e.target.value) || 1)}>
+                      {Array.from({ length: maxQty }, (_, i) => i + 1).map((q) => <option key={q} value={q}>{q}</option>)}
+                    </select>
+                  </div>
+                )}
+                {quantity > 1 && <div className="sc-line"><span>Price each</span><span>{money(item.price, item.currency)} × {quantity}</span></div>}
+                <div className="sc-line total" style={{ marginTop: 6 }}><span>Order total</span><span>{money(total, item.currency)}</span></div>
                 <p className="sc-fine" style={{ marginTop: 0 }}>No fees for buyers.</p>
                 <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: OgaPay holds your payment until you confirm you received the order.</p>
                 {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
-                <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => setParams({ step: 'pay' })}>
+                {physical && shipTried && shipError && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> Add your delivery details first.</p>}
+                <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => { setShipTried(true); if (!shipError) setParams({ step: 'pay' }) }}>
                   {uploading ? 'Uploading your files…' : <>Proceed to payment <i className="ti ti-arrow-right" aria-hidden="true" /></>}
                 </button>
               </section>
@@ -491,7 +553,7 @@ export default function StorePayment() {
                   <h1 className="sc-h"><i className="ti ti-credit-card" aria-hidden="true" /> Payment details</h1>
                   <div className="sc-amount">
                     <span>Total to pay</span>
-                    <b>{money(item.price, item.currency)}</b>
+                    <b>{money(total, item.currency)}</b>
                   </div>
 
                   <div className="sc-opt-head"><span className="n">1</span> Pay from your OgaPay wallet</div>
@@ -513,10 +575,11 @@ export default function StorePayment() {
                   <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!canPay} onClick={pay}>
                     {checking ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Checking your order…</>
                       : paying ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Paying…</>
-                      : <>{priceChanged ? 'Confirm and pay' : 'Pay'} {money(item.price, item.currency)}</>}
+                      : <>{priceChanged ? 'Confirm and pay' : 'Pay'} {money(total, item.currency)}</>}
                   </button>
                   {error && <p className="sc-error" role="alert">{error}</p>}
                   {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
+                  {shipError && !blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {shipError} <button type="button" className="sc-more" onClick={() => setParams({})}>Edit delivery details</button></p>}
 
                   <div className="sc-or"><span>or</span></div>
 
@@ -547,11 +610,17 @@ export default function StorePayment() {
               <aside className="sc-side">
                 <section className="ui-card ui-card-pad">
                   <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-list-details" aria-hidden="true" /> Overview</h2>
-                  <div className="sc-line"><span>{item.title}</span><span>{money(item.price, item.currency)}</span></div>
+                  <div className="sc-line"><span>{item.title}{quantity > 1 ? ` × ${quantity}` : ''}</span><span>{money(total, item.currency)}</span></div>
                   {!item.official && <div className="sc-line"><span>Seller</span><span>@{item.seller}</span></div>}
                   {!item.official && <div className="sc-line"><span>Delivery</span><span>{delivery}</span></div>}
                   <div className="sc-line"><span>Fees</span><span>None</span></div>
-                  <div className="sc-line total"><span>Total</span><span>{money(item.price, item.currency)}</span></div>
+                  <div className="sc-line total"><span>Total</span><span>{money(total, item.currency)}</span></div>
+                  {physical && (
+                    <div className="sc-brief-sum">
+                      <div className="sc-sec-head"><span className="ui-label" style={{ margin: 0 }}>Deliver to</span><button type="button" className="sc-more" onClick={() => setParams({})}>Edit</button></div>
+                      <p>{ship.name.trim()} · {ship.phone.trim()}{'\n'}{[ship.address, ship.city, ship.state].map((x) => x.trim()).filter(Boolean).join(', ')}, {ship.country === 'GH' ? 'Ghana' : 'Nigeria'}</p>
+                    </div>
+                  )}
                   {!item.official && (
                     <div className="sc-brief-sum">
                       <div className="sc-sec-head"><span className="ui-label" style={{ margin: 0 }}>Your brief</span><button type="button" className="sc-more" onClick={() => setParams({})}>Edit</button></div>
@@ -561,7 +630,7 @@ export default function StorePayment() {
                   )}
                   {item.official
                     ? <p className="sc-note"><i className="ti ti-bolt" aria-hidden="true" /> Takes effect as soon as you pay. Not refundable once applied.</p>
-                    : <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: the seller gets your payment when you confirm you received the order, or 3 days after they mark it delivered. Something wrong? Report it before then and the money stays on hold.</p>}
+                    : <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: the seller gets your payment when you confirm you received the order, or {physical ? '7 days after they mark it shipped' : '3 days after they mark it delivered'}. Something wrong? Report it before then and the money stays on hold.</p>}
                 </section>
                 {item.official && ProductCard}
               </aside>

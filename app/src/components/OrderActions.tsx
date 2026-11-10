@@ -17,13 +17,17 @@ import '../styles/order-brief.css'
 //           compliment the seller once it's finished
 //   seller: start, mark delivered (a note or files are needed), cancel and
 //           refund, and tell OgaPay their side of a reported problem
+// 2026-11-10: the buyer can also ask for changes (while revisions last) and ask
+// to cancel after the seller started (and withdraw that); the seller marks a
+// physical item shipped (courier and tracking number), delivers changes, and
+// accepts (refund) or declines a cancel request.
 // The server checks every step again. onDone gets the message to show, and
 // 'confirmed' when the buyer just paid the seller (to ask for a review).
 
 export type ActionOrder = StoreOrder & { seller?: { username: string } | null; buyer?: { username: string } | null }
-type Panel = 'report' | 'deliver' | 'reply' | null
+type Panel = 'report' | 'deliver' | 'reply' | 'revise' | 'cancelask' | 'ship' | null
 
-const PANELS = {
+const PANELS: Record<Exclude<Panel, null>, { label: string; max: number; files?: string; send: string; sending: string; placeholder: string; hint: string; min?: number }> = {
   report: {
     label: 'What went wrong?', max: 1000, files: 'Add photos or files (optional)', send: 'Report problem', sending: 'Sending…',
     placeholder: 'For example: the files never arrived, or it isn\'t what the listing described.',
@@ -39,6 +43,21 @@ const PANELS = {
     placeholder: 'For example: I delivered on Monday and the buyer said it was fine in our chat.',
     hint: 'At least 10 characters.',
   },
+  revise: {
+    label: 'What should the seller change?', max: 2000, send: 'Ask for changes', sending: 'Sending…',
+    placeholder: 'For example: please make the blue darker and the name bigger.',
+    hint: 'At least 10 characters.',
+  },
+  cancelask: {
+    label: 'Why do you want to cancel? (optional)', max: 500, send: 'Ask to cancel', sending: 'Sending…', min: 0,
+    placeholder: 'For example: I no longer need it.',
+    hint: '',
+  },
+  ship: {
+    label: 'Courier or delivery company', max: 60, send: 'Mark shipped', sending: 'Saving…', min: 2,
+    placeholder: 'For example: GIG Logistics, or my own rider',
+    hint: 'Enter the courier.',
+  },
 }
 
 // A finished order whose seller the buyer can compliment (F19)
@@ -49,12 +68,13 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
 }) {
   const [panel, setPanel] = useState<Panel>(null)
   const [text, setText] = useState('')
+  const [tracking, setTracking] = useState('')
   const [files, setFiles] = useState<OrderFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const open = (p: Panel, start = '') => { setPanel(p); setText(start); setFiles([]); setError('') }
+  const open = (p: Panel, start = '', track = '') => { setPanel(p); setText(start); setTracking(track); setFiles([]); setError('') }
   const send = async (method: 'POST' | 'PATCH', path: string, body: object | null, done: string, what?: 'confirmed') => {
     setBusy(true); setError('')
     try {
@@ -68,7 +88,14 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
   const seller = `@${o.seller?.username || 'the seller'}`
   const amount = orderMoney(o.total, o.currency)
   const buyer = role === 'BUYER'
-  const delivered = !!o.deliveredAt
+  const delivered = !!o.deliveredAt || !!o.shippedAt
+  const physical = o.kind === 'PHYSICAL'
+  const asking = !!o.cancelRequestedAt
+  const hold = o.holdDays || 3
+  // Revisions left: a number, or null for unlimited (the server checks again)
+  const left = o.revisionsLeft
+  const canRevise = o.held && o.status === 'DELIVERED' && !physical && !asking && (left === null || (left ?? 0) > 0)
+  const canAskCancel = o.held && ['IN_PROGRESS', 'SHIPPED', 'DELIVERED', 'REVISION_REQUESTED'].includes(o.status) && !asking && o.cancelOutcome !== 'DECLINED'
 
   // ── Buyer steps ──
   const cancel = () => {
@@ -86,10 +113,14 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
   }
   const withdraw = () => {
     const next = delivered
-      ? `The order goes back to delivered: the payment goes to ${seller} in 3 days unless you confirm sooner or report again.`
+      ? `The order goes on: the payment goes to ${seller} in ${hold} days unless you confirm sooner or report again.`
       : `${seller} carries on with your order, and your payment stays held.`
     if (!window.confirm(`Withdraw your report? ${next}`)) return
     send('POST', '/dispute/withdraw', null, 'Report withdrawn. Your order goes on as normal.')
+  }
+  const withdrawCancel = () => {
+    if (!window.confirm('Withdraw your request to cancel? The order goes on as normal.')) return
+    send('POST', '/cancel-request/withdraw', null, 'Request withdrawn. Your order goes on as normal.')
   }
 
   // ── Seller steps ──
@@ -98,29 +129,49 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
     if (!window.confirm(`Cancel @${o.buyer?.username || 'the buyer'}'s order for "${o.product.name}" and refund ${amount} to them? This can't be undone.`)) return
     send('POST', '/cancel', null, 'Order cancelled. The buyer was refunded.')
   }
+  const acceptCancel = () => {
+    if (!window.confirm(`Accept the request and refund ${amount} to @${o.buyer?.username || 'the buyer'}? This can't be undone.`)) return
+    send('POST', '/cancel-request/accept', null, 'Order cancelled. The buyer was refunded.')
+  }
+  const declineCancel = () => {
+    if (!window.confirm('Decline the request? The order goes on and the buyer is told. They can still report a problem to OgaPay.')) return
+    send('POST', '/cancel-request/decline', null, 'Request declined. The order goes on and the buyer was told.')
+  }
 
   const submit = () => {
     const t = text.trim()
     if (panel === 'report') send('POST', '/dispute', { reason: t, ...(files.length && { files }) }, 'Problem reported. The payment stays on hold while OgaPay reviews it.')
     if (panel === 'deliver') send('PATCH', '', { status: 'DELIVERED', ...(t && { note: t }), ...(files.length && { files }) }, 'Marked delivered. The buyer was told and can see what you sent.')
     if (panel === 'reply') send('POST', '/dispute/respond', { text: t, ...(files.length && { files }) }, 'Your side was sent to OgaPay.')
+    if (panel === 'revise') send('POST', '/revise', { note: t }, 'Changes requested. The seller was told, and the payment waits until they deliver again.')
+    if (panel === 'cancelask') send('POST', '/cancel-request', t ? { reason: t } : {}, 'Request sent. The seller can accept (you get a refund) or decline.')
+    if (panel === 'ship') send('PATCH', '', { status: 'SHIPPED', courier: t, ...(tracking.trim() && { tracking: tracking.trim() }) }, o.status === 'SHIPPED' ? 'Shipping details updated. The buyer was told.' : 'Marked shipped. The buyer was told.')
   }
 
   if (panel) {
     const p = PANELS[panel]
     const t = text.trim()
-    const ready = panel === 'deliver' ? t.length >= 10 || files.length > 0 : t.length >= 10
+    const ready = panel === 'deliver' ? t.length >= 10 || files.length > 0 : t.length >= (p.min ?? 10)
     return (
       <div className="so-report">
         <label htmlFor={`oa-${panel}-${o.id}`}>{p.label}</label>
-        {panel === 'deliver' && <small style={{ fontSize: 12, color: 'var(--text2)' }}>The buyer sees this on the order and in your chat.{o.held ? ' They get 3 days to check it, then the payment comes to you.' : ''}</small>}
+        {panel === 'deliver' && <small style={{ fontSize: 12, color: 'var(--text2)' }}>The buyer sees this on the order and in your chat.{o.held ? ` They get ${o.status === 'SHIPPED' ? 'at least 3' : hold} days to check it, then the payment comes to you.` : ''}</small>}
         {panel === 'reply' && o.sellerResponse && <small style={{ fontSize: 12, color: 'var(--text2)' }}>Sending again replaces your earlier reply and its files.</small>}
-        <textarea id={`oa-${panel}-${o.id}`} rows={3} maxLength={p.max} value={text} onChange={(e) => setText(e.target.value)} placeholder={p.placeholder} />
-        <OrderFilePicker files={files} onChange={setFiles} onBusy={setUploading} label={p.files} />
+        {panel === 'revise' && <small style={{ fontSize: 12, color: 'var(--text2)' }}>The order goes back to {seller}. The payment waits until they deliver again.{left != null ? ` After this you have ${left - 1} revision${left - 1 === 1 ? '' : 's'} left.` : ''}</small>}
+        {panel === 'cancelask' && <small style={{ fontSize: 12, color: 'var(--text2)' }}>{seller} can accept (you get {amount} back) or decline (the order goes on). The payment waits until they answer.</small>}
+        {panel === 'ship' && <small style={{ fontSize: 12, color: 'var(--text2)' }}>{o.status === 'SHIPPED' ? 'Fix the courier or tracking number. The payment date stays the same.' : `The buyer sees this on the order and in your chat. They get ${hold} days to receive and check it, then the payment comes to you.`}</small>}
+        {panel === 'ship'
+          ? <input id={`oa-${panel}-${o.id}`} className="ui-input" maxLength={p.max} value={text} onChange={(e) => setText(e.target.value)} placeholder={p.placeholder} />
+          : <textarea id={`oa-${panel}-${o.id}`} rows={3} maxLength={p.max} value={text} onChange={(e) => setText(e.target.value)} placeholder={p.placeholder} />}
+        {panel === 'ship' && <>
+          <label htmlFor={`oa-track-${o.id}`}>Tracking or waybill number (if you have one)</label>
+          <input id={`oa-track-${o.id}`} className="ui-input" maxLength={100} value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="For example: GIG-1234567" />
+        </>}
+        {p.files && <OrderFilePicker files={files} onChange={setFiles} onBusy={setUploading} label={p.files} />}
         <div className="row-acts" style={{ gridColumn: 'auto' }}>
           <button className="up-btn primary" disabled={busy || uploading || !ready} onClick={submit}>{busy ? p.sending : p.send}</button>
           <button className="up-btn" disabled={busy} onClick={() => open(null)}>Never mind</button>
-          {!ready && <small style={{ color: 'var(--text3)' }}>{p.hint}</small>}
+          {!ready && p.hint && <small style={{ color: 'var(--text3)' }}>{p.hint}</small>}
         </div>
         {error && <div className="up-note err" role="alert">{error}</div>}
       </div>
@@ -134,21 +185,37 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
         {buyer ? (
           <>
             {o.held && o.status === 'PENDING' && <button className="up-btn" disabled={busy} onClick={cancel}>Cancel order</button>}
+            {canAskCancel && <button className="up-btn" disabled={busy} onClick={() => open('cancelask')}>Ask to cancel</button>}
+            {o.held && asking && <button className="up-btn" disabled={busy} onClick={withdrawCancel}><i className="ti ti-arrow-back-up" /> Withdraw cancel request</button>}
             {o.held && o.status !== 'DISPUTED' && <button className="up-btn" disabled={busy} onClick={() => open('report')}>Report a problem</button>}
             {o.held && o.status === 'DISPUTED' && <button className="up-btn" disabled={busy} onClick={withdraw}><i className="ti ti-arrow-back-up" /> Withdraw report</button>}
             {details && <Link className="up-btn" to={`/orders/${o.id}`}>Order details</Link>}
             {canReviewOrder(o) && o.seller && <Link className="up-btn" to={`/store/${o.product.id}#review`}><i className="ti ti-star" /> {o.reviewed ? 'Edit review' : 'Leave a review'}</Link>}
             {finished(o) && o.seller && <ComplimentButton username={o.seller.username} check={checkCompliment} />}
-            {o.held && o.status === 'DELIVERED' && <button className="up-btn primary" disabled={busy} onClick={confirmReceived}><i className="ti ti-check" /> Confirm received</button>}
+            {canRevise && <button className="up-btn" disabled={busy} onClick={() => open('revise')}><i className="ti ti-refresh" /> Ask for changes {left === null ? '' : `(${left} left)`}</button>}
+            {o.held && ['SHIPPED', 'DELIVERED', 'REVISION_REQUESTED'].includes(o.status) && <button className="up-btn primary" disabled={busy} onClick={confirmReceived}><i className="ti ti-check" /> Confirm received</button>}
             {o.held && o.status === 'DISPUTED' && <button className="up-btn" disabled={busy} onClick={confirmReceived}>Withdraw report and pay seller</button>}
           </>
         ) : (
           <>
             {details && <Link className="up-btn" to={`/orders/${o.id}`}>Order details</Link>}
-            {o.held && o.status !== 'COMPLETED' && <button className="up-btn" disabled={busy} onClick={refund}>Cancel and refund</button>}
-            {o.status === 'DISPUTED' && o.held && <button className="up-btn" disabled={busy} onClick={() => open('reply', o.sellerResponse || '')}><i className="ti ti-message" /> {o.sellerResponse ? 'Edit your side' : 'Tell OgaPay your side'}</button>}
-            {o.status === 'PENDING' && <button className="up-btn" disabled={busy} onClick={start}>Start</button>}
-            {(o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy} onClick={() => open('deliver')}>Mark delivered</button>}
+            {o.held && asking ? (
+              <>
+                <button className="up-btn" disabled={busy} onClick={declineCancel}>Decline cancel</button>
+                <button className="up-btn primary" disabled={busy} onClick={acceptCancel}>Accept and refund</button>
+              </>
+            ) : (
+              <>
+                {o.held && o.status !== 'COMPLETED' && <button className="up-btn" disabled={busy} onClick={refund}>Cancel and refund</button>}
+                {o.status === 'DISPUTED' && o.held && <button className="up-btn" disabled={busy} onClick={() => open('reply', o.sellerResponse || '')}><i className="ti ti-message" /> {o.sellerResponse ? 'Edit your side' : 'Tell OgaPay your side'}</button>}
+                {o.status === 'PENDING' && <button className="up-btn" disabled={busy} onClick={start}>Start</button>}
+                {physical && o.status === 'SHIPPED' && <button className="up-btn" disabled={busy} onClick={() => open('ship', o.courier || '', o.trackingNumber || '')}><i className="ti ti-pencil" /> Edit tracking</button>}
+                {physical && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy} onClick={() => open('ship')}><i className="ti ti-send" /> Mark shipped</button>}
+                {['PENDING', 'IN_PROGRESS', 'SHIPPED', 'REVISION_REQUESTED'].includes(o.status) && (
+                  <button className={`up-btn${physical && o.status !== 'SHIPPED' ? '' : ' primary'}`} disabled={busy} onClick={() => open('deliver')}>{o.status === 'REVISION_REQUESTED' ? 'Deliver changes' : 'Mark delivered'}</button>
+                )}
+              </>
+            )}
           </>
         )}
       </div>

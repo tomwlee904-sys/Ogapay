@@ -7,7 +7,7 @@ import { apiRequest } from '../lib/api'
 import { uploadImage, uploadFile, MAX_FILE_MB, type UploadedFile } from '../lib/upload'
 import { renderBlog } from '../lib/blogMarkdown'
 import { useAuth } from '../context/AuthContext'
-import { decisionText, orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
+import { addressLine, decisionText, orderBadge, orderWhen, requestLines, shippedWith, type OrderPage, type StoreOrder } from './StoreOrders'
 import { useMoney } from '../lib/useMoney'
 import { useCurrency } from '../context/CurrencyContext'
 import { formatCedi } from '../lib/money'
@@ -38,6 +38,11 @@ const FILE_ICON: Record<string, string> = { image: 'ti-photo', audio: 'ti-music'
 // OgaPay takes no fee on store sales today (backend STORE_FEE_PERCENT = 0)
 const STORE_FEE_PERCENT = 0
 type Order = StoreOrder & { buyer: { username: string; name: string; avatarUrl: string | null } }
+// 2026-11-10 (B15): the orders tab pages and filters on the server; the tiles use
+// the server's totals over every order (they stopped at the newest 100)
+type OrderFilter = 'open' | 'completed' | 'disputed' | 'cancelled' | 'all'
+const ORDER_FILTERS: [OrderFilter, string][] = [['open', 'Open'], ['completed', 'Completed'], ['disputed', 'Problems'], ['cancelled', 'Refunded'], ['all', 'All']]
+type SellerSummary = { revenue: Record<string, number>; held: Record<string, number>; toDeliver: number }
 
 const CATEGORIES = [
   'Graphics & Design', 'Writing & Translation', 'Social Media & Growth', 'Video & Animation', 'Web & App Development',
@@ -92,6 +97,12 @@ export default function MyStore() {
   const tab = params.get('tab') === 'orders' ? 'orders' : 'products'
   const [products, setProducts] = useState<Product[] | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
+  const [filter, setFilter] = useState<OrderFilter>('open')
+  const [nextOrders, setNextOrders] = useState<string | null>(null)
+  const [orderCounts, setOrderCounts] = useState<Record<string, number>>({})
+  const [summary, setSummary] = useState<SellerSummary | null>(null)
+  const [moreOrders, setMoreOrders] = useState(false)
+  const ordersAsk = useRef(0)
   const [error, setError] = useState('')
   // What the last order step did (OrderActions, 2026-11-10)
   const [note, setNote] = useState('')
@@ -121,23 +132,39 @@ export default function MyStore() {
       setProducts(Array.isArray(d?.products) ? d.products : [])
       if (Array.isArray(d?.seller?.needs)) setServerNeeds(d.seller.needs)
     }).catch(() => setFailed((f) => ({ ...f, products: true })))
-    apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setFailed((f) => ({ ...f, orders: true })))
+    loadOrders()
+  }
+  // One page of orders for the filter; a reload after a step keeps as many as were showing
+  const loadOrders = (f = filter, keep = 0) => {
+    const ask = ++ordersAsk.current
+    apiRequest<OrderPage<Order> & { summary?: SellerSummary }>(`/store/my-orders?status=${f}&limit=${Math.min(Math.max(keep, 20), 50)}`).then((d) => {
+      if (ask !== ordersAsk.current) return
+      setOrders(Array.isArray(d?.orders) ? d.orders : []); setNextOrders(d?.nextCursor || null)
+      if (d?.counts) setOrderCounts(d.counts)
+      if (d?.summary) setSummary(d.summary)
+    }).catch(() => { if (ask === ordersAsk.current) setFailed((x) => ({ ...x, orders: true })) })
   }
   useEffect(load, [])
+  const pickFilter = (f: OrderFilter) => { if (f === filter) return; setFilter(f); setOrders(null); loadOrders(f) }
+  const loadMoreOrders = async () => {
+    if (!nextOrders || moreOrders) return
+    setMoreOrders(true)
+    try {
+      const d = await apiRequest<OrderPage<Order>>(`/store/my-orders?status=${filter}&limit=20&cursor=${nextOrders}`)
+      setOrders((prev) => [...(prev || []), ...(d?.orders || []).filter((o) => !(prev || []).some((x) => x.id === o.id))])
+      setNextOrders(d?.nextCursor || null)
+    } catch { setError("More orders couldn't be loaded. Try again.") }
+    setMoreOrders(false)
+  }
 
-  // Paid to the seller (released, or paid at purchase on older orders) vs still held for the buyer
+  // Paid to the seller (released, less what a split gave back; older orders paid at
+  // purchase) vs still held for the buyer: the server's totals over every order
   const [revenue, held] = useMemo(() => {
-    const sum = (list: Order[]) => {
-      const by: Record<string, number> = {}
-      // A split order paid the seller the total less what went back to the buyer (2026-11-10)
-      for (const o of list) by[o.currency] = (by[o.currency] || 0) + o.total - (o.refundedPart || 0)
-      return Object.entries(by).map(([c, v]) => show(v, c)).join(' · ')
-    }
-    const paid = (orders || []).filter((o) => o.releasedAt || (!o.protected && o.status !== 'CANCELLED'))
-    return [sum(paid) || show(0), sum((orders || []).filter((o) => o.held))]
-  }, [orders, show])
+    const sum = (by: Record<string, number>) => Object.entries(by).filter(([, v]) => v).map(([c, v]) => show(v, c)).join(' · ')
+    return [summary ? sum(summary.revenue) || show(0) : '', summary ? sum(summary.held) : '']
+  }, [summary, show])
   const live = (products || []).filter((p) => p.isActive).length
-  const open = (orders || []).filter((o) => o.status === 'PENDING' || o.status === 'IN_PROGRESS').length
+  const open = summary?.toDeliver || 0
   const rated = (products || []).filter((p) => p.reviewsCount > 0)
   const avg = rated.length ? rated.reduce((s, p) => s + p.avgRating * p.reviewsCount, 0) / rated.reduce((s, p) => s + p.reviewsCount, 0) : 0
 
@@ -194,8 +221,8 @@ export default function MyStore() {
 
         <div className="ms2-stats">
           <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} hidden` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{orders ? orders.length : '…'}</b><small>{orders ? `${open} to deliver` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{orders ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
+          <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{summary ? orderCounts.all || 0 : '…'}</b><small>{summary ? `${open} to deliver` : ''}</small></div>
+          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{summary ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-star" /> Rating</span><b>{rated.length ? avg.toFixed(1) : '—'}</b><small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small></div>
         </div>
 
@@ -256,8 +283,16 @@ export default function MyStore() {
             )
           })
         ) : (
-          orders === null ? (failed.orders ? <LoadError what="your orders" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
-          : orders.length === 0 ? <div className="up-empty"><i className="ti ti-receipt" />No orders yet. When someone buys, it shows here and you get a message from them.</div>
+          <>
+          <div role="group" aria-label="Show orders" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            {ORDER_FILTERS.map(([f, label]) => (
+              <button key={f} type="button" className={`ui-chip${filter === f ? ' on' : ''}`} aria-pressed={filter === f} onClick={() => pickFilter(f)}>
+                {label}{orderCounts[f] ? <em>{orderCounts[f]}</em> : null}
+              </button>
+            ))}
+          </div>
+          {orders === null ? (failed.orders ? <LoadError what="your orders" onRetry={() => { setFailed((x) => ({ ...x, orders: false })); loadOrders() }} /> : <div className="up-skel" style={{ height: 140 }} />)
+          : orders.length === 0 ? <div className="up-empty"><i className="ti ti-receipt" />{orderCounts.all ? 'No orders here.' : 'No orders yet. When someone buys, it shows here and you get a message from them.'}</div>
           : orders.map((o) => (
             <div className="up-card ms2-order" key={o.id}>
               <div className="who">
@@ -268,12 +303,17 @@ export default function MyStore() {
                 </div>
               </div>
               <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.refundedPart != null ? 'part paid to you' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
-              {o.held && o.status === 'DELIVERED' && o.releaseAt && (
-                <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
+              {o.held && (o.status === 'DELIVERED' || o.status === 'SHIPPED') && o.releaseAt && !o.cancelRequestedAt && (
+                <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>{o.status === 'SHIPPED' ? `Shipped with ${shippedWith(o)}. ` : ''}Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
               )}
               {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
-                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.{o.autoRefundAt && <> Mark it delivered by <b>{orderWhen(o.autoRefundAt)}</b> or the buyer is refunded.</>}</span></p>
+                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. {o.kind === 'PHYSICAL' ? `Send it, then mark it shipped: you're paid when they confirm, or ${o.holdDays || 7} days later.` : `Deliver, then mark it delivered: you're paid when they confirm, or ${o.holdDays || 3} days later.`}{o.autoRefundAt && <> Mark it {o.kind === 'PHYSICAL' ? 'shipped' : 'delivered'} by <b>{orderWhen(o.autoRefundAt)}</b> or the buyer is refunded.</>}</span></p>
               )}
+              {/* Where to send a physical item: only this order's seller sees it (B7) */}
+              {o.shipping && o.held && !o.deliveredAt && (
+                <p className="so-line"><i className="ti ti-map-pin" aria-hidden="true" /><span>Deliver to <b>{o.shipping.name}</b>, {o.shipping.phone}: {addressLine(o.shipping)}</span></p>
+              )}
+              {requestLines(o, 'SELLER').map((l) => <p key={l.icon} className={`so-line${l.bad ? ' bad' : ''}`}><i className={`ti ${l.icon}`} aria-hidden="true" /><span>{l.text}</span></p>)}
               {o.status === 'DISPUTED' && (
                 <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. {o.sellerResponse ? 'You told OgaPay your side; you can still edit it.' : 'Tell OgaPay your side below.'} Sort it out with them in your chat, or refund them.</span></p>
               )}
@@ -282,13 +322,19 @@ export default function MyStore() {
               <OrderBrief brief={o.brief} fileCount={o.briefFileCount || 0} orderId={o.id} />
               {/* What you delivered (2026-11-10) */}
               <OrderBrief label="What you delivered" more="Read more" brief={o.deliveryNote} fileCount={o.deliveryFileCount || 0} orderId={o.id} />
-              <OrderActions order={o} role="SELLER" onDone={(msg) => { setError(''); setNote(msg); load() }} lead={<>
+              <OrderActions order={o} role="SELLER" onDone={(msg) => { setError(''); setNote(msg); loadOrders(filter, orders.length) }} lead={<>
                 <span className={`ms2-badge ${orderBadge(o).cls}`}>{orderBadge(o).label}</span>
                 <span style={{ flex: 1 }} />
                 {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
               </>} />
             </div>
-          ))
+          ))}
+          {nextOrders && orders && orders.length > 0 && (
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <button className="up-btn" disabled={moreOrders} onClick={loadMoreOrders}>{moreOrders ? 'Loading…' : 'Load more'}</button>
+            </div>
+          )}
+          </>
         )}
       </div>
 
