@@ -7,6 +7,7 @@ import '../styles/workers.css'
 import { PremiumMark } from '../components/Perks'
 import { itemCategoryLabel } from '../components/ItemCover'
 import { sized } from '../lib/img'
+import { loadStoreCategories } from '../lib/storeCategories'
 
 // The store's creator directory (F5, 2026-11-10): "Browse creators" on the store
 // used to open the job-worker list, where nobody's products showed. This lists
@@ -56,14 +57,11 @@ export default function StoreCreators() {
 
   useEffect(() => { document.title = 'Creators selling on OgaPay Store | OgaPay' }, [])
 
-  // The store's categories for the chips. The answer is a list of names, or of
-  // { name, subcategories } (both shapes are read)
+  // The store's listed categories for the chips (GET /store/categories:
+  // [{ name, subcategories, count }], shared with the store page and kept for the visit)
   useEffect(() => {
-    apiRequest<any>('/store/categories', { auth: false })
-      .then((d) => {
-        const list = Array.isArray(d) ? d : Array.isArray(d?.categories) ? d.categories : []
-        setCategories(list.map((c: any) => (typeof c === 'string' ? c : c?.name)).filter((c: any) => typeof c === 'string' && c))
-      })
+    loadStoreCategories()
+      .then((list) => setCategories(list.map((c) => c.name)))
       .catch(() => setCategories([]))
   }, [])
 
