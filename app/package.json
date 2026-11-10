@@ -29,11 +29,8 @@
     "test:profile-public": "node scripts/tests/profile-public.test.cjs",
     "test:profile-page": "node scripts/tests/profile-page.test.cjs",
     "test:profile-meta": "node scripts/tests/profile-meta.test.mjs",
-<<<<<<< HEAD
-    "test:dashboard": "node scripts/tests/dashboard.test.cjs"
-=======
+    "test:dashboard": "node scripts/tests/dashboard.test.cjs",
     "test:verification-text": "node scripts/tests/verification-text.test.cjs"
->>>>>>> b1/ver
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",
