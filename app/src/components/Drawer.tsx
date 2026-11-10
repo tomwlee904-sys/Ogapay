@@ -158,6 +158,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 
               <div className="oga-drawer-divider" />
 
+              {/* ── Dashboard: first, not folded inside Account (on phones it was hard to find again) ── */}
+              <Link className="oga-drawer-item" to="/dashboard" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-layout-dashboard" /></span>
+                <span><strong>Dashboard</strong><small>Your work, jobs and balance</small></span>
+              </Link>
+
               {/* ── Create Job ── */}
               <Link className="oga-drawer-item" to="/create" onClick={onClose}>
                 <span className="oga-drawer-icon"><i className="ti ti-circle-plus" /></span>
@@ -283,14 +289,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 </Link>
               )}
 
-              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, dashboard, settings">
+              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, wallet, settings">
                 <Link className="oga-drawer-item" to="/profile" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user" /></span>
                   <span><strong>My Profile</strong><small>View and edit profile</small></span>
-                </Link>
-                <Link className="oga-drawer-item" to="/dashboard" onClick={onClose}>
-                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-layout-dashboard" /></span>
-                  <span><strong>Dashboard</strong><small>Your activity overview</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/wallet" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-wallet" /></span>

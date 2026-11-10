@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
@@ -31,16 +31,20 @@ const INTENT_OPTS: { value: Intent; label: string; icon: string }[] = [
   { value: 'HIRE', label: 'Hire people', icon: 'ti-briefcase' },
   { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
 ]
-type Me = { ogaScore?: number; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
+type Me = { ogaScore?: number; gender?: string | null; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number; provider?: string | null; idType?: string | null } | null }
 type Sub = {
   id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
-  task?: { id: string; title: string; reward: number | string; currency?: string; expiresAt?: string | null; deadline?: string | null }
+  task?: { id: string; title: string; reward: number | string; currency?: string; category?: string; expiresAt?: string | null; deadline?: string | null }
   isContest?: boolean; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
 }
 type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; posterId?: string; status?: string
   maxWorkers?: number; currentWorkers?: number; expiresAt?: string | null; deadline?: string | null
   submissions?: { status: string }[]
+  // From /tasks/my/created?lite=1: entries waiting for review, without the entries
+  toReview?: number
+  // From /tasks?eligible=1: can you take it now, and if not, why (server codes)
+  eligible?: boolean; whyNot?: string[]
   featured?: boolean; workerRequirement?: string | null; minJobsDone?: number; excludesTaskIds?: string[]
   isContest?: boolean; isSelection?: boolean; requiredCommunityId?: string | null; communityId?: string | null
 }
@@ -54,10 +58,18 @@ const LIVE = ['OPEN', 'IN_PROGRESS', 'COOLING_DOWN', 'DRAFT']
 const STATUS: Record<string, string> = { OPEN: 'Open', IN_PROGRESS: 'In progress', COOLING_DOWN: 'Wrapping up', DRAFT: 'Draft' }
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' }
 const when = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
-const toReviewOn = (j: Job) => (j.submissions || []).filter((s) => s.status === 'SUBMITTED').length
+const toReviewOn = (j: Job) => j.toReview ?? (j.submissions || []).filter((s) => s.status === 'SUBMITTED').length
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const STARTER_UNTIL = 5
 const placesLeft = (j: Job) => Math.max(0, (Number(j.maxWorkers) || 1) - (Number(j.currentWorkers) || 0))
+// What stops a starter job that the person can fix themselves (verify, finish a
+// job first, connect X or a wallet, say their gender): those starter jobs still
+// show, tagged. Anything else (lives in another country, women-only, rank, a
+// higher score or more followers...) hides the job: taking it would be refused.
+const FIXABLE = new Set(['JOBS', 'KYC', 'KYC2', 'HUMAN', 'X', 'WALLET'])
+// A failed load is tried once more after this long, then a Retry button shows
+const RETRY_MS = 4000
+type Part = 'me' | 'earned' | 'subs' | 'created' | 'jobs'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -93,19 +105,60 @@ export default function Dashboard() {
   const intentDoneRef = useRef<HTMLParagraphElement>(null)
   useEffect(() => { if (intentDone) intentDoneRef.current?.focus() }, [intentDone])
 
+  // Each list remembers a failed load apart from an empty one: a slow or failed
+  // load used to look like an empty account (an active worker was shown "Find
+  // your first job" and "not working on anything"). A failed part is tried once
+  // more on its own, then says so with a Retry button.
+  const [failed, setFailed] = useState<Partial<Record<Part, boolean>>>({})
+  const [retrying, setRetrying] = useState(false)
+  // The quiet second try is over: from then on a failed part says so (until then
+  // it keeps its loading shape)
+  const [settled, setSettled] = useState(false)
+  const load = useCallback((parts: Part[]) => {
+    const get: Record<Part, () => Promise<unknown>> = {
+      me: () => apiRequest<Me>('/users/me').then((d) => setMe(d || {})),
+      earned: () => apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })),
+      subs: () => apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])),
+      // lite: each job's number to review, not every entry with its proof
+      created: () => apiRequest<Job[]>('/tasks/my/created?lite=1&limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])),
+      // eligible=1: which jobs you can take, so we only suggest those
+      jobs: () => apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100&eligible=1').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])),
+    }
+    return Promise.all(parts.map((k) => get[k]().then(() => { setFailed((f) => ({ ...f, [k]: false })); return null }, () => { setFailed((f) => ({ ...f, [k]: true })); return k })))
+      .then((r) => r.filter((k): k is Part => !!k))
+  }, [])
   useEffect(() => {
-    apiRequest<Me>('/users/me').then(setMe).catch(() => setMe({}))
-    apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })).catch(() => setEarned({}))
-    apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])).catch(() => setSubs([]))
-    apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])).catch(() => setCreated([]))
-    apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
+    let timer: ReturnType<typeof setTimeout> | undefined
+    load(['me', 'earned', 'subs', 'created', 'jobs']).then((bad) => {
+      if (bad.length) timer = setTimeout(() => { load(bad).finally(() => setSettled(true)) }, RETRY_MS)
+      else setSettled(true)
+    })
     // Saved banks (the old check read a profile field the bank form never sets)
     sharedGet<any[]>('/wallet/banks', 5000).then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
-  }, [])
+    return () => clearTimeout(timer)
+  }, [load])
+  const retry = (parts: Part[]) => {
+    setRetrying(true)
+    load(parts.filter((k) => failed[k])).finally(() => setRetrying(false))
+  }
 
   if (!user) return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 200 }} /></div></Layout>
 
-  const ngn = balances?.NGN?.available ?? 0
+  // Every wallet you hold money in (naira, cedis, USDC...), not naira alone: a
+  // Ghanaian with GH₵40 saw GH₵0 here while the top bar said GH₵40. One currency
+  // shows as itself; several are added up in the display currency at today's
+  // rates, each listed underneath ("₦3,000 + GH₵40.00").
+  const dCode = displayCode(preferredCurrency)
+  const held = Object.entries(balances || {}).filter(([, b]) => Number(b?.available) > 0)
+    .sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
+  const heldIn = held.map(([c, b]) => (c === dCode ? Number(b.available) : convert(Number(b.available), c as Currency, dCode)))
+  // Cedis as the top bar writes them (GH₵40.00)
+  const own = (c: string, v: number) => (c === 'GHS' ? formatIn('GHS', v) : show(v, c, { exact: true }))
+  const balanceText = !balances ? '…' : held.length === 0 ? show(0)
+    : held.length === 1 ? (held[0][0] === dCode ? formatIn(dCode, Number(held[0][1].available)) : show(Number(held[0][1].available), held[0][0]))
+      : heldIn.every((v) => Number.isFinite(v) && v > 0) ? formatIn(dCode, heldIn.reduce((a, b) => a + b, 0))
+        : held.map(([c, b]) => own(c, Number(b.available))).join(' + ')
+  const balanceParts = held.length > 1 ? held.map(([c, b]) => own(c, Number(b.available))).join(' + ') : ''
   const mine = created || []
   const live = mine.filter((j) => LIVE.includes(String(j.status || 'OPEN')))
   const reviewJobs = mine.filter((j) => toReviewOn(j) > 0)
@@ -134,18 +187,41 @@ export default function Dashboard() {
   const similarTaken = (j: Job) => (j.excludesTaskIds || []).some((id) => taken.has(id)) ||
     (jobs || []).some((o) => taken.has(o.id) && (o.excludesTaskIds || []).includes(j.id))
   const jobsDone = me?.workerProfile?.tasksCompleted ?? 0
-  const starter = me && jobsDone < STARTER_UNTIL
-    ? (jobs || []).filter((j) => j.featured && j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended')
+  const open = (j: Job) => j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended'
+  // GENDER can be fixed only by someone who hasn't said theirs yet
+  const fixableOnly = (j: Job) => j.eligible !== false || (!!j.whyNot?.length && j.whyNot.every((c) => FIXABLE.has(c) || (c === 'GENDER' && !me?.gender)))
+  // Not while your work failed to load: without it we can't tell which jobs you took
+  const starter = me && subs !== null && jobsDone < STARTER_UNTIL
+    ? (jobs || []).filter((j) => j.featured && open(j) && fixableOnly(j))
     : []
   const starterIds = new Set(starter.map((j) => j.id))
-  const forYou = (jobs || []).filter((j) => j.posterId !== user.id && !taken.has(j.id) && !starterIds.has(j.id)).slice(0, 4)
+  // "Jobs for you": only jobs you can take now, the kinds of work you've done
+  // before first, then the best paid (it used to be the 4 newest, any of them)
+  const doneKinds = new Set((subs || []).map((s) => s.task?.category).filter(Boolean))
+  const payNgn = (j: Job) => { const v = (j.currency || 'NGN') === 'NGN' ? Number(j.reward || 0) : convert(Number(j.reward || 0), (j.currency || 'NGN') as Currency, 'NGN'); return Number.isFinite(v) ? v : 0 }
+  const forYou = (jobs || []).filter((j) => open(j) && j.eligible !== false && !starterIds.has(j.id))
+    .map((j, i) => ({ j, i, kind: doneKinds.has(j.category) ? 1 : 0, pay: payNgn(j) }))
+    .sort((a, b) => b.kind - a.kind || b.pay - a.pay || a.i - b.i).slice(0, 4).map((x) => x.j)
   const rank = me?.workerProfile?.level
   const rankLabel = rank ? rankName(LEVELS.indexOf(rank) + 1) : 'Beginner'
   const kycTier = (me?.kyc?.status || user.kycStatus) === 'APPROVED' ? Number(me?.kyc?.kycTier ?? user.kycTier ?? 0) : 0
   const kycOk = kycTier >= 1
+  // Verified by NIN or ID (backend wallet.service verifiedById). The bank account
+  // check is Level 1 too and lets you withdraw, but the ₦1,000 first job bonus and
+  // sending money need NIN or ID: bank Level 1 used to show "Your ID is verified"
+  const byId = kycOk && me?.kyc?.provider !== 'bank-name' && me?.kyc?.idType !== 'BANK'
   // What stands between you and a starter job (null: you can do it now)
   const stepFor = (j: Job): { text: string; tag: string; order: number } | null => {
     const need = Number(j.minJobsDone) || 0
+    // The server's reasons (eligible=1) win over our own guess from the profile
+    const why = j.whyNot || []
+    if (why.includes('JOBS') && need <= jobsDone) return { text: 'Opens after more approved jobs', tag: 'Later', order: 2 }
+    if (why.includes('KYC2') && kycTier >= 2) return { text: 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
+    if (why.includes('KYC') && kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
+    if (why.includes('HUMAN') && me?.humanVerifiedAt) return { text: 'Get Human Verified first, it takes a minute', tag: 'Verify', order: 1 }
+    if (why.includes('X')) return { text: 'Connect your X account in Settings first', tag: 'Set up', order: 1 }
+    if (why.includes('WALLET')) return { text: 'Connect a Solana wallet in Settings first', tag: 'Set up', order: 1 }
+    if (why.includes('GENDER') && !me?.gender) return { text: 'Say your gender in Settings, Account first', tag: 'Set up', order: 1 }
     if (need > jobsDone) return { text: need === 1 ? 'Opens after your first approved job' : `Opens after ${need} approved jobs`, tag: 'Later', order: 2 }
     if (j.workerRequirement === 'KYC2' && kycTier < 2) return { text: 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
     if (j.workerRequirement === 'KYC' && !kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
@@ -159,23 +235,33 @@ export default function Dashboard() {
   // plus the ₦1,000 first job bonus, and the two steps to get it. A job they've
   // already taken comes first (finish it), then a starter job, then any simple job.
   const simple = (j: Job) => !j.isContest && !j.isSelection && !j.requiredCommunityId && !j.communityId && (j.currency || 'NGN') === 'NGN'
-    && j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended' && !stepFor(j)
+    && open(j) && j.eligible !== false && !stepFor(j)
   const byPay = (a: Job, b: Job) => Number(b.reward || 0) - Number(a.reward || 0)
   const firstPick = (jobs || []).filter((j) => simple(j) && j.featured).sort(byPay)[0]
     || (jobs || []).filter((j) => simple(j) && Number(j.reward || 0) <= 2000).sort(byPay)[0]
   const firstActive = [...working, ...waiting][0]
-  const showFirstJob = !!me && jobsDone === 0 && (!!firstActive || !!firstPick)
+  const showFirstJob = !!me && subs !== null && jobsDone === 0 && (!!firstActive || !!firstPick)
 
   const loaded = subs !== null && created !== null
+  // Your work or your jobs didn't load: never guess "new account" from that
+  const workFailed = settled && ((!!failed.subs && subs === null) || (!!failed.created && created === null))
   const hires = mine.length > 0
   const works = (subs || []).length > 0
   const isNew = loaded && !hires && !works
+  // Your profile (OgaScore, first job tips) or earnings didn't load: say so too.
+  // When the work card above failed, its Try again already asks for the profile.
+  const meFailed = settled && !!failed.me && me === null
+  const earnFailed = settled && !!failed.earned && earned === null
+  const infoParts: Part[] = [...(meFailed && !workFailed ? ['me' as const] : []), ...(earnFailed ? ['earned' as const] : [])]
+  const retryBtn = (parts: Part[]) => (
+    <button type="button" className="db-step-btn" onClick={() => retry(parts)} disabled={retrying}>{retrying ? 'Trying again…' : 'Try again'}</button>
+  )
 
   const steps = [
     { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
     { done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' as const },
     { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: `Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN, then finish your first job to get your ${show(FIRST_JOB_BONUS, 'NGN')} first job bonus. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.`, to: '/settings/verification', cta: 'Verify' },
+    { done: kycOk, label: 'Verify your identity', sub: `Free. Your bank account check (Level 1) lets you withdraw. For your ${show(FIRST_JOB_BONUS, 'NGN')} first job bonus and to send money, verify with your NIN or a photo of your ID, then finish your first paid job. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.`, to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length
 
@@ -184,7 +270,7 @@ export default function Dashboard() {
     ...reviewJobs.slice(0, 3).map((j) => ({ key: `r-${j.id}`, icon: 'ti-inbox', text: `${plural(toReviewOn(j), 'submission', 'submissions')} to review on “${j.title}”`, to: `/manage-jobs?job=${j.id}`, cta: 'Review' })),
     ...working.slice(0, 3).map((s) => ({ key: `w-${s.id}`, icon: 'ti-pencil', text: `Send your work for “${s.task?.title || 'your job'}”`, to: `/tasks/${s.taskId}/submit`, cta: 'Open' })),
     // (a new account sees this in the setup steps right below instead)
-    ...(!kycOk && ngn > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${show(ngn, 'NGN', { exact: true })}`, to: '/settings/verification', cta: 'Verify' }] : []),
+    ...(!kycOk && held.length > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${balanceText}`, to: '/settings/verification', cta: 'Verify' }] : []),
   ]
   const moreReview = reviewJobs.length - 3
 
@@ -276,10 +362,10 @@ export default function Dashboard() {
         </>
       )}
       <ol className="db-first-steps">
-        <li className={kycOk ? 'done' : ''}>
-          <i className={`ti ${kycOk ? 'ti-circle-check' : 'ti-circle-number-1'}`} aria-hidden="true" />
-          <span>{kycOk ? 'Your ID is verified' : 'Verify your ID with your NIN (free, about a minute)'}</span>
-          {!kycOk && <Link className="db-step-btn" to="/settings/verification">Verify</Link>}
+        <li className={byId ? 'done' : ''}>
+          <i className={`ti ${byId ? 'ti-circle-check' : 'ti-circle-number-1'}`} aria-hidden="true" />
+          <span>{byId ? 'Verified with your NIN or ID' : kycOk ? 'Bank check done, so you can withdraw. For the bonus, also verify with your NIN or a photo of your ID' : 'Verify with your NIN or a photo of your ID (free)'}</span>
+          {!byId && <Link className="db-step-btn" to="/settings/verification">Verify</Link>}
         </li>
         <li>
           <i className="ti ti-circle-number-2" aria-hidden="true" />
@@ -289,7 +375,7 @@ export default function Dashboard() {
             : firstPick && <Link className="db-step-btn dark" to={`/tasks/${firstPick.id}`}>Take this job</Link>}
         </li>
       </ol>
-      <p className="db-first-note">The {show(FIRST_JOB_BONUS, 'NGN')} is added to your wallet with your first approved job, once your ID is verified.</p>
+      <p className="db-first-note">The {show(FIRST_JOB_BONUS, 'NGN')} is added to your wallet with your first approved job, once you're verified with your NIN or ID. The bank account check alone doesn't count.</p>
     </section>
   )
 
@@ -377,8 +463,10 @@ export default function Dashboard() {
         </ul>
       )}
       <div className="db-sub-head"><span>Jobs for you</span><Link to="/tasks">See all jobs</Link></div>
-      {jobs === null ? <div className="ui-sk" style={{ height: 90 }} /> : forYou.length === 0 ? (
-        <div className="db-empty">No open jobs right now. Check back soon.</div>
+      {jobs === null && failed.jobs && settled ? (
+        <div className="db-empty db-load-err" role="alert"><span>Couldn't load jobs. Check your connection.</span>{retryBtn(['jobs'])}</div>
+      ) : jobs === null ? <div className="ui-sk" style={{ height: 90 }} /> : forYou.length === 0 ? (
+        <div className="db-empty">No jobs you can take right now. Check back soon.</div>
       ) : (
         <div className="db-jobs">
           {forYou.map((j) => (
@@ -438,17 +526,29 @@ export default function Dashboard() {
           {isNew && setup}
 
           <div className="db-snap">
-            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{show(ngn)}</b><small>Open wallet →</small></Link>
+            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{balanceText}</b><small>{balanceParts || 'Open wallet →'}</small></Link>
             <Link to="/wallet" className="db-stat">
               <span>Your level</span>
               <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays` : 'Verify to withdraw and send money'}</small>
+              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, verify with NIN or ID'}` : 'Verify to withdraw and send money'}</small>
             </Link>
-            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
+            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? (meFailed ? '–' : '…')}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>
+          {infoParts.length > 0 && (
+            <div className="db-empty db-load-err" role="alert">
+              <span>{infoParts.length === 2 ? "Couldn't load your OgaScore and earnings." : infoParts[0] === 'me' ? "Couldn't load your OgaScore and first job tips." : "Couldn't load your earnings."} Check your connection.</span>
+              {retryBtn(infoParts)}
+            </div>
+          )}
 
           {/* a new member's two cards wait for /users/me too: their order depends on the answer */}
-          {!loaded || (isNew && me === null) ? (
+          {workFailed ? (
+            <section className="ui-card ui-card-pad db-load-err" role="alert">
+              <div><strong>We couldn't load your work and jobs</strong>
+              <span>Nothing is lost. Check your connection and try again.</span></div>
+              {retryBtn(['subs', 'created', 'me'])}
+            </section>
+          ) : !loaded || (isNew && me === null && !failed.me) ? (
             <div className="ui-sk" style={{ height: 200, borderRadius: 20 }} />
           ) : isNew ? (
             <div className="db-pair">
