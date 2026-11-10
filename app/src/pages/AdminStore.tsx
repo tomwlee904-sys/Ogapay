@@ -12,19 +12,24 @@ import { sized } from '../lib/img'
 // removed ones too, with open reports. Admins and store moderators remove a
 // product with a reason the seller sees, put it back, read reports and close
 // them. Only admins delete for good and choose moderators.
+// Curation (F3, 2026-11-10): the team gives each product a quality score of 1-5
+// ("To rate" lists the ones nobody has rated, or that changed since), and
+// admins feature products on the homepage. Both order the store's Recommended sort.
 
 type Row = {
   id: string; name: string; imageUrl: string; price: number; currency: string; priceOnRequest: boolean; category: string
   status: 'active' | 'hidden' | 'removed' | 'deleted'; official: boolean; createdAt: string
   delistedAt: string | null; delistReason: string | null; delistedBy: string | null
   orders: number; openReports: number
+  featured?: boolean; qualityScore?: number | null
   seller: { id: string; username: string; avatarUrl: string | null; isBanned: boolean; isPublic: boolean; flagged?: boolean } | null
 }
-type Page = { items: Row[]; pagination: { page: number; limit: number; total: number; totalPages: number }; counts: { active: number; hidden: number; removed: number; reported: number } }
+type Page = { items: Row[]; pagination: { page: number; limit: number; total: number; totalPages: number }; counts: { active: number; hidden: number; removed: number; reported: number; unrated?: number; featured?: number } }
 type ProductReport = { id: string; category: string; description: string; status: string; createdAt: string; reporter: string | null }
 type Moderator = { id: string; username: string; avatarUrl: string | null; isTwoFactorEnabled: boolean; isBanned: boolean }
 
-const STATUSES = [['all', 'All'], ['reported', 'Reported'], ['active', 'On sale'], ['hidden', 'Hidden'], ['removed', 'Removed'], ['deleted', 'Deleted']] as const
+const STATUSES = [['all', 'All'], ['reported', 'Reported'], ['unrated', 'To rate'], ['featured', 'Featured'], ['active', 'On sale'], ['hidden', 'Hidden'], ['removed', 'Removed'], ['deleted', 'Deleted']] as const
+const SCORES = [[5, '5 · Great'], [4, '4 · Good'], [3, '3 · OK'], [2, '2 · Weak'], [1, '1 · Poor']] as const
 type Status = (typeof STATUSES)[number][0]
 const SORTS = [['newest', 'Newest'], ['reports', 'Most reports'], ['orders', 'Most orders'], ['name', 'Name']] as const
 const STATUS_LABEL: Record<Row['status'], string> = { active: 'On sale', hidden: 'Hidden', removed: 'Removed', deleted: 'Deleted' }
@@ -48,6 +53,7 @@ const CSS = `
   .as-tag.ok{border-color:rgba(var(--green-rgb),.3);background:rgba(var(--green-rgb),.1);color:var(--green)}
   .as-acts{display:flex;flex-direction:column;gap:6px;min-width:150px}
   .as-acts .ui-btn{min-height:40px;justify-content:center}
+  .as-acts select{min-height:40px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font:500 13px var(--font)}
   .as-why{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--red)}
   .as-reports{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
   .as-reports li{border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--bg2)}
@@ -121,8 +127,28 @@ export default function AdminStore() {
     setBusy('')
   }
 
+  // Quality score 1-5 (moderators too) and the homepage Featured switch (admins)
+  const rate = async (r: Row, score: number) => {
+    setBusy(r.id)
+    try {
+      await apiRequest(`/store/admin/products/${r.id}/quality`, { method: 'POST', body: JSON.stringify({ score }) })
+      toast(`Rated ${score} out of 5`, 'success')
+      load()
+    } catch (e: any) { toast(e?.message || 'That didn’t work', 'error') }
+    setBusy('')
+  }
+  const feature = async (r: Row, on: boolean) => {
+    setBusy(r.id)
+    try {
+      await apiRequest(`/store/admin/products/${r.id}/feature`, { method: 'POST', body: JSON.stringify({ on }) })
+      toast(on ? 'Featured on the homepage' : 'No longer featured', 'success')
+      load()
+    } catch (e: any) { toast(e?.message || 'That didn’t work', 'error') }
+    setBusy('')
+  }
+
   const c = data?.counts
-  const countOf = (k: Status) => (k === 'reported' ? c?.reported : k === 'active' ? c?.active : k === 'hidden' ? c?.hidden : k === 'removed' ? c?.removed : undefined)
+  const countOf = (k: Status) => (k === 'reported' ? c?.reported : k === 'active' ? c?.active : k === 'hidden' ? c?.hidden : k === 'removed' ? c?.removed : k === 'unrated' ? c?.unrated : k === 'featured' ? c?.featured : undefined)
   const pg = data?.pagination
 
   return (
@@ -153,7 +179,7 @@ export default function AdminStore() {
         {data === null ? (
           <div style={{ display: 'grid', gap: 10 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 96 }} />)}</div>
         ) : data.items.length === 0 ? (
-          <div className="ui-empty">{q ? `Nothing matches "${q}".` : status === 'reported' ? 'No products with open reports. Nice.' : 'No products here.'}</div>
+          <div className="ui-empty">{q ? `Nothing matches "${q}".` : status === 'reported' ? 'No products with open reports. Nice.' : status === 'unrated' ? 'Every product on sale has a quality score.' : 'No products here.'}</div>
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
             {data.items.map((r) => {
@@ -168,6 +194,8 @@ export default function AdminStore() {
                       <div className="as-meta">
                         <span className={`as-tag${r.status === 'removed' || r.status === 'deleted' ? ' bad' : r.status === 'active' ? ' ok' : ''}`}>{STATUS_LABEL[r.status]}</span>
                         {r.openReports > 0 && <span className="as-tag bad"><i className="ti ti-flag" aria-hidden="true" /> {r.openReports} open {r.openReports === 1 ? 'report' : 'reports'}</span>}
+                        {r.featured && <span className="as-tag ok"><i className="ti ti-sparkles" aria-hidden="true" /> Featured</span>}
+                        {r.status === 'active' && <span className="as-tag">{r.qualityScore ? `Quality ${r.qualityScore}/5` : 'Not rated'}</span>}
                         <span>{r.priceOnRequest ? 'Price on request' : <Money amount={r.price} currency={r.currency} size={13} exact />}</span>
                         <span>{r.category}</span>
                         <span>{r.orders} {r.orders === 1 ? 'order' : 'orders'}</span>
@@ -184,6 +212,13 @@ export default function AdminStore() {
                     <div className="as-acts">
                       {live && (!r.official || isAdmin) && <button type="button" className="ui-btn ui-btn-dark" disabled={busy === r.id} onClick={() => setRemoving(r)}><i className="ti ti-eye-off" /> Remove</button>}
                       {r.status === 'removed' && (!r.official || isAdmin) && <button type="button" className="ui-btn ui-btn-ghost" disabled={busy === r.id} onClick={() => act(r, 'relist', 'Product is back')}><i className="ti ti-arrow-back-up" /> Put back</button>}
+                      {r.status === 'active' && (
+                        <select value={r.qualityScore || ''} disabled={busy === r.id} aria-label={`Quality score for ${r.name}`} onChange={(e) => { if (e.target.value) rate(r, Number(e.target.value)) }}>
+                          <option value="">{r.qualityScore ? 'Rate again' : 'Rate quality'}</option>
+                          {SCORES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      )}
+                      {isAdmin && (r.featured || r.status === 'active') && <button type="button" className="ui-btn ui-btn-ghost" disabled={busy === r.id} aria-pressed={!!r.featured} onClick={() => feature(r, !r.featured)}><i className="ti ti-sparkles" /> {r.featured ? 'Stop featuring' : 'Feature'}</button>}
                       <button type="button" className="ui-btn ui-btn-ghost" aria-expanded={!!rep} onClick={() => toggleReports(r)}><i className="ti ti-flag" /> {rep ? 'Hide reports' : 'Reports'}</button>
                       {r.openReports > 0 && live && <button type="button" className="ui-btn ui-btn-ghost" disabled={busy === r.id} onClick={() => act(r, 'reports/dismiss', 'Reports closed')}><i className="ti ti-check" /> Keep it, close reports</button>}
                     </div>

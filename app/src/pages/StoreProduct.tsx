@@ -15,6 +15,7 @@ import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
 import { sized } from '../lib/img'
 import { ModerateBar, ReportProductSheet } from '../components/StoreModeration'
 import { useToast } from '../context/ToastContext'
+import { storeCategoryLink } from '../lib/storeCategories'
 
 interface ReviewItem {
   id: string
@@ -41,6 +42,7 @@ interface StoreProductData {
   reviews: ReviewItem[]
   image: string
   category: string
+  categoryGroup?: string // the listed category it shows under ("Other" for an older unlisted one)
   stock: number | null
   isActive: boolean
   createdAt: string
@@ -322,6 +324,11 @@ export default function StoreProduct() {
   const delivery = p.metadata?.delivery || '3 days'
   const revisions = p.metadata?.revisions ?? 3
   const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
+  // The breadcrumb links to the store filtered to the category, then the
+  // subcategory (F1, 2026-11-10). OgaPay's own items keep the plain label.
+  const crumbCat = !p.official && p.categoryGroup ? p.categoryGroup : ''
+  const crumbSub = crumbCat && crumbCat !== 'Other' ? p.metadata?.subcategory : ''
+  const crumbLink = { color: 'inherit', textDecoration: 'none', display: 'inline-block', padding: '10px 0' }
 
   const onRequest = !!p.priceOnRequest
   const contactSeller = () => {
@@ -444,7 +451,12 @@ export default function StoreProduct() {
           <button onClick={goBack}><i className="ti ti-arrow-left" />Back</button>
           <button onClick={() => navigate('/store')}>All products <i className="ti ti-arrow-up-right" /></button>
         </div>
-        <span className="ui-eyebrow">{crumb}</span>
+        {crumbCat ? (
+          <nav className="ui-eyebrow" aria-label="Breadcrumb">
+            <Link to={storeCategoryLink(crumbCat)} style={crumbLink}>{crumbCat}</Link>
+            {crumbSub && <> / <Link to={storeCategoryLink(crumbCat, crumbSub)} style={crumbLink}>{crumbSub}</Link></>}
+          </nav>
+        ) : <span className="ui-eyebrow">{crumb}</span>}
         <h1 className="ui-title">{p.title}</h1>
 
         <div className="sp-layout">

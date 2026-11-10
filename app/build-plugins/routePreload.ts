@@ -33,7 +33,7 @@ const ROUTES: Route[] = [
   {
     path: '^/$',
     page: 'src/pages/HomePage.tsx',
-    data: ['/stats/live', '/stats', '/tasks?status=OPEN', '/store?limit=9&sort=newest', '/blog?limit=9', '/communities?limit=12'],
+    data: ['/stats/live', '/stats', '/tasks?status=OPEN', '/store?limit=9&sort=recommended', '/blog?limit=9', '/communities?limit=12'],
   },
   { path: '^/tasks/?$', page: 'src/pages/Tasks.tsx', data: ['/tasks?limit=100'], bareOnly: true },
   { path: '^/tasks/(?!new/?$)([^/]+)/?$', page: 'src/pages/JobDetail.tsx' },
