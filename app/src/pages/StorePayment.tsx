@@ -22,17 +22,24 @@ import '../styles/checkout.css'
 // in the same step as the payment (the server also posts them in the chat), so
 // they can't be lost. Attachments go to private storage, never public links.
 // OgaPay's own items (perks) have no seller, so they skip straight to payment.
+// 2026-11-10 (F13): ?offer=<id> pays a seller's private offer (its price, one
+// item, the same held payment); (F21) products with download files say the
+// files come straight after paying.
 
 type Item = {
   id: string; title: string; description: string; price: number; currency: Currency
   seller: string; sellerId?: string; sellerAvatar: string | null; image: string
   stock: number | null; isActive?: boolean; category?: string; official?: boolean
   metadata?: { delivery?: string; revisions?: number; subcategory?: string }
+  priceOnRequest?: boolean; instantFiles?: number
 }
+// A seller's private offer for this buyer (GET /store/offers/:id)
+type Offer = { id: string; itemId: string; price: number; currency: Currency; note: string | null; delivery: string | null; expiresAt: string; status: string; purchaseId: string | null; role: 'BUYER' | 'SELLER' }
 type Seller = { username: string; name: string; avatarUrl: string | null; bio: string | null; rating: number; reviews: number }
 type MyJob = { id: string; title: string; status: string; expiresAt?: string | null; hiredWorkerId?: string | null }
 // A file still uploading, or one that failed (kept so it can be tried again)
-type Pending = { id: string; file: File; pct: number; error?: string }
+// (2026-11-10, SP8: files go straight to storage; abort cancels one on its way)
+type Pending = { id: string; file: File; pct: number; error?: string; abort?: AbortController }
 
 // OgaPay's own items (no seller): what each one does, and what's permanent
 const PERKS: Record<string, { kind: string; what: string; permanent?: boolean }> = {
@@ -81,6 +88,10 @@ export default function StorePayment() {
   const { id = '' } = useParams<{ id: string }>()
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
+  const offerId = params.get('offer') || ''
+  const [offer, setOffer] = useState<Offer | null>(null)
+  // Keep ?offer= when moving between the steps
+  const goStep = (step?: 'pay') => setParams({ ...(step && { step }), ...(offerId && { offer: offerId }) })
   const { user } = useAuth()
   const { balances, refresh, loading: balanceLoading, error: balanceError } = useWalletBalance()
   const [item, setItem] = useState<Item | null>(null)
@@ -113,11 +124,22 @@ export default function StorePayment() {
     if (!id) return
     // Signed in, the server's 30-second public copy is skipped: checkout shows the
     // price as it is now (2026-11-08)
-    apiRequest<Item>('/store/' + id, { fresh: true })
-      // A price-on-request product has no fixed price to pay: ask the seller instead
-      .then((d: any) => { if (d?.priceOnRequest) setLoadError('This product is priced on request. Message the seller from the product page for a price.'); else setItem(d) })
-      .catch((e: any) => setLoadError(e?.message || "This product couldn't be loaded"))
-  }, [id])
+    Promise.all([apiRequest<Item>('/store/' + id, { fresh: true }), offerId ? apiRequest<Offer>('/store/offers/' + encodeURIComponent(offerId), { fresh: true }) : null])
+      .then(([d, o]: [any, Offer | null]) => {
+        if (o) {
+          // A private offer: its price replaces the product's (the server checks again)
+          if (o.itemId !== d?.id || o.role !== 'BUYER') { setLoadError('This offer is not for you.'); return }
+          if (o.status === 'ACCEPTED') { setLoadError('You already paid this offer. It is in My orders.'); return }
+          if (o.status !== 'OPEN') { setLoadError(`This offer is ${o.status.toLowerCase()}. Ask the seller in your chat to send a new one.`); return }
+          setOffer(o)
+          setItem({ ...d, price: o.price, currency: o.currency })
+          return
+        }
+        // A price-on-request product has no fixed price to pay: ask the seller instead
+        if (d?.priceOnRequest) setLoadError('This product is priced on request. Message the seller from the product page for a price.'); else setItem(d)
+      })
+      .catch((e: any) => setLoadError(e?.status === 404 && offerId ? 'This offer could not be found.' : e?.message || "This product couldn't be loaded"))
+  }, [id, offerId])
 
   useEffect(() => {
     if (!item?.seller || item.official) return
@@ -190,7 +212,10 @@ export default function StorePayment() {
   const alreadyHave = !!perk?.permanent && owned.includes(perk.kind)
   const needJob = perk?.kind === 'TASK_BOOST' && !jobId
   const canPay = !own && !soldOut && !alreadyHave && !needJob && balanceKnown && short === 0 && !paying
-  const delivery = item.metadata?.delivery || '3 days'
+  const delivery = offer?.delivery || item.metadata?.delivery || '3 days'
+  // F21: files the buyer can download as soon as they pay
+  const instant = !item.official && (item.instantFiles || 0) > 0
+  const instantLine = instant ? `${item.instantFiles === 1 ? 'Its file is' : `Its ${item.instantFiles} files are`} ready to download on your order as soon as you pay.` : ''
   const revisions = item.metadata?.revisions ?? 3
   const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
 
@@ -201,12 +226,13 @@ export default function StorePayment() {
     const queue = [...jobs]
     const worker = async () => {
       for (let job = queue.shift(); job; job = queue.shift()) {
-        const { id: jobId, file } = job
+        const { id: jobId, file, abort } = job
         try {
-          const saved = await uploadOrderFile(file, (pct) => setPending((prev) => prev.map((p) => (p.id === jobId ? { ...p, pct } : p))))
+          const saved = await uploadOrderFile(file, (pct) => setPending((prev) => prev.map((p) => (p.id === jobId ? { ...p, pct } : p))), abort?.signal)
           setPending((prev) => prev.filter((p) => p.id !== jobId))
           setFiles((prev) => (prev.length < MAX_FILES ? [...prev, saved] : prev))
         } catch (e: any) {
+          if (e?.cancelled) { setPending((prev) => prev.filter((p) => p.id !== jobId)); continue }
           setPending((prev) => prev.map((p) => (p.id === jobId ? { ...p, error: e?.message || 'Upload failed' } : p)))
         }
       }
@@ -222,14 +248,14 @@ export default function StorePayment() {
     const big = all.slice(0, Math.max(0, room)).filter((f) => f.size > ORDER_FILE_MB * 1024 * 1024)
     if (big.length) setFileError(`${big.map((f) => f.name).join(', ')} ${big.length === 1 ? 'is' : 'are'} over ${ORDER_FILE_MB} MB.`)
     const jobs = all.slice(0, Math.max(0, room)).filter((f) => f.size <= ORDER_FILE_MB * 1024 * 1024)
-      .map((file) => ({ id: newKey(), file, pct: 0 }))
+      .map((file) => ({ id: newKey(), file, pct: 0, abort: new AbortController() }))
     if (fileRef.current) fileRef.current.value = ''
     if (!jobs.length) return
     setPending((prev) => [...prev, ...jobs])
     runUploads(jobs)
   }
   const retry = (p: Pending) => {
-    const job = { ...p, pct: 0, error: undefined }
+    const job = { ...p, pct: 0, error: undefined, abort: new AbortController() }
     setPending((prev) => prev.map((x) => (x.id === p.id ? job : x)))
     runUploads([job])
   }
@@ -291,7 +317,7 @@ export default function StorePayment() {
     setPaying(true); setError(''); setPriceChanged(null)
     const startedAt = Date.now()
     // What the buyer saw: the server refuses with PRICE_CHANGED if it's different
-    const agreed = { expectedPrice: item.price, currency: item.currency, idempotencyKey: purchaseKey.current }
+    const agreed = { expectedPrice: item.price, currency: item.currency, idempotencyKey: purchaseKey.current, ...(offer && { offerId: offer.id }) }
     try {
       if (item.official) {
         // Takes effect straight away; there's no seller or delivery
@@ -441,7 +467,9 @@ export default function StorePayment() {
                         {p.error
                           ? <button type="button" className="sc-file-retry" onClick={() => retry(p)}>Try again</button>
                           : <small aria-live="polite">{p.pct}%</small>}
-                        {p.error && <button type="button" aria-label={`Remove ${p.file.name}`} onClick={() => setPending((x) => x.filter((y) => y.id !== p.id))}><i className="ti ti-x" aria-hidden="true" /></button>}
+                        {p.error
+                          ? <button type="button" aria-label={`Remove ${p.file.name}`} onClick={() => setPending((x) => x.filter((y) => y.id !== p.id))}><i className="ti ti-x" aria-hidden="true" /></button>
+                          : <button type="button" aria-label={`Cancel ${p.file.name}`} onClick={() => p.abort?.abort()}><i className="ti ti-x" aria-hidden="true" /></button>}
                         {!p.error && <span className="sc-file-bar" aria-hidden="true"><span style={{ width: `${p.pct}%` }} /></span>}
                       </li>
                     ))}
@@ -457,9 +485,11 @@ export default function StorePayment() {
                 <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-receipt" aria-hidden="true" /> Order summary</h2>
                 <div className="sc-line total" style={{ marginTop: 6 }}><span>Order total</span><span>{money(item.price, item.currency)}</span></div>
                 <p className="sc-fine" style={{ marginTop: 0 }}>No fees for buyers.</p>
+                {offer && <p className="sc-note"><i className="ti ti-receipt" aria-hidden="true" /> Private offer from @{item.seller}: this price is for you only.{offer.note ? ` "${offer.note}"` : ''}</p>}
+                {instant && <p className="sc-note"><i className="ti ti-download" aria-hidden="true" /> {instantLine}</p>}
                 <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: OgaPay holds your payment until you confirm you received the order.</p>
                 {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
-                <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => setParams({ step: 'pay' })}>
+                <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => goStep('pay')}>
                   {uploading ? 'Uploading your files…' : <>Proceed to payment <i className="ti ti-arrow-right" aria-hidden="true" /></>}
                 </button>
               </section>
@@ -549,12 +579,13 @@ export default function StorePayment() {
                   <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-list-details" aria-hidden="true" /> Overview</h2>
                   <div className="sc-line"><span>{item.title}</span><span>{money(item.price, item.currency)}</span></div>
                   {!item.official && <div className="sc-line"><span>Seller</span><span>@{item.seller}</span></div>}
-                  {!item.official && <div className="sc-line"><span>Delivery</span><span>{delivery}</span></div>}
+                  {!item.official && <div className="sc-line"><span>Delivery</span><span>{instant ? 'Instant download' : delivery}</span></div>}
+                  {offer && <div className="sc-line"><span>Price</span><span>Private offer</span></div>}
                   <div className="sc-line"><span>Fees</span><span>None</span></div>
                   <div className="sc-line total"><span>Total</span><span>{money(item.price, item.currency)}</span></div>
                   {!item.official && (
                     <div className="sc-brief-sum">
-                      <div className="sc-sec-head"><span className="ui-label" style={{ margin: 0 }}>Your brief</span><button type="button" className="sc-more" onClick={() => setParams({})}>Edit</button></div>
+                      <div className="sc-sec-head"><span className="ui-label" style={{ margin: 0 }}>Your brief</span><button type="button" className="sc-more" onClick={() => goStep()}>Edit</button></div>
                       {brief.trim() ? <p>{brief.trim()}</p> : <p className="empty">No message. You can still talk to the seller in your chat after paying.</p>}
                       {files.length > 0 && <small><i className="ti ti-paperclip" aria-hidden="true" /> {files.length} attachment{files.length === 1 ? '' : 's'}</small>}
                     </div>

@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import OrderBrief, { type BriefFile } from '../components/OrderBrief'
 import OrderActions from '../components/OrderActions'
+import OrderListing, { type Listing } from '../components/OrderListing'
 import { apiRequest } from '../lib/api'
 import { sized } from '../lib/img'
 import { useWalletBalance } from '../context/WalletBalanceContext'
@@ -29,6 +30,8 @@ type Order = StoreOrder & {
   seller: { username: string; name: string } | null
   buyer: { username: string; name: string } | null
   briefFiles?: BriefFile[]; deliveryFiles?: BriefFile[]; disputeFiles?: BriefFile[]; sellerResponseFiles?: BriefFile[]
+  // 2026-11-10: the listing when it was bought (F22), delivered at purchase with download files (F21)
+  listing?: Listing | null; instantDelivery?: boolean
 }
 
 // What happened to the order, oldest first, then what comes next
@@ -103,7 +106,7 @@ export default function OrderConfirmation() {
   const other = buyer ? order.seller : order.buyer
   const chat = (s.conversationId || order.conversationId) ? `/messages?c=${s.conversationId || order.conversationId}` : '/messages'
   // "Order placed" only straight after buying (checkout passes its state)
-  const justPlaced = buyer && !!s.title && order.status === 'PENDING'
+  const justPlaced = buyer && !!s.title && (order.status === 'PENDING' || (!!order.instantDelivery && order.status === 'DELIVERED'))
   const badge = orderBadge(order)
   const p = order.product
   const hasBrief = !!order.brief || !!order.briefFiles?.length
@@ -126,6 +129,7 @@ export default function OrderConfirmation() {
               {other ? <>@{other.username} has been told about your order.</> : <>The seller has been told about your order.</>}
               {' '}OgaPay holds your payment until you confirm you received it, or 3 days after the seller marks it delivered.
               {hasBrief ? ' Your brief and files are saved on this order and sent to them in your chat.' : ' Use the chat to share any details they need.'}
+              {order.instantDelivery && ' Your files are ready: download them below.'}
             </p>
           ) : (
             <p className="ui-sub">Status: <span className={`ms2-badge ${badge.cls}`}>{badge.label}</span></p>
@@ -175,7 +179,8 @@ export default function OrderConfirmation() {
 
           <div className="oc-blocks">
             {hasBrief && <OrderBrief label={buyer ? 'Your brief' : "Buyer's brief"} brief={order.brief} files={order.briefFiles || []} />}
-            <OrderBrief label={buyer ? 'What the seller delivered' : 'What you delivered'} more="Read more" brief={order.deliveryNote} files={order.deliveryFiles || []} />
+            <OrderBrief label={order.instantDelivery ? (buyer ? 'Your download' : 'Delivered instantly') : buyer ? 'What the seller delivered' : 'What you delivered'} more="Read more" brief={order.deliveryNote} files={order.deliveryFiles || []} />
+            <OrderListing listing={order.listing} label={buyer ? 'The listing when you paid' : 'Your listing when they paid'} />
             {order.disputeReason && (order.status === 'DISPUTED' || order.disputedAt) && (
               <OrderBrief label={buyer ? 'The problem you reported' : 'The problem the buyer reported'} more="Read more" brief={order.disputeReason} files={order.disputeFiles || []} />
             )}
