@@ -20,6 +20,7 @@ const SECTIONS = [
   { id: 'creators', title: 'Creators and audiences' },
   { id: 'money', title: 'Your wallet, deposits and withdrawals' },
   { id: 'store', title: 'The store' },
+  { id: 'refunds', title: 'Refund policy' },
   { id: 'communities', title: 'Communities and the blog' },
   { id: 'developers', title: 'Developers and AI agents' },
   { id: 'vault', title: 'The vault and $PAY' },
@@ -55,7 +56,7 @@ export default function Terms() {
         <header className="lg-head">
           <div className="up-eyebrow">Legal</div>
           <h1>Terms of Service</h1>
-          <p>Last updated: 3 November 2026</p>
+          <p>Last updated: 10 November 2026</p>
           <p className="lg-lead">These terms are the agreement between you and OGA-P INTEGRATED SERVICES LIMITED, Nigeria ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
         </header>
 
@@ -164,6 +165,22 @@ export default function Terms() {
                 <li><b>Buyer protection.</b> When you buy, the price is taken from your wallet and held by OgaPay, and a chat opens with the seller to arrange delivery. The seller is paid when you confirm you received the order, or 3 days after they mark it delivered if you haven't reported a problem.</li>
                 <li>If something is wrong, choose Report a problem before then: the payment stays held while we look at both sides, then we either refund you or pay the seller. Until the seller starts work you can cancel and get your money back, and the seller can refund you at any time while the payment is held.</li>
                 <li>OgaPay also sells a few items of its own: a Premium badge and a worker frame (shown on your profile for as long as your account is in good standing), Priority Support (your tickets go to the top of our queue for 30 days) and Task Boost (one of your open jobs is listed first for 24 hours). They take effect straight away and aren't refundable once applied.</li>
+              </ul>
+            </section>
+
+            <section id="refunds">
+              <h2><span>{n('refunds')}</span>Refund policy</h2>
+              <p>This is how money comes back to you on OgaPay. Refunds go to your OgaPay wallet, in the currency you paid, and you can then withdraw them to your bank as usual.</p>
+              <ul>
+                <li><b>Jobs you post.</b> If you cancel a job before anyone has taken a place, everything held for it, including the fee, is refunded. When a job closes or ends with places unused, the rewards for those places and the matching part of the fee are refunded. Rewards for work you approved, or that was approved automatically, are not refunded.</li>
+                <li><b>Contests.</b> Prizes for places with no eligible entry, and the matching part of the fee, are refunded. A contest that gets no entries is refunded in full. Prizes already awarded are not refunded.</li>
+                <li><b>Store orders.</b> Your payment is held until you confirm you received the order. You get a full refund if you cancel before the seller starts, if the seller refunds you, or if the seller doesn't mark the order delivered in time (14 days after you paid, or the promised delivery time plus 7 days if that is longer). If something is wrong, choose Report a problem before the payment is released: we look at both sides and refund you, pay the seller, or split the amount. Once you confirm you received an order, or the payment is released after the waiting time, it can't be refunded through OgaPay.</li>
+                <li><b>OgaPay's own items.</b> The Premium badge, worker frame, Priority Support and Task Boost take effect straight away and are not refundable once applied.</li>
+                <li><b>Deposits.</b> Money you add stays in your wallet until you spend or withdraw it. If you added money by mistake, you can withdraw it to your bank (the normal withdrawal minimum and fee apply). A deposit that is reversed, charged back or found to be fraudulent is taken back.</li>
+                <li><b>Withdrawals.</b> If a bank withdrawal can't be paid, or we reject it, the money goes back to your wallet and we tell you why. Crypto withdrawals and sending money to another member are final once sent and can't be refunded.</li>
+                <li><b>Mistakes on our side.</b> If we charge you in error, or a fault on OgaPay takes money it shouldn't, we refund it in full once we confirm it. Tell us within 30 days at support@ogapay.app or 0903 009 7844.</li>
+                <li><b>How to ask.</b> For a store order, use Report a problem on the order. For anything else, contact support with your username and the date and amount, and we reply within 24 hours. We may refuse or reverse a refund that is part of fraud or abuse of these terms.</li>
+                <li>Nothing in this policy limits any right you have under the Federal Competition and Consumer Protection Act 2018 that can't be excluded by agreement.</li>
               </ul>
             </section>
 
