@@ -7,6 +7,9 @@
 // "Name" (https://link), become links too (2026-10-31). Everything is escaped
 // first, and links and pictures only accept https:// addresses or paths on this
 // site, so a post can't carry HTML or javascript: links.
+// A YouTube link on a line of its own (pasted, or as [text](link)) shows the video
+// (2026-11-10): only youtube.com / youtu.be links with a real 11-character video
+// id, played from youtube-nocookie.com. Nothing else from the link is used.
 
 function escapeHtml(text: string) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
@@ -64,6 +67,28 @@ function inline(escaped: string) {
   return restore(format(text))
 }
 
+// The video id (and start second) of a YouTube watch, share, shorts, live or embed link, or null
+export function youtubeVideo(raw: string): { id: string; start: number } | null {
+  let u: URL
+  try { u = new URL(raw) } catch { return null }
+  if (u.protocol !== 'https:' || u.username || u.password || u.port) return null
+  const host = u.hostname.toLowerCase()
+  let id = ''
+  if (host === 'youtu.be') id = u.pathname.slice(1).replace(/\/$/, '')
+  else if (/^(www\.|m\.)?youtube\.com$/.test(host) || /^(www\.)?youtube-nocookie\.com$/.test(host)) {
+    if (u.pathname === '/watch') id = u.searchParams.get('v') || ''
+    else id = u.pathname.match(/^\/(?:shorts|live|embed)\/([^/]+)\/?$/)?.[1] || ''
+  } else return null
+  if (!/^[\w-]{11}$/.test(id)) return null
+  // ?t=90, t=90s, t=1m30s or start=90
+  const t = (u.searchParams.get('t') || u.searchParams.get('start') || '').match(/^(?:(\d{1,2})h)?(?:(\d{1,3})m)?(?:(\d{1,5})s?)?$/)
+  const start = t ? Number(t[1] || 0) * 3600 + Number(t[2] || 0) * 60 + Number(t[3] || 0) : 0
+  return { id, start }
+}
+
+const videoHtml = ({ id, start }: { id: string; start: number }) =>
+  `<div class="md-video"><iframe src="https://www.youtube-nocookie.com/embed/${id}${start ? `?start=${start}` : ''}" title="YouTube video" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+
 // "| a | b |" -> ["a", "b"]
 const cells = (line: string) => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim())
 const isTableRow = (line: string) => /^\s*\|.*\|\s*$/.test(line)
@@ -119,6 +144,9 @@ export function renderBlog(text: string): string {
     if (num) { openList('ol'); html += `<li>${inline(escapeHtml(num[1]))}</li>`; continue }
     closeList()
     if (line.trim() === '') continue
+    const alone = line.trim().match(/^(?:https:\/\/\S+|\[[^\]]*\]\((https:\/\/[^\s)]+)\))$/)
+    const video = alone && youtubeVideo(alone[1] || alone[0].replace(/[.,;:!?]+$/, ''))
+    if (video) { html += videoHtml(video); continue }
     const img = line.trim().match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/)
     if (img && SAFE_URL.test(img[2])) {
       const caption = img[1].trim()

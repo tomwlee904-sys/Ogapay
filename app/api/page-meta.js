@@ -19,7 +19,7 @@ export const plain = (s) => String(s || '')
   .replace(/[*_`#>~|]+/g, '')
   .replace(/\s+/g, ' ')
   .trim()
-const SYMBOL = { NGN: '₦', USDC: '$', USD: '$' }
+const SYMBOL = { NGN: '₦', GHS: 'GH₵', USDC: '$', USD: '$' }
 export const money = (n, cur) => {
   const v = Number(n || 0)
   const s = SYMBOL[cur] || ''
@@ -47,6 +47,8 @@ const PAGES = {
   '/': ['OgaPay: earn and hire in Nigeria', 'Post paid jobs or earn by doing them. OgaPay holds the money in escrow and pays workers in naira or crypto when work is approved.'],
   '/hire': ['Hire freelancers and workers in Nigeria | OgaPay', 'Hire people in Nigeria for small jobs, writing, design and promotion. Your money is held in escrow and only paid when you approve the work.'],
   '/creators': ['Hire micro-influencers in Nigeria | OgaPay Creators', 'Find Nigerian micro-influencers and creators by audience and followers, and pay them to promote your business through OgaPay.'],
+  // Reached through the /store/:id preview rule (metaFor 'product' hands it over)
+  '/store/creators': ['Creators on OgaPay Store | OgaPay', 'Nigerian creators selling design, writing, video and other services and digital products on OgaPay Store, paid safely through escrow.'],
   '/workers': ['Workers | OgaPay', 'Nigerian workers on OgaPay with their ranks, ratings and finished jobs. Hire someone directly.'],
   '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, escrow, payouts, verification levels and fees.'],
   '/support': ['Support | OgaPay', 'Get help with your OgaPay account, jobs, payments and withdrawals.'],
@@ -67,12 +69,14 @@ const PAGES = {
   '/jobs/design': ['Graphic design jobs in Nigeria: logos, flyers and more | OgaPay', 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC through escrow.'],
 }
 
-export function headFor({ title, description, url, image, type = 'website', large = false, jsonLd = null }) {
+// robots: e.g. 'noindex' for a page search engines must drop (a hidden product)
+export function headFor({ title, description, url, image, type = 'website', large = false, jsonLd = null, robots = null }) {
   const img = image || CARD
   const big = large || img === CARD
   return [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
+    ...(robots ? [`<meta name="robots" content="${esc(robots)}" />`] : []),
     `<link rel="canonical" href="${esc(url)}" />`,
     `<meta property="og:type" content="${esc(type)}" />`,
     `<meta property="og:site_name" content="OgaPay" />`,
@@ -93,6 +97,46 @@ const getJson = async (path) => {
   const r = await fetch(`${API}${path}`, { headers: { accept: 'application/json' } })
   if (!r.ok) return null
   return (await r.json())?.data ?? null
+}
+
+// Google's Product data for a store product (F9, 2026-11-10): name, picture,
+// the offer (left out for price on request, and for coins that aren't a real
+// currency), stars when it has reviews, and the Store > category > product trail
+const OFFER_CURRENCY = { NGN: 'NGN', GHS: 'GHS', USDC: 'USD', USDT: 'USD' }
+export function productJsonLd(p) {
+  const url = `${SITE}/store/${p.id}`
+  const img = picture(p.image)
+  const currency = OFFER_CURRENCY[p.currency]
+  const price = Number(p.price)
+  const reviews = Number(p.reviewsCount || 0)
+  const product = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.title,
+    description: clip(plain(p.description) || p.title, 500),
+    url,
+    sku: p.id,
+    ...(p.category ? { category: p.category } : {}),
+    ...(img ? { image: [img] } : {}),
+    ...(reviews > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(Number(p.rating || 0).toFixed(1)), reviewCount: reviews, bestRating: 5, worstRating: 1 } } : {}),
+    ...(!p.priceOnRequest && currency && price > 0 ? {
+      offers: {
+        '@type': 'Offer',
+        url,
+        price: String(Math.round(price * 100) / 100),
+        priceCurrency: currency,
+        availability: p.stock === 0 ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+        seller: p.official ? { '@type': 'Organization', name: 'OgaPay' } : { '@type': 'Person', name: p.seller },
+      },
+    } : {}),
+  }
+  const trail = [['OgaPay', `${SITE}/`], ['Store', `${SITE}/store`], ...(p.category ? [[p.category, `${SITE}/store?category=${encodeURIComponent(p.category)}`]] : []), [p.title, url]]
+  const breadcrumbs = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
+  }
+  return [product, breadcrumbs]
 }
 
 export async function metaFor(kind, id) {
@@ -118,15 +162,33 @@ export async function metaFor(kind, id) {
     })
   }
   if (kind === 'product') {
-    const p = await getJson(`/store/${safe}`)
-    if (!p || p.isActive === false) return null
+    // A store page with a name (/store/creators), not a product
+    if (PAGES[`/store/${safe}`]) return metaFor('page', `/store/${safe}`)
+    const r = await fetch(`${API}/store/${safe}`, { headers: { accept: 'application/json' } })
+    // Hidden, removed or deleted products answer 404 (only their seller can open
+    // them): search engines are told to drop the page (F9). Any other failure
+    // keeps the generic preview, so a slow API never drops a real product.
+    if (r.status === 404) {
+      return headFor({ title: 'Product not available | OgaPay Store', description: "This product isn't on sale on OgaPay Store.", url: `${SITE}/store/${safe}`, robots: 'noindex, nofollow' })
+    }
+    if (!r.ok) return null
+    const p = (await r.json())?.data
+    if (!p) return null
+    const url = `${SITE}/store/${p.id}`
+    if (p.isActive === false) {
+      return headFor({ title: 'Product not available | OgaPay Store', description: "This product isn't on sale on OgaPay Store.", url, robots: 'noindex, nofollow' })
+    }
     const by = p.official ? 'OgaPay' : `@${p.seller}`
+    // Price on request is saved as 0: the preview says so instead of "₦0" (B10)
+    const price = p.priceOnRequest ? 'Price on request' : money(p.price, p.currency)
     return headFor({
-      title: `${p.title} · ${money(p.price, p.currency)} | OgaPay Store`,
-      description: clip(`${plain(p.description) || p.title}. Sold by ${by}, paid safely through escrow.`, 200),
-      url: `${SITE}/store/${p.id}`,
+      title: `${p.title} · ${price} | OgaPay Store`,
+      // (no doubled full stop when the description ends with one)
+      description: clip(`${(plain(p.description) || p.title).replace(/[\s.!?…]+$/, '')}. Sold by ${by}, paid safely through escrow.`, 200),
+      url,
       image: picture(p.image),
       type: 'product',
+      jsonLd: productJsonLd(p),
     })
   }
   if (kind === 'community') {
