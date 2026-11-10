@@ -1,0 +1,32 @@
+/* The buyer's brief on a store order (components/OrderBrief.tsx, 2026-11-10) */
+.ob { grid-column: 1 / -1; display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card, transparent); text-align: left; }
+.ob-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.ob-label i { font-size: 15px; color: var(--text3); }
+.ob-text { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.ob-text.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.ob-more { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; margin: -6px 0; padding: 0; border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text); text-decoration: underline; cursor: pointer; }
+.ob-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ob-files a, .ob-files .ob-off { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border-radius: 8px; background: var(--bg2); font-size: 13px; color: var(--text); text-decoration: none; }
+.ob-files a:hover { background: var(--border); }
+.ob-files span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-files small { flex-shrink: 0; font-size: 11px; color: var(--text3); }
+.ob-files .ob-off { color: var(--text3); }
+/* The order page (pages/OrderConfirmation.tsx, 2026-11-10): timeline, the
+   delivery and report blocks, and the order's steps (components/OrderActions.tsx) */
+.ot { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
+.ot li { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 13px; color: var(--text); }
+.ot li i { font-size: 16px; color: var(--text3); flex-shrink: 0; }
+.ot li span { flex: 1; min-width: 0; }
+.ot li small { flex-shrink: 0; font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
+.ot li.ot-next { color: var(--text2); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 4px; }
+.ot-warn { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.ot-warn i { font-size: 15px; color: var(--text3); }
+.oc-blocks { display: grid; gap: 10px; margin-top: 12px; text-align: left; }
+.oc-blocks:empty { display: none; }
+.sc-done .ui-card.oc-acts { margin-top: 12px; }
+@media (max-width: 767px) {
+  .ot li { align-items: flex-start; padding: 6px 0; }
+  .ot li i { margin-top: 1px; }
+  /* Order steps (OrderActions) get a full 40px tap area on phones */
+  .ms2-order .row-acts .up-btn { min-height: 40px; }
+}

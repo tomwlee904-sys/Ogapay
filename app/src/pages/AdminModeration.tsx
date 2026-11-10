@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import OrderBrief from '../components/OrderBrief'
 import { apiRequest } from '../lib/api'
 import RateWork from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
@@ -20,6 +21,11 @@ export default function AdminModeration() {
   // Store orders where the buyer reported a problem: the payment waits for us
   const [disputes, setDisputes] = useState<any[] | null>(null)
   const loadDisputes = () => apiRequest<any[]>('/store/admin/disputes').then((d) => setDisputes(Array.isArray(d) ? d : [])).catch(() => setDisputes([]))
+  // 2026-11-10: every decision has a note both people get; a split gives the
+  // seller part of the money; the buyer and seller's chat can be read here
+  const [orderNotes, setOrderNotes] = useState<Record<string, string>>({})
+  const [sellerParts, setSellerParts] = useState<Record<string, string>>({})
+  const [chats, setChats] = useState<Record<string, any[] | 'loading' | 'failed'>>({})
   // Second looks: workers who asked us to check a rejection (POST /escrow/dispute)
   const [looks, setLooks] = useState<any[] | null>(null)
   const [lookNotes, setLookNotes] = useState<Record<string, string>>({})
@@ -58,20 +64,39 @@ export default function AdminModeration() {
     setBusy(null)
   }
 
-  const settle = async (o: any, action: 'RELEASE' | 'REFUND') => {
-    const amount = `${o.currency === 'NGN' ? '₦' : ''}${Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 6 })}${o.currency === 'NGN' ? '' : ' ' + o.currency}`
-    const who = action === 'RELEASE' ? `the seller @${o.seller?.username}` : `the buyer @${o.buyer?.username}`
-    if (!window.confirm(`Send ${amount} for "${o.product?.name}" to ${who}? This can't be undone.`)) return
+  const storeMoney = (n: number, cur: string) => `${cur === 'NGN' ? '₦' : ''}${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })}${cur === 'NGN' ? '' : ' ' + cur}`
+  const settle = async (o: any, action: 'RELEASE' | 'REFUND' | 'SPLIT' | 'RESUME') => {
+    const amount = storeMoney(o.total, o.currency)
+    const note = (orderNotes[o.id] || '').trim()
+    if (note.length < 10) { setMsg('Failed: write a note for both people saying why (at least 10 characters)'); return }
+    const part = Number(sellerParts[o.id])
+    if (action === 'SPLIT' && !(part > 0 && part < Number(o.total))) { setMsg(`Failed: the seller's part must be more than 0 and less than ${amount}`); return }
+    const what = action === 'RELEASE' ? `Send ${amount} for "${o.product?.name}" to the seller @${o.seller?.username}`
+      : action === 'REFUND' ? `Refund ${amount} for "${o.product?.name}" to the buyer @${o.buyer?.username}`
+      : action === 'SPLIT' ? `Pay @${o.seller?.username} ${storeMoney(part, o.currency)} and refund @${o.buyer?.username} ${storeMoney(Number(o.total) - part, o.currency)}`
+      : `Turn the report down? The order goes on${o.deliveredAt ? ' and the buyer gets 3 more days to confirm' : ' and the seller still has to deliver'}`
+    if (!window.confirm(`${what}? Both sides get your note.${action === 'RESUME' ? '' : " This can't be undone."}`)) return
     setBusy(o.id)
     setMsg('')
     try {
-      await apiRequest(`/store/admin/orders/${o.id}/resolve`, { method: 'POST', body: JSON.stringify({ action }) })
+      await apiRequest(`/store/admin/orders/${o.id}/resolve`, { method: 'POST', body: JSON.stringify({ action, note, ...(action === 'SPLIT' && { sellerAmount: part }) }) })
       setDisputes((prev) => (prev || []).filter((d) => d.id !== o.id))
-      setMsg(action === 'RELEASE' ? `Paid ${amount} to @${o.seller?.username}` : `Refunded ${amount} to @${o.buyer?.username}`)
+      setMsg(action === 'RELEASE' ? `Paid ${amount} to @${o.seller?.username}`
+        : action === 'REFUND' ? `Refunded ${amount} to @${o.buyer?.username}`
+        : action === 'SPLIT' ? `Split "${o.product?.name}" between @${o.seller?.username} and @${o.buyer?.username}`
+        : `Report on "${o.product?.name}" turned down; the order goes on`)
     } catch (err: any) {
-      setMsg(err.message || 'Failed to settle the order')
+      setMsg(`Failed: ${err.message || 'could not settle the order'}`)
     }
     setBusy(null)
+  }
+  const toggleChat = async (o: any) => {
+    if (chats[o.id]) { setChats(({ [o.id]: _, ...rest }) => rest); return }
+    setChats((c) => ({ ...c, [o.id]: 'loading' }))
+    try {
+      const r = await apiRequest<{ messages: any[] }>(`/store/admin/orders/${o.id}/chat`)
+      setChats((c) => ({ ...c, [o.id]: r?.messages || [] }))
+    } catch { setChats((c) => ({ ...c, [o.id]: 'failed' })) }
   }
 
   const handleResolve = async (submissionId: string, action: 'APPROVED' | 'REJECTED', warn?: { reason: string; note: string }) => {
@@ -159,6 +184,16 @@ export default function AdminModeration() {
         .mod-look .mod-files a{color:var(--accent);text-decoration:none}
         .mod-look .ui-input{margin-top:10px}
         .btn-split{background:transparent;color:var(--text);border:1px solid var(--border)!important}
+        .mod-look .ob{margin-top:8px}
+        .mod-look textarea.ui-input{margin-top:10px;resize:vertical;font-family:inherit}
+        .mod-chat{max-height:320px;overflow-y:auto;margin-top:6px;padding:4px;border:1px solid var(--border);border-radius:10px}
+        .mod-chat .mod-text{margin:4px 0}
+        .mod-chat .mod-chat-seller{border-left:3px solid var(--accent)}
+        .mod-chat .mod-files a{color:var(--accent);text-decoration:none}
+        .mod-split{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text2)}
+        .mod-split label{font-weight:600}
+        .mod-split .ui-input{width:160px;margin-top:0}
+        .mod-split small{width:100%;font-size:12px}
         @media(max-width:640px){.mod-card{flex-direction:column;align-items:stretch}.mod-actions button{flex:1}}
       `}</style>
       <div className="mod-wrap">
@@ -221,29 +256,65 @@ export default function AdminModeration() {
           <div className="mod-empty">No reported problems. Payments for store orders are released as normal.</div>
         ) : (
           <div className="mod-queue" style={{ marginBottom: 28 }}>
-            {disputes.map((o: any) => (
-              <div key={o.id} className="mod-card mod-dispute">
+            {disputes.map((o: any) => {
+              const chat = chats[o.id]
+              return (
+              <div key={o.id} className="mod-card mod-look">
                 <div className="mod-card-info">
                   <h3>{o.product?.name || 'Store order'}</h3>
                   <div className="meta">
                     <span><i className="ti ti-user" /> Buyer @{o.buyer?.username}</span>
                     <span><i className="ti ti-building-store" /> Seller @{o.seller?.username}</span>
-                    <span><i className="ti ti-coin" /> {Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 6 })} {o.currency} held</span>
-                    {o.disputedAt && <span><i className="ti ti-clock" /> reported {timeSince(o.disputedAt)} ago</span>}
-                    {o.deliveredAt && <span><i className="ti ti-package" /> marked delivered</span>}
+                    <span><i className="ti ti-coin" /> {storeMoney(o.total, o.currency)} held</span>
+                    {o.delivery && <span><i className="ti ti-clock" /> promised {o.delivery}</span>}
+                    {o.disputedAt && <span><i className="ti ti-alert-triangle" /> reported {timeSince(o.disputedAt)} ago</span>}
+                    <span><i className="ti ti-package" /> {o.deliveredAt ? `marked delivered ${timeSince(o.deliveredAt)} ago` : 'not marked delivered'}</span>
                   </div>
-                  <p className="mod-reason">"{o.disputeReason}"</p>
+                  {/* What the buyer asked for, saved with the payment (2026-11-10) */}
+                  <OrderBrief brief={o.brief} files={o.briefFiles || []} />
+                  <OrderBrief label="What the seller delivered" more="Read more" brief={o.deliveryNote} files={o.deliveryFiles || []} />
+                  <OrderBrief label={`Why @${o.buyer?.username} reported it`} more="Read more" brief={o.disputeReason} files={o.disputeFiles || []} />
+                  {o.sellerResponse
+                    ? <OrderBrief label={`@${o.seller?.username}'s side`} more="Read more" brief={o.sellerResponse} files={o.sellerResponseFiles || []} />
+                    : <p className="mod-text">The seller hasn't replied yet.</p>}
+                  {o.hasChat && (
+                    <div className="mod-files">
+                      <button type="button" className="btn-split" style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40 }} onClick={() => toggleChat(o)} aria-expanded={!!chat}>
+                        <i className="ti ti-messages" /> {chat ? 'Hide their chat' : 'Read their chat'}
+                      </button>
+                    </div>
+                  )}
+                  {chat === 'loading' && <p className="mod-text">Loading the chat...</p>}
+                  {chat === 'failed' && <p className="mod-text">The chat could not be loaded.</p>}
+                  {Array.isArray(chat) && (
+                    <div className="mod-chat" aria-label="Buyer and seller chat (read only)">
+                      {chat.length === 0 ? <p className="mod-text">No messages.</p> : chat.map((m: any) => (
+                        <p key={m.id} className={`mod-text mod-chat-${m.from === 'SELLER' ? 'seller' : 'buyer'}`}>
+                          <b>{m.from === 'BUYER' ? 'Buyer' : m.from === 'SELLER' ? 'Seller' : 'Other'} @{m.username} · {new Date(m.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</b>
+                          {m.content}
+                          {(m.files || []).length > 0 && <span className="mod-files">{m.files.map((f: any, i: number) => f.url ? <a key={i} href={f.url} target="_blank" rel="noreferrer"><i className="ti ti-paperclip" /> {f.name}</a> : <span key={i}>{f.name}</span>)}</span>}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  <textarea className="ui-input" rows={2} value={orderNotes[o.id] || ''} maxLength={1000} onChange={(e) => setOrderNotes((m) => ({ ...m, [o.id]: e.target.value }))}
+                    placeholder="Note to both sides (required), e.g. The files match the brief, so the seller is paid" aria-label="Note to both sides" />
+                  <div className="mod-split">
+                    <label htmlFor={`part-${o.id}`}>Seller's part for a split ({o.currency})</label>
+                    <input id={`part-${o.id}`} className="ui-input" type="number" inputMode="decimal" min={0} max={o.total} step="any" value={sellerParts[o.id] || ''}
+                      onChange={(e) => setSellerParts((m) => ({ ...m, [o.id]: e.target.value }))} placeholder={`e.g. ${Number(o.total) / 2}`} />
+                    {Number(sellerParts[o.id]) > 0 && Number(sellerParts[o.id]) < Number(o.total) && <small>The buyer gets {storeMoney(Number(o.total) - Number(sellerParts[o.id]), o.currency)} back.</small>}
+                  </div>
                 </div>
                 <div className="mod-actions">
-                  <button className="btn-approve" onClick={() => settle(o, 'RELEASE')} disabled={busy === o.id}>
-                    {busy === o.id ? '...' : 'Pay seller'}
-                  </button>
-                  <button className="btn-reject" onClick={() => settle(o, 'REFUND')} disabled={busy === o.id}>
-                    {busy === o.id ? '...' : 'Refund buyer'}
-                  </button>
+                  <button className="btn-approve" onClick={() => settle(o, 'RELEASE')} disabled={busy === o.id}>{busy === o.id ? '...' : 'Pay seller'}</button>
+                  <button className="btn-split" onClick={() => settle(o, 'SPLIT')} disabled={busy === o.id}>Split</button>
+                  <button className="btn-reject" onClick={() => settle(o, 'REFUND')} disabled={busy === o.id}>{busy === o.id ? '...' : 'Refund buyer'}</button>
+                  <button className="btn-spam" onClick={() => settle(o, 'RESUME')} disabled={busy === o.id}>Turn down, order goes on</button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import OrderBrief from '../components/OrderBrief'
+import OrderActions from '../components/OrderActions'
 import { apiRequest } from '../lib/api'
 import { uploadImage, uploadFile, MAX_FILE_MB, type UploadedFile } from '../lib/upload'
 import { renderBlog } from '../lib/blogMarkdown'
 import { useAuth } from '../context/AuthContext'
-import { orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
+import { decisionText, orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
 import { useMoney } from '../lib/useMoney'
 import '../styles/profile-public.css'
 import '../styles/hire.css'
@@ -51,6 +53,8 @@ export default function MyStore() {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
+  // What the last order step did (OrderActions, 2026-11-10)
+  const [note, setNote] = useState('')
   const [failed, setFailed] = useState({ products: false, orders: false })
   // /my-store?new=1 (the Store page's "Add a product") opens the form straight away
   const [editing, setEditing] = useState<Product | 'new' | null>(() => (params.get('new') === '1' ? 'new' : null))
@@ -72,7 +76,8 @@ export default function MyStore() {
   const [revenue, held] = useMemo(() => {
     const sum = (list: Order[]) => {
       const by: Record<string, number> = {}
-      for (const o of list) by[o.currency] = (by[o.currency] || 0) + o.total
+      // A split order paid the seller the total less what went back to the buyer (2026-11-10)
+      for (const o of list) by[o.currency] = (by[o.currency] || 0) + o.total - (o.refundedPart || 0)
       return Object.entries(by).map(([c, v]) => show(v, c)).join(' · ')
     }
     const paid = (orders || []).filter((o) => o.releasedAt || (!o.protected && o.status !== 'CANCELLED'))
@@ -96,21 +101,6 @@ export default function MyStore() {
     catch (e: any) { setError(e?.message || 'Could not delete the product') }
     setBusy('')
   }
-  const moveOrder = async (o: Order, status: 'IN_PROGRESS' | 'DELIVERED') => {
-    if (status === 'DELIVERED' && !window.confirm(`Mark "${o.product.name}" for @${o.buyer.username} as delivered? The buyer is notified${o.held ? ', and the payment comes to you when they confirm, or in 3 days if they report no problem' : ''}.`)) return
-    setBusy(o.id)
-    try { await apiRequest(`/store/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify({ status }) }); load() }
-    catch (e: any) { setError(e?.message || 'Could not update the order') }
-    setBusy('')
-  }
-  const refundOrder = async (o: Order) => {
-    if (!window.confirm(`Cancel @${o.buyer.username}'s order for "${o.product.name}" and refund ${money(o.total, o.currency)} to them? This can't be undone.`)) return
-    setBusy(o.id)
-    try { await apiRequest(`/store/orders/${o.id}/cancel`, { method: 'POST' }); load() }
-    catch (e: any) { setError(e?.message || 'Could not cancel the order') }
-    setBusy('')
-  }
-
   return (
     <Layout>
       <div className="up-wrap">
@@ -144,6 +134,7 @@ export default function MyStore() {
         </div>
 
         {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
+        {note && tab === 'orders' && <div className="up-note ok" role="status" style={{ marginBottom: 12 }}><i className="ti ti-circle-check" /> {note}</div>}
 
         {tab === 'products' ? (
           products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
@@ -200,7 +191,7 @@ export default function MyStore() {
                   <small>by <Link to={`/user/${o.buyer.username}`} style={{ color: 'var(--text2)' }}>@{o.buyer.username}</Link> · {new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
                 </div>
               </div>
-              <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
+              <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.refundedPart != null ? 'part paid to you' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
               {o.held && o.status === 'DELIVERED' && o.releaseAt && (
                 <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
               )}
@@ -208,16 +199,18 @@ export default function MyStore() {
                 <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.{o.autoRefundAt && <> Mark it delivered by <b>{orderWhen(o.autoRefundAt)}</b> or the buyer is refunded.</>}</span></p>
               )}
               {o.status === 'DISPUTED' && (
-                <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
+                <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. {o.sellerResponse ? 'You told OgaPay your side; you can still edit it.' : 'Tell OgaPay your side below.'} Sort it out with them in your chat, or refund them.</span></p>
               )}
-              <div className="row-acts">
+              {decisionText(o, 'SELLER') && <p className="so-line"><i className="ti ti-scale" aria-hidden="true" /><span>{decisionText(o, 'SELLER')}</span></p>}
+              {/* What the buyer asked for, saved with the payment (2026-11-10) */}
+              <OrderBrief brief={o.brief} fileCount={o.briefFileCount || 0} orderId={o.id} />
+              {/* What you delivered (2026-11-10) */}
+              <OrderBrief label="What you delivered" more="Read more" brief={o.deliveryNote} fileCount={o.deliveryFileCount || 0} orderId={o.id} />
+              <OrderActions order={o} role="SELLER" onDone={(msg) => { setError(''); setNote(msg); load() }} lead={<>
                 <span className={`ms2-badge ${orderBadge(o).cls}`}>{orderBadge(o).label}</span>
                 <span style={{ flex: 1 }} />
                 {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
-                {o.held && <button className="up-btn" disabled={busy === o.id} onClick={() => refundOrder(o)}>Cancel and refund</button>}
-                {o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'IN_PROGRESS')}>Start</button>}
-                {(o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}>Mark delivered</button>}
-              </div>
+              </>} />
             </div>
           ))
         )}

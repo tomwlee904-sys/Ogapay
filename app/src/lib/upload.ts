@@ -22,7 +22,7 @@ const uploadRoutes: Record<string, UploadRoute> = {
   'creator-proofs':   { path: '/uploads/proof', field: 'file', responseKey: 'url' },
   'user-covers':      { path: '/users/cover', field: 'cover', responseKey: 'coverUrl' },
   'kyc-docs':         { path: '/kyc/documents/id_front', field: 'document', responseKey: 'url' },
-  'task-attachments': { path: '/uploads/proof', field: 'file', responseKey: 'url' },
+  // Store checkout files are private now: uploadOrderFile below (2026-11-10)
 }
 
 export async function uploadImage(
@@ -147,4 +147,36 @@ export async function uploadFile(file: File, purpose: 'store-file' | 'support'):
   } finally {
     clearTimeout(timeout)
   }
+}
+
+// A file for a store order's brief, chosen at checkout (2026-11-10). It goes to
+// private storage: the server returns where it saved it, never a public link,
+// and only the buyer, the seller and OgaPay support see it on the order.
+// onProgress gets 0 to 100 while it uploads.
+export type OrderFile = { path: string; name: string; type: string; size: number }
+export const ORDER_FILE_MB = 25
+export const ORDER_FILE_ACCEPT = 'image/*,audio/*,video/mp4,video/webm,video/quicktime,video/3gpp,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.md'
+export function uploadOrderFile(file: File, onProgress?: (pct: number) => void): Promise<OrderFile> {
+  const token = getAccessToken()
+  if (!token) return Promise.reject(new Error('Not authenticated'))
+  if (file.size > ORDER_FILE_MB * 1024 * 1024) return Promise.reject(new Error(`${file.name} is over ${ORDER_FILE_MB} MB`))
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${API_BASE}/uploads/order-attachment`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.timeout = 300_000
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100))) }
+    xhr.onload = () => {
+      let json: any = {}
+      try { json = JSON.parse(xhr.responseText || '{}') } catch { /* not JSON */ }
+      const d = json?.data
+      if (xhr.status >= 200 && xhr.status < 300 && d?.path) { onProgress?.(100); resolve({ path: d.path, name: d.name || file.name, type: d.type || file.type, size: d.size ?? file.size }) }
+      else reject(new Error(json?.message || 'Upload failed'))
+    }
+    xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
+    xhr.ontimeout = () => reject(new Error('Upload took too long. Try again.'))
+    const fd = new FormData()
+    fd.append('file', file)
+    xhr.send(fd)
+  })
 }

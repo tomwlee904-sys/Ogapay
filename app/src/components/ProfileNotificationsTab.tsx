@@ -54,6 +54,11 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   STORE_ORDER_REFUNDED:    { icon: 'ti ti-receipt-refund', color: 'var(--green)' },
   STORE_PAYMENT_RELEASED:  { icon: 'ti ti-coin', color: 'var(--green)' },
   STORE_ORDER_DISPUTED:    { icon: 'ti ti-alert-triangle', color: 'var(--red)' },
+  // The buyer's receipt and the one-day reminder before the payment goes to the seller (2026-11-10)
+  STORE_ORDER_PLACED:      { icon: 'ti ti-receipt', color: 'var(--green)' },
+  STORE_ORDER_REMINDER:    { icon: 'ti ti-clock', color: '#F59E0B' },
+  // Asks the buyer to rate a finished order (2026-11-10)
+  STORE_REVIEW_REQUEST:    { icon: 'ti ti-star', color: '#F59E0B' },
   DIRECT_HIRE:             { icon: 'ti ti-briefcase', color: 'var(--green)' },
   SELECTION_PICKED:        { icon: 'ti ti-user-check', color: 'var(--green)' },
   SELECTION_NOT_PICKED:    { icon: 'ti ti-user-x', color: 'var(--text3)' },
