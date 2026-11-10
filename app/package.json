@@ -7,6 +7,7 @@
     "test:blog-links": "node scripts/tests/blogmd.test.cjs && node scripts/tests/blogmd.review.test.cjs && node scripts/tests/blogmd.video.test.cjs && node scripts/tests/blogmd.fuzz.cjs",
     "test:page-meta": "node scripts/tests/page-meta-product.test.cjs",
     "test:store-product": "node scripts/tests/store-product.test.cjs",
+    "test:signin-google": "node scripts/tests/signin-google.test.cjs",
     "test:wallet-labels": "node scripts/tests/wallet-labels.test.cjs",
     "test:share-gets": "node scripts/tests/share-gets.test.cjs",
     "test:convert-usdc": "node scripts/tests/convert-usdc.test.cjs",
