@@ -18,6 +18,7 @@ const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/
 type Form = {
   firstName: string; lastName: string; username: string; bio: string; about: string; skills: string
   categories: string[]; isAvailable: boolean; isPublic: boolean; showFullName: boolean; showEarnings: boolean; showRank: boolean
+  showLinks: boolean; showLastActive: boolean
   twitter: string; telegram: string; discord: string; website: string
 }
 
@@ -41,6 +42,12 @@ export default function EditProfile() {
   // A picked photo waits here (with a preview) until Save changes
   const [photo, setPhoto] = useState<{ file: File; preview: string } | null>(null)
   useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.preview) }, [photo])
+  // The cover photo works the same way; removeCover: take it off on Save
+  const [cover, setCover] = useState<string | null>(null)
+  const [coverPick, setCoverPick] = useState<{ file: File; preview: string } | null>(null)
+  const [removeCover, setRemoveCover] = useState(false)
+  useEffect(() => () => { if (coverPick) URL.revokeObjectURL(coverPick.preview) }, [coverPick])
+  const coverRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -58,12 +65,15 @@ export default function EditProfile() {
     showFullName: u.showFullName !== false,
     showEarnings: u.preferences?.showEarnings === true,
     showRank: u.preferences?.showRank === true,
+    // Both on unless turned off
+    showLinks: u.preferences?.showLinks !== false,
+    showLastActive: u.preferences?.showLastActive !== false,
     twitter: u.twitter || '', telegram: u.telegram || '', discord: u.discord || '', website: u.website || '',
   })
 
   useEffect(() => {
     apiRequest<any>('/users/me')
-      .then((u) => { setMe(u); setForm(fromUser(u)); setAvatar(u.avatarUrl || null) })
+      .then((u) => { setMe(u); setForm(fromUser(u)); setAvatar(u.avatarUrl || null); setCover(u.coverUrl || null) })
       .catch(() => setMsg({ ok: false, text: "Couldn't load your profile. Refresh to try again." }))
   }, [])
 
@@ -75,6 +85,15 @@ export default function EditProfile() {
     if (!file) return
     if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) { setMsg({ ok: false, text: 'Pick a JPG, PNG, WebP or GIF photo.' }); return }
     setPhoto({ file, preview: URL.createObjectURL(file) })
+    setMsg(null)
+  }
+
+  const pickCover = (file?: File) => {
+    if (coverRef.current) coverRef.current.value = ''
+    if (!file) return
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { setMsg({ ok: false, text: 'Pick a JPG, PNG or WebP picture for the cover.' }); return }
+    setCoverPick({ file, preview: URL.createObjectURL(file) })
+    setRemoveCover(false)
     setMsg(null)
   }
 
@@ -99,10 +118,13 @@ export default function EditProfile() {
     const prefs: Record<string, boolean> = {}
     if (form.showEarnings !== base.showEarnings) prefs.showEarnings = form.showEarnings
     if (form.showRank !== base.showRank) prefs.showRank = form.showRank
+    if (form.showLinks !== base.showLinks) prefs.showLinks = form.showLinks
+    if (form.showLastActive !== base.showLastActive) prefs.showLastActive = form.showLastActive
     if (Object.keys(prefs).length) body.preferences = prefs
+    if (removeCover && cover && !coverPick) body.coverUrl = null
     return body
   }
-  const dirty = !!photo || Object.keys(changes()).length > 0
+  const dirty = !!photo || !!coverPick || Object.keys(changes()).length > 0
 
   // Unsaved changes: closing or reloading the tab, or following a link on the page
   // (Cancel, the Profile link, the menus), asks first (2026-11-08)
@@ -131,7 +153,7 @@ export default function EditProfile() {
     if (Object.keys(errs).length) { setErrors(errs); setMsg({ ok: false, text: 'Check the highlighted fields.' }); return }
 
     const body = changes()
-    if (!Object.keys(body).length && !photo) { setMsg({ ok: true, text: 'No changes to save.' }); return }
+    if (!Object.keys(body).length && !photo && !coverPick) { setMsg({ ok: true, text: 'No changes to save.' }); return }
 
     setSaving(true); setMsg(null)
     // The photo first: if it fails, nothing else is saved, so the page and the
@@ -149,11 +171,25 @@ export default function EditProfile() {
       }
       setUploading(false)
     }
+    if (coverPick) {
+      setUploading(true)
+      try {
+        const url = await uploadImage(coverPick.file, 'user-covers') // saves it on the account
+        if (url) setCover(url)
+        setCoverPick(null)
+      } catch (err: any) {
+        setUploading(false); setSaving(false)
+        setMsg({ ok: false, text: `${err?.message || 'Cover upload failed'}. Only the photos before it were saved.` })
+        return
+      }
+      setUploading(false)
+    }
     try {
       if (Object.keys(body).length) {
         await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify(body) })
         const fresh = await apiRequest<any>('/users/me')
         setMe(fresh); setForm(fromUser(fresh))
+        if (body.coverUrl === null) { setCover(null); setRemoveCover(false) }
       }
       refreshUser()
       setMsg({ ok: true, text: 'Profile saved.' })
@@ -201,6 +237,21 @@ export default function EditProfile() {
                   <p>{photo ? 'New photo picked. It is saved when you press Save changes.' : 'JPG or PNG, square works best.'}</p>
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickAvatar(e.target.files?.[0])} />
+              </div>
+              {/* Cover photo: the wide picture across the top of your public profile */}
+              <div className="ep-field">
+                <span>Cover photo (optional)</span>
+                {(coverPick || (cover && !removeCover)) && (
+                  <div className="up-cover" style={{ marginBottom: 8 }}><img src={coverPick?.preview || cover || ''} alt="" /></div>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <button type="button" className="up-btn" disabled={uploading || saving} onClick={() => coverRef.current?.click()}>{coverPick || (cover && !removeCover) ? 'Change cover' : 'Add cover'}</button>
+                  {coverPick && <button type="button" className="up-btn" disabled={saving} onClick={() => setCoverPick(null)}>Undo</button>}
+                  {!coverPick && cover && !removeCover && <button type="button" className="up-btn" disabled={saving} onClick={() => setRemoveCover(true)}>Remove</button>}
+                  {!coverPick && removeCover && <button type="button" className="up-btn" disabled={saving} onClick={() => setRemoveCover(false)}>Undo</button>}
+                </div>
+                <small>{coverPick ? 'New cover picked. It is saved when you press Save changes.' : removeCover ? 'The cover is removed when you press Save changes.' : 'A wide picture works best (about 4 times wider than tall).'}</small>
+                <input ref={coverRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => pickCover(e.target.files?.[0])} />
               </div>
               <div className="hr-row">
                 {field('firstName', 'First name', { maxLength: 50, autoComplete: 'given-name', disabled: nameLocked })}
@@ -255,10 +306,12 @@ export default function EditProfile() {
               <div className="ep-toggle"><div><b>Show my full name</b><small>Off: others see your first name and the first letter of your last name{form.firstName ? `, e.g. ${form.firstName.trim()}${form.lastName.trim() ? ` ${form.lastName.trim()[0].toUpperCase()}.` : ''}` : ''}</small></div><Switch on={form.showFullName} onChange={(v) => set('showFullName', v)} label="Show my full name" /></div>
               <div className="ep-toggle"><div><b>Show rank</b><small>Your worker rank and OgaScore on your profile.</small></div><Switch on={form.showRank} onChange={(v) => set('showRank', v)} label="Show rank" /></div>
               <div className="ep-toggle"><div><b>Show earnings</b><small>Your total earned on your profile.</small></div><Switch on={form.showEarnings} onChange={(v) => set('showEarnings', v)} label="Show earnings" /></div>
+              <div className="ep-toggle"><div><b>Show when I was last active</b><small>"Active today" or "this week" on your profile. Never the exact time.</small></div><Switch on={form.showLastActive} onChange={(v) => set('showLastActive', v)} label="Show when I was last active" /></div>
             </section>
 
             <section className="up-card hr-sec">
               <div className="hr-sec-h"><h2>Links</h2></div>
+              <div className="ep-toggle" style={{ marginBottom: 12 }}><div><b>Show my links</b><small>Anyone can see these on your public profile.</small></div><Switch on={form.showLinks} onChange={(v) => set('showLinks', v)} label="Show my links" /></div>
               <div className="hr-row">
                 {field('twitter', 'X / Twitter', { placeholder: '@handle', maxLength: 100 })}
                 {field('telegram', 'Telegram', { placeholder: '@handle', maxLength: 100 })}

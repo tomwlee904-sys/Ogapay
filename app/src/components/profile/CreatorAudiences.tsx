@@ -7,15 +7,19 @@ import { compact, fullCount, platformOf } from '../../lib/creators'
 
 interface Aud { platform: string; platformName: string; handle: string; followers: number; tier: string | null }
 
-export default function CreatorAudiences({ userId }: { userId: string }) {
-  const [list, setList] = useState<Aud[]>([])
+// audiences: the list the public profile already sent (2026-11-10), so there is
+// no second request; without it, it is fetched
+export default function CreatorAudiences({ userId, audiences }: { userId: string; audiences?: Aud[] }) {
+  const [fetched, setList] = useState<Aud[]>([])
   useEffect(() => {
+    if (Array.isArray(audiences)) return
     let live = true
     apiRequest<{ audiences: Aud[] }>(`/creators/${userId}/audiences`)
       .then((d) => { if (live) setList(d.audiences || []) })
       .catch(() => {})
     return () => { live = false }
-  }, [userId])
+  }, [userId, audiences])
+  const list = Array.isArray(audiences) ? audiences : fetched
 
   if (!list.length) return null
   const top = list[0]

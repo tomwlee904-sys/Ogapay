@@ -5,7 +5,9 @@ import { useToast } from './Toast'
    sheet (WhatsApp, X, Telegram…); elsewhere, or when there is no share sheet, it
    copies the link and says so. Sellers sell by posting their links, and the
    installed app has no address bar to copy from. Closing the share sheet does
-   nothing. className/label let a page fit it to its own buttons. */
+   nothing. className/label let a page fit it to its own buttons. onCopyFailed:
+   when copying is blocked, the page shows the link to copy by hand (instead of
+   the toast). */
 
 // Copies text; the old way for browsers without the clipboard API (or when it's blocked)
 export async function copyText(text: string): Promise<boolean> {
@@ -26,8 +28,9 @@ export async function copyText(text: string): Promise<boolean> {
   } catch { return false }
 }
 
-export default function ShareButton({ url, title, text, label = 'Share', className, style }: {
+export default function ShareButton({ url, title, text, label = 'Share', className, style, onCopyFailed }: {
   url: string; title: string; text?: string; label?: string; className?: string; style?: CSSProperties
+  onCopyFailed?: (url: string) => void
 }) {
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
@@ -48,6 +51,8 @@ export default function ShareButton({ url, title, text, label = 'Share', classNa
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
       toast('Link copied. Paste it anywhere to share.', 'success')
+    } else if (onCopyFailed) {
+      onCopyFailed(url)
     } else {
       toast(`Couldn't copy the link. Here it is: ${url}`, 'error')
     }

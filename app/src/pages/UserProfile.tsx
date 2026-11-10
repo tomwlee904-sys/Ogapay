@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
 import ItemCover from '../components/ItemCover'
-import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import Layout from "../components/Layout"
 import InviteToCommunity from "../components/profile/InviteToCommunity"
 import TransferModal from "../components/TransferModal"
@@ -15,11 +15,13 @@ import { sized, isOurMedia } from '../lib/img'
 import { formatMoney } from '../lib/money'
 import CreatorAudiences from "../components/profile/CreatorAudiences"
 import InfoTip from '../components/InfoTip'
+import ShareButton from '../components/ShareButton'
 import { XProfileSummary } from '../components/profile/XProfile'
 import type { XPublic } from '../lib/xprofile'
 import { useMoney } from '../lib/useMoney'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
+const TABS: Tab[] = ["store", "portfolio", "reviews", "communities"]
 
 type Review = {
   id: string
@@ -62,10 +64,16 @@ function SectionState({ status, noun, onRetry }: { status: SectionStatus; noun: 
     </div>
   )
 }
+type Blogs = { posts: any[]; page: number; totalPages: number; total: number }
+const NO_BLOGS: Blogs = { posts: [], page: 1, totalPages: 1, total: 0 }
+const NO_REVIEWS: ReviewData = { average: 0, total: 0, distribution: {}, reviews: [] }
 
 const LEVEL_NAMES: Record<string, string> = {
   BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced", EXPERT: "Expert", LEGEND: "Legend",
 }
+const ACTIVE: Record<string, string> = { today: "Active today", week: "Active this week", month: "Active this month" }
+const PRODUCTS_PAGE = 24
+const BLOGS_PAGE = 5
 
 const fmtDate = (d: string, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }) =>
   new Date(d).toLocaleDateString("en-US", opts)
@@ -88,79 +96,130 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
 export default function UserProfile() {
   const { username = "" } = useParams<{ username: string }>()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const { user: me } = useAuth()
   // Earnings and store prices follow the visitor's display currency
   const show = useMoney()
+  // Your own page skips the 30-second cache signed-out visitors share, so your edits show at once
+  const ownPage = !!me?.username && me.username.toLowerCase() === username.toLowerCase()
 
   const [profile, setProfile] = useState<any>(null)
   const [state, setState] = useState<"loading" | "ok" | "private" | "missing" | "error">("loading")
   const [reviews, setReviews] = useState<ReviewData | null>(null)
   const [products, setProducts] = useState<any[]>([])
   const [portfolio, setPortfolio] = useState<any[]>([])
-  const [blogs, setBlogs] = useState<any[]>([])
+  const [blogs, setBlogs] = useState<Blogs>(NO_BLOGS)
   const [communities, setCommunities] = useState<any[]>([])
-  // /user/<name>?tab=store opens that tab (Share my store, 2026-11-10)
-  const [params] = useSearchParams()
-  const askedTab = (["store", "portfolio", "reviews", "communities"] as Tab[]).find((t) => t === params.get("tab")) || null
   const [sec, setSec] = useState<Record<Section, SectionStatus>>(ALL_LOADING)
   const [reviewPage, setReviewPage] = useState(1)
-  const [tab, setTab] = useState<Tab>(askedTab || "store")
+  const [more, setMore] = useState<"" | "products" | "blogs">("")
+  // ?tab=store (etc.) opens that tab, so a member can share "see my store"
+  const linked = TABS.includes(params.get("tab") as Tab) ? params.get("tab") as Tab : null
+  const [tab, setTabState] = useState<Tab>(linked || "store")
+  // Set once the link or the visitor picked a tab: the page then stops choosing one
+  const tabPicked = useRef(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tipOpen, setTipOpen] = useState(false)
-  const [shared, setShared] = useState(false)
+  // The link to copy by hand when the browser won't copy it
+  const [shareBox, setShareBox] = useState("")
+  const nameRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => { if (linked) { tabPicked.current = true; setTabState(linked) } }, [linked])
+  const setTab = (t: Tab) => {
+    tabPicked.current = true
+    setTabState(t)
+    setParams((p) => { const n = new URLSearchParams(p); n.set("tab", t); return n }, { replace: true })
+  }
 
   // One section's data. Each call is numbered, so an older answer (another
-  // profile, or a review page clicked past) never replaces a newer one.
+  // profile, or a review page clicked past) never replaces a newer one. It
+  // resolves with the data (undefined when it failed or was overtaken).
   const reqs = useRef<Record<string, number>>({})
   const pendingPage = useRef(1)
-  const loadSection = (s: Section, page = 1) => {
+  const loadSection = (s: Section, page = 1): Promise<any> => {
     const n = (reqs.current[s] = (reqs.current[s] || 0) + 1)
     if (s === "reviews") pendingPage.current = page
     const u = encodeURIComponent(username)
     setSec((x) => ({ ...x, [s]: "loading" }))
-    const path = s === "reviews" ? `/users/public/${u}/reviews?page=${page}&limit=${REVIEWS_PER_PAGE}` : `/users/public/${u}/${s}`
-    apiRequest<any>(path, { auth: false })
+    const path = s === "reviews" ? `/users/public/${u}/reviews?page=${page}&limit=${REVIEWS_PER_PAGE}`
+      : s === "products" ? `/users/public/${u}/products?limit=${PRODUCTS_PAGE}`
+      : s === "blogs" ? `/users/public/${u}/blogs?page=1&limit=${BLOGS_PAGE}`
+      : `/users/public/${u}/${s}`
+    // Your own page is asked for signed in, past the 30-second shared cache
+    return apiRequest<any>(path, { auth: ownPage })
       .then((d) => {
-        if (reqs.current[s] !== n) return
-        if (s === "reviews") { setReviews(d); setReviewPage(page) }
+        if (reqs.current[s] !== n) return undefined
+        if (s === "reviews") { setReviews(d || NO_REVIEWS); setReviewPage(page) }
+        // An older server sends the posts as a plain list
+        else if (s === "blogs") setBlogs(Array.isArray(d) ? { posts: d, page: 1, totalPages: 1, total: d.length } : d?.posts ? d : NO_BLOGS)
         else {
           const list = Array.isArray(d) ? d : []
           if (s === "products") setProducts(list)
           else if (s === "portfolio") setPortfolio(list)
-          else if (s === "blogs") setBlogs(list)
           else setCommunities(list)
         }
         setSec((x) => ({ ...x, [s]: "ok" }))
+        return d
       })
-      .catch(() => { if (reqs.current[s] === n) setSec((x) => ({ ...x, [s]: "error" })) })
+      .catch(() => { if (reqs.current[s] === n) setSec((x) => ({ ...x, [s]: "error" })); return undefined })
   }
 
+  // Everything is asked for at once (2026-11-10: the sections waited for the
+  // profile, about 1.7s before the tabs filled). The sections answer "not found"
+  // for a private profile, and the page then shows only the private notice.
   useEffect(() => {
     let live = true
     setState("loading")
     setProfile(null)
-    setReviews(null); setProducts([]); setPortfolio([]); setBlogs([]); setCommunities([])
+    setReviews(null); setProducts([]); setPortfolio([]); setBlogs(NO_BLOGS); setCommunities([])
     setSec(ALL_LOADING); setReviewPage(1)
-    // Answers for the profile opened before this one are ignored
-    for (const k of Object.keys(ALL_LOADING)) reqs.current[k] = (reqs.current[k] || 0) + 1
+    setTabState(linked || "store")
+    tabPicked.current = !!linked
+    const u = encodeURIComponent(username)
 
-    apiRequest<any>(`/users/${encodeURIComponent(username)}`, { auth: false })
+    apiRequest<any>(`/users/${u}`, { auth: ownPage })
       .then((p) => {
         if (!live) return
-        if (p?.isPublic === false) { setProfile(p); setState("private"); return }
         setProfile(p)
-        setState("ok")
+        setState(p?.isPublic === false ? "private" : "ok")
         // Open on the first tab with something in it, from the profile's own
         // counts, so the tab doesn't jump once the lists arrive (unless the
-        // link asked for a tab)
+        // link or the visitor picked one)
         const c = p?._count || {}
-        if (!askedTab) setTab(c.storeItems > 0 ? "store" : c.portfolioItems > 0 ? "portfolio" : p?.workerProfile?.totalRatings > 0 ? "reviews" : "store")
-        for (const k of Object.keys(ALL_LOADING) as Section[]) loadSection(k)
+        if (!tabPicked.current && p?.isPublic !== false) setTabState(c.storeItems > 0 ? "store" : c.portfolioItems > 0 ? "portfolio" : p?.workerProfile?.totalRatings > 0 ? "reviews" : "store")
       })
       .catch((e) => { if (live) setState(/not found/i.test(e?.message || "") ? "missing" : "error") })
+
+    Promise.all((["reviews", "products", "portfolio", "blogs", "communities"] as Section[]).map((k) => loadSection(k)))
+      .then(([r, pr, pf]) => {
+        // No products: open on the portfolio or the reviews instead, unless a tab was picked
+        if (!live || tabPicked.current || pr === undefined || (Array.isArray(pr) && pr.length)) return
+        if (Array.isArray(pf) && pf.length) setTabState("portfolio")
+        else if (r?.total) setTabState("reviews")
+      })
     return () => { live = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username])
+  }, [username, ownPage])
+
+  // "Show more": the next page of products or posts
+  const loadMore = async (what: "products" | "blogs") => {
+    if (more) return
+    setMore(what)
+    const u = encodeURIComponent(username)
+    try {
+      if (what === "products") {
+        const page = Math.floor(products.length / PRODUCTS_PAGE) + 1
+        const next = await apiRequest<any[]>(`/users/public/${u}/products?limit=${PRODUCTS_PAGE}&page=${page}`, { auth: ownPage })
+        const seen = new Set(products.map((p) => p.id))
+        setProducts([...products, ...(Array.isArray(next) ? next.filter((p) => !seen.has(p.id)) : [])])
+      } else {
+        const next = await apiRequest<Blogs>(`/users/public/${u}/blogs?page=${blogs.page + 1}&limit=${BLOGS_PAGE}`, { auth: ownPage })
+        const seen = new Set(blogs.posts.map((b) => b.id))
+        if (next?.posts) setBlogs({ ...next, posts: [...blogs.posts, ...next.posts.filter((b) => !seen.has(b.id))] })
+      }
+    } catch { /* the button stays, to try again */ }
+    setMore("")
+  }
 
   // Reviews page by page (10 at a time), back to the top of the list
   const reviewsRef = useRef<HTMLElement>(null)
@@ -181,32 +240,38 @@ export default function UserProfile() {
   // reviews, so visitors and the person saw different numbers.
   const avg = Number(wp.avgRating || 0)
   const jobRatings = Number(wp.totalRatings || 0)
-  const reviewTotal = reviews?.total ?? jobRatings
+  const reviewTotal = reviews ? reviews.total : jobRatings
   // Store reviews have their own number
-  const storeAvg = Number(reviews?.products?.average || 0)
-  const storeTotal = Number(reviews?.products?.total || 0)
+  const storeAvg = Number((reviews && reviews.products?.average) || 0)
+  const storeTotal = Number((reviews && reviews.products?.total) || 0)
+  // The profile counts the products on sale; the list comes in pages
+  const productCount = Number(counts.storeItems ?? (Array.isArray(products) ? products.length : 0))
 
   useEffect(() => {
-    document.title = state === "ok" ? `${name} (@${handle}) | OgaPay` : "Profile | OgaPay"
+    document.title = state === "ok" ? `${name} (@${handle}) | OgaPay`
+      : state === "private" ? `@${handle} | OgaPay`
+      : state === "missing" ? "User not found | OgaPay" : "Profile | OgaPay"
     return () => { document.title = "OgaPay" }
   }, [state, name, handle])
 
-  const share = async () => {
-    const url = `${window.location.origin}/user/${handle}`
-    try {
-      if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
-        await navigator.share({ title: `${name} on OgaPay`, url })
-        return
-      }
-      await navigator.clipboard.writeText(url)
-      setShared(true)
-      setTimeout(() => setShared(false), 2000)
-    } catch { /* cancelled */ }
-  }
+  // Private and missing profiles stay out of search results
+  useEffect(() => {
+    if (state !== "private" && state !== "missing") return
+    const m = document.createElement("meta")
+    m.name = "robots"; m.content = "noindex,nofollow"
+    document.head.appendChild(m)
+    return () => { m.remove() }
+  }, [state])
 
   const invite = () => {
     if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
     setInviteOpen(true)
+  }
+
+  // Message: opens your chat with them (Messages starts one if there isn't one)
+  const message = () => {
+    if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
+    navigate(`/messages?user=${encodeURIComponent(handle)}`)
   }
 
   // Report this user: reason + note to the admin queue
@@ -252,6 +317,21 @@ export default function UserProfile() {
     setComplimenting(false)
   }
 
+  // Tabs: arrow keys, Home and End move between them
+  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = TABS.indexOf(tab)
+    const to = e.key === "ArrowRight" ? (i + 1) % TABS.length : e.key === "ArrowLeft" ? (i - 1 + TABS.length) % TABS.length
+      : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : -1
+    if (to < 0) return
+    e.preventDefault()
+    setTab(TABS[to])
+    document.getElementById(`up-tab-${TABS[to]}`)?.focus()
+  }
+  const backToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+    nameRef.current?.focus({ preventScroll: true })
+  }
+
   // ── States ─────────────────────────────────────────────────────────────
   if (state !== "ok") {
     return (
@@ -289,6 +369,7 @@ export default function UserProfile() {
 
   // ── Stats ──────────────────────────────────────────────────────────────
   // The join date is in the header, so compliments take the first spot (like wurk.fun)
+  const contests = profile?.contests || { entered: 0, wins: 0 }
   const stats: { icon: string; label: string; value: string; sub?: string; tip?: ReactNode }[] = [
     { icon: "ti-heart", label: "Compliments", value: String(compliments ?? 0),
       tip: <p>How many people complimented this profile. Anyone signed in can give one compliment per profile, and take it back.</p> },
@@ -301,8 +382,12 @@ export default function UserProfile() {
       </> }] : []),
     ...(typeof profile?.xScore === "number" ? [{ icon: "ti-brand-x", label: "X score", value: `${profile.xScore}/100`,
       tip: <p>How much job posters can trust this person's X account, from things OgaPay checks: X connected, followers once checked, a blue tick, and their record on social-media jobs. Some jobs need a minimum.</p> }] : []),
-    { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
-    { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
+    // Contests: shown once they entered one
+    ...(contests.entered > 0 ? [{ icon: "ti-award", label: "Contests", value: String(contests.entered), sub: `${Math.round((contests.wins / contests.entered) * 100)}% win rate`,
+      tip: <p>Contests this person entered, and the share they won a place in.</p> }] : []),
+    ...(contests.wins > 0 ? [{ icon: "ti-medal", label: "Wins", value: String(contests.wins) }] : []),
+    { icon: "ti-building-store", label: "Products", value: String(productCount) },
+    { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? (Array.isArray(communities) ? communities.length : 0)) },
   ]
   // One total per currency they were paid in (naira first), never added together
   const earned: { currency: string; amount: number }[] = Array.isArray(wp.earned) ? wp.earned.filter((e: any) => Number(e?.amount) > 0) : []
@@ -316,14 +401,28 @@ export default function UserProfile() {
   const categories: string[] = Array.isArray(wp.categories) ? wp.categories.map((c: string) => c.replace(/_/g, " ").toLowerCase()) : []
   const hasAbout = skills.length > 0 || categories.length > 0 || wp.isAvailable
   const x: XPublic | null = profile?.x?.handle ? profile.x : null
+  // A creator: a verified audience, or something in the store or the blog
+  const isCreator = !!profile.creatorVerified || productCount > 0 || Number(counts.blogPosts || 0) > 0
+
+  // Links from Edit profile. The server sends only safe values (an http(s)
+  // website, plain usernames); the typed X handle is left out when X is connected.
+  const lk = profile?.links || {}
+  const links: { key: string; icon: string; label: string; href?: string }[] = [
+    ...(lk.website ? [{ key: "web", icon: "ti-world", label: String(lk.website).replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, ""), href: lk.website }] : []),
+    ...(lk.x && !x ? [{ key: "x", icon: "ti-brand-x", label: `@${lk.x}`, href: `https://x.com/${lk.x}` }] : []),
+    ...(lk.telegram ? [{ key: "tg", icon: "ti-brand-telegram", label: `@${lk.telegram}`, href: `https://t.me/${lk.telegram}` }] : []),
+    // Discord has no profile link: just the username
+    ...(lk.discord ? [{ key: "dc", icon: "ti-brand-discord", label: lk.discord }] : []),
+  ]
 
   const tabs: { key: Tab; label: string; icon: string; count: number }[] = [
     // The profile's own counts until each list has loaded
-    { key: "store", label: "Store", icon: "ti-building-store", count: sec.products === "ok" ? products.length : Number(counts.storeItems || 0) },
+    { key: "store", label: "Store", icon: "ti-building-store", count: productCount },
     { key: "portfolio", label: "Portfolio", icon: "ti-photo", count: sec.portfolio === "ok" ? portfolio.length : Number(counts.portfolioItems || 0) },
     { key: "reviews", label: "Reviews", icon: "ti-message-star", count: reviewTotal },
     { key: "communities", label: "Communities", icon: "ti-users", count: sec.communities === "ok" ? communities.length : Number(counts.communityMemberships || 0) },
   ]
+  const panel = (key: Tab) => ({ role: "tabpanel", id: `up-panel-${key}`, "aria-labelledby": `up-tab-${key}` })
 
   return (
     <Layout>
@@ -333,6 +432,9 @@ export default function UserProfile() {
           <span>Public profile</span>
         </div>
 
+        {/* Cover photo from Edit profile */}
+        {profile.coverUrl && <div className="up-cover"><img src={sized(profile.coverUrl, 1024)} alt="" /></div>}
+
         {/* ── Header ── */}
         <section className="up-card up-head">
           <div className="up-id">
@@ -340,16 +442,27 @@ export default function UserProfile() {
               ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={sized(profile.avatarUrl, 128, true)} alt="" />
               : <div className={`up-avatar${profile.frame ? ' oga-frame' : ''}`}>{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
-              <div className="up-eyebrow">Creator profile</div>
+              <div className="up-eyebrow">{isCreator ? "Creator profile" : "Member profile"}</div>
               <div className="up-name">
-                <h1>{name}</h1>
+                <h1 ref={nameRef} tabIndex={-1}>{name}</h1>
+                {profile.creatorVerified && <span className="up-badge ok"><i className="ti ti-rosette-discount-check" /> Verified creator</span>}
                 {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}
                 {profile.kycVerified && <span className="up-badge ok"><i className="ti ti-shield-check" /> ID verified</span>}
                 {profile.posterProfile?.isVerified && <VerifiedBusinessMark label name={profile.posterProfile.verifiedName} />}
                 {profile.premium && <PremiumMark label />}
               </div>
-              <div className="up-handle">@{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}</div>
+              <div className="up-handle">
+                @{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}
+                {ACTIVE[profile.lastActive] && <> · <span className="up-active">{ACTIVE[profile.lastActive]}</span></>}
+              </div>
               {profile.bio && <p className="up-bio">{profile.bio}</p>}
+              {links.length > 0 && (
+                <div className="up-links">
+                  {links.map((l) => l.href
+                    ? <a key={l.key} className="up-link" href={l.href} target="_blank" rel="nofollow ugc noopener noreferrer"><i className={`ti ${l.icon}`} aria-hidden="true" /> {l.label}</a>
+                    : <span key={l.key} className="up-link" title="Discord username"><i className={`ti ${l.icon}`} aria-hidden="true" /> {l.label}</span>)}
+                </div>
+              )}
               {/* The longer "More about you" text from Edit profile */}
               {profile.about && (
                 <details className="up-about">
@@ -359,10 +472,11 @@ export default function UserProfile() {
               )}
               <div className="up-actions">
                 {isMe ? (
-                  <Link className="up-btn primary" to="/profile"><i className="ti ti-pencil" /> Edit profile</Link>
+                  <Link className="up-btn primary" to="/edit-profile"><i className="ti ti-pencil" /> Edit profile</Link>
                 ) : (
                   <Link className="up-btn primary" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire</Link>
                 )}
+                {!isMe && <button className="up-btn" onClick={message}><i className="ti ti-message" /> Message</button>}
                 {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
                 {!isMe && <button className="up-btn" onClick={tip}><i className="ti ti-heart-handshake" /> Tip</button>}
                 {!isMe && (
@@ -370,7 +484,8 @@ export default function UserProfile() {
                     <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}
                   </button>
                 )}
-                <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
+                {/* The device's share sheet, or copy the link (the box below when copying is blocked) */}
+                <ShareButton className="up-btn" url={`${window.location.origin}/user/${handle}`} title={`${name} on OgaPay`} onCopyFailed={setShareBox} />
                 {!isMe && <button className="up-btn" onClick={report}><i className="ti ti-flag" /> Report</button>}
                 {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
                 {!isMe && me?.role === "ADMIN" && (
@@ -384,6 +499,16 @@ export default function UserProfile() {
                   <Link className="up-btn" to="/settings/business"><i className="ti ti-rosette-discount-check" /> Get a Verified business badge</Link>
                 )}
               </div>
+              {/* Copying was blocked: the link to copy by hand */}
+              {shareBox && (
+                <div className="up-sharebox">
+                  <label htmlFor="up-share-url">Copy this link</label>
+                  <div>
+                    <input id="up-share-url" className="ui-input" readOnly value={shareBox} autoFocus onFocus={(e) => e.currentTarget.select()} />
+                    <button type="button" className="up-btn" onClick={() => setShareBox("")} aria-label="Close"><i className="ti ti-x" /></button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -413,7 +538,7 @@ export default function UserProfile() {
           </section>
         )}
 
-        {profile?.id && <CreatorAudiences userId={profile.id} />}
+        {profile?.id && <CreatorAudiences userId={profile.id} audiences={profile.audiences} />}
 
         {hasAbout && (
           <section className="up-card up-about">
@@ -428,53 +553,64 @@ export default function UserProfile() {
           </section>
         )}
 
-        {/* ── Tabs ── */}
+        {/* ── Tabs ── (?tab=store etc. in the address; arrow keys move between them) */}
         <div className="up-tabs-row">
-          <div className="up-tabs" role="tablist">
+          <div className="up-tabs" role="tablist" aria-label="Profile sections" onKeyDown={onTabKey}>
             {tabs.map((t) => (
-              <button key={t.key} role="tab" aria-selected={tab === t.key} className={`up-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}>
+              <button key={t.key} id={`up-tab-${t.key}`} role="tab" aria-selected={tab === t.key} aria-controls={`up-panel-${t.key}`} tabIndex={tab === t.key ? 0 : -1}
+                className={`up-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}>
                 <i className={`ti ${t.icon}`} /> {t.label} {t.count > 0 && <em>{t.count}</em>}
               </button>
             ))}
           </div>
-          <button className="up-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><i className="ti ti-arrow-up" /> Profile</button>
+          <button className="up-top" onClick={backToTop}><i className="ti ti-arrow-up" /> Back to top</button>
         </div>
 
         {tab === "store" && (
-          <section>
+          <section {...panel("store")}>
             <div className="up-sec-h"><h2>Products & services</h2><p>What {first || handle} offers in the OgaPay store.</p></div>
             {sec.products !== "ok" ? (
               <SectionState status={sec.products} noun="products" onRetry={() => loadSection("products")} />
             ) : products.length === 0 ? (
               <div className="up-empty"><i className="ti ti-building-store" />No products yet.</div>
             ) : (
-              <div className="up-grid">
-                {products.map((p) => (
-                  <Link className="up-card up-item" to={`/store/${p.id}`} key={p.id}>
-                    <div className="img"><ItemCover src={p.image} category={p.category} title={p.title} width={400} /></div>
-                    <div className="body">
-                      <div className="meta">{String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}</div>
-                      <h3>{p.title}</h3>
-                      {p.description && <p>{p.description}</p>}
-                      {(p.delivery || p.revisions != null) && (
-                        <div className="meta" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>
-                          {[p.delivery, p.revisions != null ? `${p.revisions} ${p.revisions === 1 ? 'revision' : 'revisions'}` : null].filter(Boolean).join(' · ')}
+              <>
+                <div className="up-grid">
+                  {products.map((p) => (
+                    <Link className="up-card up-item" to={`/store/${p.id}`} key={p.id}>
+                      <div className="img"><ItemCover src={p.image} category={p.category} title={p.title} width={400} /></div>
+                      <div className="body">
+                        <div className="meta">
+                          {String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}
+                          {/* No stock number means no limit */}
+                          {p.stock === 0 ? <span className="up-stock out">Sold out</span> : <span className="up-stock">Available</span>}
                         </div>
-                      )}
-                      <div className="foot">
-                        <b>{show(Number(p.price || 0), p.currency || "NGN")}</b>
-                        {p.reviewsCount > 0 ? <span><Stars value={p.rating} /> <small style={{ color: "var(--text3)" }}>({p.reviewsCount})</small></span> : <span className="link">View details <i className="ti ti-arrow-right" /></span>}
+                        <h3>{p.title}</h3>
+                        {(p.excerpt ?? p.description) && <p>{p.excerpt ?? p.description}</p>}
+                        {(p.delivery || p.revisions != null) && (
+                          <div className="meta" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>
+                            {[p.delivery, p.revisions != null ? `${p.revisions} ${p.revisions === 1 ? 'revision' : 'revisions'}` : null].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
+                        <div className="foot">
+                          <b>{p.priceOnRequest ? "Price on request" : show(Number(p.price || 0), p.currency || "NGN")}</b>
+                          {p.reviewsCount > 0 ? <span><Stars value={p.rating} /> <small style={{ color: "var(--text3)" }}>({p.reviewsCount})</small></span> : <span className="link">View details <i className="ti ti-arrow-right" /></span>}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+                {/* More pages: the count says so and the last page was full */}
+                {products.length < productCount && products.length % PRODUCTS_PAGE === 0 && (
+                  <div className="up-more"><button className="up-btn" onClick={() => loadMore("products")} disabled={!!more}>{more === "products" ? "Loading…" : "Show more products"}</button></div>
+                )}
+              </>
             )}
           </section>
         )}
 
         {tab === "portfolio" && (
-          <section>
+          <section {...panel("portfolio")}>
             <div className="up-sec-h"><h2>Portfolio</h2><p>A closer look at {first || handle}'s work.</p></div>
             {sec.portfolio !== "ok" ? (
               <SectionState status={sec.portfolio} noun="portfolio" onRetry={() => loadSection("portfolio")} />
@@ -516,7 +652,7 @@ export default function UserProfile() {
         )}
 
         {tab === "reviews" && (
-          <section ref={reviewsRef} style={{ scrollMarginTop: 80 }}>
+          <section {...panel("reviews")} ref={reviewsRef} style={{ scrollMarginTop: 80 }}>
             <div className="up-sec-h"><h2>Reviews</h2><p>Ratings from job creators and store buyers.</p></div>
             {!reviews && sec.reviews !== "ok" ? (
               <SectionState status={sec.reviews} noun="reviews" onRetry={() => loadSection("reviews", reviewPage)} />
@@ -583,7 +719,7 @@ export default function UserProfile() {
         )}
 
         {tab === "communities" && (
-          <section>
+          <section {...panel("communities")}>
             <div className="up-sec-h"><h2>Communities</h2><p>Where {first || handle} hangs out.</p></div>
             {sec.communities !== "ok" ? (
               <SectionState status={sec.communities} noun="communities" onRetry={() => loadSection("communities")} />
@@ -608,25 +744,31 @@ export default function UserProfile() {
           </section>
         )}
 
-        {/* ── Writing ── */}
+        {/* ── Writing ── (5 posts at a time) */}
         <section className="up-writing">
           <div className="up-eyebrow">Published writing</div>
           <div className="up-sec-h" style={{ marginTop: 4 }}><h2>From the creator</h2></div>
           {sec.blogs !== "ok" ? (
             <SectionState status={sec.blogs} noun="blogs" onRetry={() => loadSection("blogs")} />
-          ) : blogs.length === 0 ? (
+          ) : blogs.posts.length === 0 ? (
             <div className="up-empty"><i className="ti ti-writing" />No published blogs yet.</div>
           ) : (
-            blogs.map((b) => (
-              <Link className="up-post" to={`/blog/${b.slug || b.id}`} key={b.id}>
-                <time>{fmtDate(b.publishedAt || b.createdAt)}</time>
-                <div>
-                  <h3>{b.title}</h3>
-                  {b.excerpt && <p>{b.excerpt}</p>}
-                  <span>Read story →</span>
-                </div>
-              </Link>
-            ))
+            <>
+              {blogs.posts.map((b) => (
+                <Link className={`up-post${b.coverImage ? " has-cover" : ""}`} to={`/blog/${b.slug || b.id}`} key={b.id}>
+                  <time>{fmtDate(b.publishedAt || b.createdAt)}</time>
+                  <div>
+                    <h3>{b.title}</h3>
+                    {b.excerpt && <p>{b.excerpt}</p>}
+                    <span>Read story →</span>
+                  </div>
+                  {b.coverImage && <img className="up-post-cover" src={sized(b.coverImage, 200)} alt="" loading="lazy" />}
+                </Link>
+              ))}
+              {blogs.page < blogs.totalPages && (
+                <div className="up-more"><button className="up-btn" onClick={() => loadMore("blogs")} disabled={!!more}>{more === "blogs" ? "Loading…" : `Show more posts (${blogs.total - blogs.posts.length} more)`}</button></div>
+              )}
+            </>
           )}
         </section>
       </div>

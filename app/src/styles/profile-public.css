@@ -165,4 +165,32 @@ a.up-item:hover { border-color: var(--text3); }
 }
 
 .up-compliment.on { border-color: #e11d48; color: #e11d48; }
+
+/* Cover photo, links, last active, share fallback (2026-11-10) */
+.up-cover { aspect-ratio: 4 / 1; border-radius: 18px; overflow: hidden; background: var(--bg2); border: 1px solid var(--border); margin-bottom: 12px; }
+.up-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.up-active { color: var(--green); }
+.up-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.up-link { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 13px; text-decoration: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.up-link:hover { border-color: var(--text3); color: var(--text); }
+.up-link i { font-size: 16px; }
+.up-sharebox { margin-top: 12px; max-width: 460px; }
+.up-sharebox label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.up-sharebox > div { display: flex; gap: 8px; }
+.up-sharebox input { flex: 1; min-width: 0; height: 40px; font-size: 13px; }
+.up-sharebox .up-btn { width: 40px; padding: 0; }
+.up-stock { margin-left: 8px; padding: 1px 7px; border-radius: 999px; letter-spacing: 0; text-transform: none; font-family: inherit; font-weight: 700; color: var(--green); background: color-mix(in srgb, var(--green) 9%, transparent); }
+.up-stock.out { color: var(--text3); background: var(--bg2); }
+.up-rev p.up-rev-none { color: var(--text3); font-style: italic; }
+.up-more { display: flex; justify-content: center; margin-top: 14px; }
+.up-post.has-cover { grid-template-columns: 110px 1fr 120px; }
+.up-post-cover { width: 120px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); background: var(--bg2); }
+.up-name h1:focus { outline: none; }
+.up-name h1:focus-visible { outline: 2px solid var(--text3); outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 767px) {
+  .up-cover { aspect-ratio: 3 / 1; border-radius: 14px; }
+  .up-post.has-cover { grid-template-columns: 1fr 96px; }
+  .up-post.has-cover time { grid-column: 1 / -1; }
+  .up-post-cover { width: 96px; grid-column: 2; grid-row: 2; }
+}
 .up-compliment.on i { color: #e11d48; }
