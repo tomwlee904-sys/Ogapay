@@ -41,6 +41,7 @@ const Tasks = lazyPage(() => import('./pages/Tasks'))
 const JobDetail = lazyPage(() => import('./pages/JobDetail'))
 const Store = lazyPage(() => import('./pages/Store'))
 const StoreProduct = lazyPage(() => import('./pages/StoreProduct'))
+const StoreCreators = lazyPage(() => import('./pages/StoreCreators'))
 const StorePayment = lazyPage(() => import('./pages/StorePayment'))
 const OrderConfirmation = lazyPage(() => import('./pages/OrderConfirmation'))
 const StoreOrders = lazyPage(() => import('./pages/StoreOrders'))
@@ -182,6 +183,7 @@ export default function App() {
             <Route path="/store/pay/:id" element={<AuthGuard><StorePayment /></AuthGuard>} />
             <Route path="/store/orders" element={<AuthGuard><StoreOrders /></AuthGuard>} />
             <Route path="/orders/:id" element={<AuthGuard><OrderConfirmation /></AuthGuard>} />
+            <Route path="/store/creators" element={<StoreCreators />} />
             <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />
             <Route path="/communities" element={<Communities />} />

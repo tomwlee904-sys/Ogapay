@@ -142,17 +142,33 @@ export function HomeCommunityCard({ community: c }: { community: any }) {
   );
 }
 
+// The corner fact on a product card (F6, 2026-11-10), instead of an "Active" on
+// every card: sold out, only a few left, or how fast it's delivered
+export function productCardFact(item: any): { text: string; off?: boolean; icon?: string } | null {
+  if (item.stock === 0) return { text: "Sold out", off: true };
+  if (item.stock != null && item.stock > 0 && item.stock <= 5) return { text: `Only ${item.stock} left` };
+  if (item.official) return { text: "Instant", icon: "ti-bolt" };
+  const d = String(item.metadata?.delivery || "").trim();
+  if (!d) return null;
+  return /^instant/i.test(d) ? { text: "Instant delivery", icon: "ti-bolt" } : { text: `Delivery in ${d}`, icon: "ti-clock" };
+}
+
+// The seller's verified badge on cards (F4); the product page explains it
+const VERIFIED_LABEL: Record<string, string> = { id: "ID verified", basic: "Verified seller" };
+
 export function HomeProductCard({ item, convert }: { item: any; convert: Convert }) {
   const show = useMoney();
   const price = Number(item.price ?? 0);
   const cur = item.currency || "NGN";
   const seller = item.seller || "OgaPay";
+  const fact = productCardFact(item);
+  const sales = Number(item.salesCount || 0);
+  const verified = !item.official && item.sellerVerified ? VERIFIED_LABEL[item.sellerVerified] : null;
   return (
     <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${item.priceOnRequest ? "price on request" : spoken(show(price, cur), price, cur)}. View details`}>
       <div className="hc-media">
         <ItemCover src={item.image} category={item.category} title={item.title} width={320} />
-        {/* Stock 0 said "Active" too (2026-11-08) */}
-        {item.stock === 0 ? <span className="hc-active off">Sold out</span> : <span className="hc-active"><span />Active</span>}
+        {fact && <span className={`hc-active${fact.off ? " off" : ""}`}>{fact.icon && <i className={`ti ${fact.icon}`} aria-hidden="true" />}{fact.text}</span>}
       </div>
       <div className="hc-pbody">
         <span className="hc-type">{itemCategoryLabel(item.category, item.title)}</span>
@@ -162,8 +178,11 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
         <div className="hc-by">
           <Avatar src={item.sellerAvatar} name={seller} size={28} />
           <span className="hc-by-txt">
-            <b>{seller}</b>
-            <span>{item.reviewsCount > 0 ? <><b className="hc-rating">{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star hc-star" /> · {item.reviewsCount} reviews</> : item.official ? "From OgaPay" : "New seller"}</span>
+            <b><span className="hc-by-name">{seller}</span>{verified && <i className="ti ti-rosette-discount-check hc-verified" role="img" aria-label={verified} title={verified} />}</b>
+            <span>
+              {item.reviewsCount > 0 ? <><b className="hc-rating">{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star hc-star" /> · {item.reviewsCount} {item.reviewsCount === 1 ? "review" : "reviews"}</> : item.official ? "From OgaPay" : "New"}
+              {sales > 0 && <> · {sales.toLocaleString("en-US")} {sales === 1 ? "sale" : "sales"}</>}
+            </span>
           </span>
         </div>
         <div className="hc-reward hc-price">

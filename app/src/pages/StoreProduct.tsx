@@ -14,7 +14,10 @@ import Money from '../components/Money'
 import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
 import { sized } from '../lib/img'
 import { ModerateBar, ReportProductSheet } from '../components/StoreModeration'
-import { useToast } from '../context/ToastContext'
+import { useToast } from '../components/Toast' // the toasts App shows (context/ToastContext has no provider, so its toasts never appeared)
+import ShareButton from '../components/ShareButton'
+import InfoTip from '../components/InfoTip'
+import { HomeProductCard } from '../components/home/HomeCards'
 
 interface ReviewItem {
   id: string
@@ -45,6 +48,8 @@ interface StoreProductData {
   isActive: boolean
   createdAt: string
   metadata?: Record<string, any>
+  sellerVerified?: 'id' | 'basic' | null // the seller's verified badge (Level 2 / Level 1)
+  salesCount?: number // finished sales
   official?: boolean // sold by OgaPay itself (perks)
   priceOnRequest?: boolean
   sampleFiles?: { url: string; name: string; type: string; size: number | null }[]
@@ -96,6 +101,24 @@ function formatAlt(price: number, currency: string, solRate: number): string {
   return `\u2248 ${formatPrice(price / solRate, 'SOL')}`
 }
 
+// Markdown to one line of plain text (the browser's description for the page)
+const plainText = (s: string) => s
+  .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+  .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+  .replace(/[*_`#>~|]+/g, '')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+// The verified badge and what its ⓘ says (F4, 2026-11-10). Keep in step with
+// the levels (lib/levels.ts): Level 1 is a NIN or a bank account in their name,
+// Level 2 an ID document our team checked.
+const VERIFIED: Record<'id' | 'basic', { label: string; tip: string }> = {
+  id: { label: 'ID verified', tip: "OgaPay's team checked this seller's ID document (Level 2)." },
+  basic: { label: 'Verified seller', tip: "OgaPay checked this seller's identity with their NIN or a bank account in their own name (Level 1)." },
+}
+
+type RelatedRows = { fromSeller: any[]; similar: any[] }
+
 // What staff are told when buyers can't see a product (2026-11-10)
 const HIDDEN_STAFF: Record<string, string> = {
   removed: "Removed by OgaPay. Buyers can't see it.",
@@ -108,7 +131,7 @@ const HIDDEN_STAFF: Record<string, string> = {
 const SP_CSS = `
         .sp-page{padding-top:24px}
         .sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-        .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 13px var(--font);color:var(--text2);padding:4px 0;min-height:36px}
+        .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 13px var(--font);color:var(--text2);padding:4px 0;min-height:40px}
         .sp-top button:hover{color:var(--text)}
         .sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start;margin-top:18px}
         .sp-side{position:sticky;top:calc(var(--nav-h,64px) + 18px);display:flex;flex-direction:column;gap:14px}
@@ -166,7 +189,23 @@ const SP_CSS = `
         .sp-desc td,.sp-desc th{border:1px solid var(--border);padding:6px 8px}
         .sp-desc pre{overflow-x:auto;background:var(--card2);padding:10px;border-radius:8px}
         .sp-desc img{max-width:100%}
+        .sp-top-end{display:flex;align-items:center;gap:16px}
+        .sp-muted{font-weight:400!important;color:var(--text2)}
+        .sp-verified{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12.5px;font-weight:500;color:var(--green)}
+        .sp-verified>i{font-size:16px}
+        .sp-related{margin-top:28px}
+        .sp-related-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 12px}
+        .sp-related-head h2{font-size:var(--fs-h2);font-weight:600;letter-spacing:-.02em;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .sp-related-head a{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;min-height:40px;font-size:13px;font-weight:500;color:var(--text2);text-decoration:none}
+        .sp-related-head a:hover{color:var(--text)}
+        .sp-related-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
         .sp-mobile-only{display:none}
+        @media(max-width:1023px){.sp-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:767px){
+          /* phones: one row that scrolls sideways */
+          .sp-related-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px 6px}
+          .sp-related-grid>*{flex:0 0 78%;scroll-snap-align:start}
+        }
         @media(max-width:900px){
           .sp-layout{grid-template-columns:minmax(0,1fr)} /* minmax: a long name in a review can't widen the column past the phone (2026-11-08) */
           .sp-side{position:static}
@@ -195,6 +234,9 @@ export default function StoreProduct() {
   const [reviewDone, setReviewDone] = useState(false)
   const shownId = useRef<string | null>(null)
   const prefilled = useRef<string | null>(null)
+  // "More from this seller" and "Similar products", loaded when the reader gets near them
+  const [related, setRelated] = useState<RelatedRows | null>(null)
+  const relatedRef = useRef<HTMLDivElement | null>(null)
 
   const isOwner = user && product && user.id === product.sellerId
   const isSoldOut = product && product.stock !== null && product.stock <= 0
@@ -249,8 +291,29 @@ export default function StoreProduct() {
       meta.setAttribute('name', 'description')
       document.head.appendChild(meta)
     }
-    meta.setAttribute('content', (product.description || '').slice(0, 160))
+    // Plain words, not the description's markdown ("## What you get **PNG**…")
+    meta.setAttribute('content', plainText(product.description || '').slice(0, 160))
   }, [product])
+
+  // The related rows wait until the reader scrolls near the end, so they never
+  // slow the product itself (2026-11-10)
+  useEffect(() => {
+    setRelated(null)
+    const el = relatedRef.current
+    if (!id || !el || product?.id !== id) return
+    let done = false
+    const load = () => {
+      if (done) return
+      done = true
+      apiRequest<RelatedRows>('/store/' + id + '/related')
+        .then((d) => setRelated({ fromSeller: Array.isArray(d?.fromSeller) ? d.fromSeller : [], similar: Array.isArray(d?.similar) ? d.similar : [] }))
+        .catch(() => setRelated({ fromSeller: [], similar: [] }))
+    }
+    if (typeof IntersectionObserver === 'undefined') { load(); return }
+    const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load() } }, { rootMargin: '400px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [id, product?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmitReview = async () => {
     if (reviewRating < 1 || !product) return
@@ -319,8 +382,13 @@ export default function StoreProduct() {
   // The seller's bio and job numbers (none for OgaPay's own items or a private profile)
   const seller = p.official ? null : p.sellerInfo
   const cur = (p.currency || 'NGN') as string
-  const delivery = p.metadata?.delivery || '3 days'
-  const revisions = p.metadata?.revisions ?? 3
+  // Only the terms the seller set (B19, 2026-11-10): an empty one used to show a
+  // made-up "3 days" / "3 revisions". OgaPay's own items work as soon as they're paid.
+  const delivery: string | null = p.metadata?.delivery ? String(p.metadata.delivery) : null
+  const revisions: number | null = p.metadata?.revisions != null && Number.isFinite(Number(p.metadata.revisions)) ? Number(p.metadata.revisions) : null
+  const sales = Number(p.salesCount || 0)
+  const lowStock = p.stock !== null && p.stock > 0 && p.stock <= 5
+  const badge = p.official ? null : p.sellerVerified ? VERIFIED[p.sellerVerified] : null
   const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
 
   const onRequest = !!p.priceOnRequest
@@ -341,7 +409,7 @@ export default function StoreProduct() {
     <div className="ui-card sp-price">
       <div className="sp-price-head">
         <span>Your next project</span>
-        {isHidden ? <span className="sp-pill sp-pill-off">Not available</span> : isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />Active</span>}
+        {isHidden ? <span className="sp-pill sp-pill-off">Not available</span> : isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />{lowStock ? `Only ${p.stock} left` : 'Available'}</span>}
       </div>
       <div className="hc-reward sp-total">
         <span className="ui-label" style={{ margin: 0 }}>{onRequest ? 'Price' : 'Total price'}</span>
@@ -351,8 +419,11 @@ export default function StoreProduct() {
         {onRequest && <small style={{ display: 'block', color: 'var(--text2)', marginTop: 6, fontSize: 12 }}>Message the seller with what you need. They'll reply with a price.</small>}
       </div>
       <div className="sp-facts">
-        <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
-        <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
+        {p.official
+          ? <div><span><i className="ti ti-clock" />Delivery</span><b>Instant</b></div>
+          : <div><span><i className="ti ti-clock" />Delivery</span>{delivery ? <b>{delivery}</b> : <b className="sp-muted">Ask the seller</b>}</div>}
+        {!p.official && revisions !== null && <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>}
+        {sales > 0 && <div><span><i className="ti ti-package" />Sales</span><b>{sales.toLocaleString('en-US')}</b></div>}
       </div>
       {isHidden && !isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />{isStaff && p.hiddenBecause ? HIDDEN_STAFF[p.hiddenBecause] : "The seller isn't selling this right now."}</div>}
       {/* Hidden products open only for their seller (and staff) since 2026-11-10; the seller is told why */}
@@ -417,6 +488,14 @@ export default function StoreProduct() {
           </span>
         </span>
       </button>
+      {badge && (
+        <div className="sp-verified">
+          <i className="ti ti-rosette-discount-check" aria-hidden="true" />{badge.label}
+          <InfoTip label={`What "${badge.label}" means`} title={badge.label}>
+            {badge.tip} It doesn't promise the work is good, so keep paying through OgaPay: your money is held until you confirm you got your order.
+          </InfoTip>
+        </div>
+      )}
       {p.sellerInfo && (
         <ul className="sp-trust">
           <li><i className="ti ti-clock" aria-hidden="true" /> Last active {activeAgo(p.sellerInfo.lastActiveAt)}</li>
@@ -442,7 +521,11 @@ export default function StoreProduct() {
       <div className="ui-page sp-page">
         <div className="sp-top">
           <button onClick={goBack}><i className="ti ti-arrow-left" />Back</button>
-          <button onClick={() => navigate('/store')}>All products <i className="ti ti-arrow-up-right" /></button>
+          <span className="sp-top-end">
+            {/* Share (F8): the device's share sheet, or copy the link. Not for a product buyers can't open. */}
+            {!isHidden && <ShareButton url={`${window.location.origin}/store/${p.id}`} title={p.title} text={`${p.title} on OgaPay Store`} />}
+            <button onClick={() => navigate('/store')}>All products <i className="ti ti-arrow-up-right" /></button>
+          </span>
         </div>
         <span className="ui-eyebrow">{crumb}</span>
         <h1 className="ui-title">{p.title}</h1>
@@ -528,6 +611,28 @@ export default function StoreProduct() {
             {CreatorCard}
             {Moderate}
           </aside>
+        </div>
+
+        {/* More products (F11): the page used to end after the reviews */}
+        <div ref={relatedRef}>
+          {related && related.fromSeller.length > 0 && (
+            <section className="sp-related" aria-label={p.official ? 'More from OgaPay' : `More from ${p.seller}`}>
+              <div className="sp-related-head">
+                <h2>{p.official ? 'More from OgaPay' : `More from ${p.seller}`}</h2>
+                {!p.official && <Link to={'/user/' + encodeURIComponent(p.seller)}>View profile <i className="ti ti-arrow-up-right" /></Link>}
+              </div>
+              <div className="sp-related-grid">{related.fromSeller.map((it) => <HomeProductCard key={it.id} item={it} convert={convert} />)}</div>
+            </section>
+          )}
+          {related && related.similar.length > 0 && (
+            <section className="sp-related" aria-label="Similar products">
+              <div className="sp-related-head">
+                <h2>Similar products</h2>
+                <Link to={'/store?category=' + encodeURIComponent(p.category)}>See all <i className="ti ti-arrow-up-right" /></Link>
+              </div>
+              <div className="sp-related-grid">{related.similar.map((it) => <HomeProductCard key={it.id} item={it} convert={convert} />)}</div>
+            </section>
+          )}
         </div>
       </div>
       {reporting && <ReportProductSheet product={p} onClose={() => setReporting(false)} />}
