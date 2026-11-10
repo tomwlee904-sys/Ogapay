@@ -42,9 +42,10 @@ export function isPlaceholderImage(src?: string | null) {
   return !src || PLACEHOLDER.test(src)
 }
 
-export default function ItemCover({ src, category, title, className = '', alt = '', width = 640 }: {
+export default function ItemCover({ src, category, title, className = '', alt = '', width = 640, priority = false }: {
   src?: string | null; category?: string | null; title?: string | null; className?: string; alt?: string
   width?: number // largest width it's shown at, in CSS pixels
+  priority?: boolean // the main picture at the top of a page: load it first, not lazily (2026-11-10)
 }) {
   const [broken, setBroken] = useState(false)
   const look = coverLook(category, title)
@@ -52,7 +53,8 @@ export default function ItemCover({ src, category, title, className = '', alt = 
   return (
     <div className={`o-cover ${className}`.trim()}>
       {usePicture
-        ? <img src={sized(src, width)} alt={alt} loading="lazy" onError={() => setBroken(true)} />
+        ? <img src={sized(src, width)} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding={priority ? undefined : 'async'}
+            {...(priority && { fetchpriority: 'high' })} onError={() => setBroken(true)} />
         : (
           <div className={`o-cover-art tone-${look.tone}`} role={alt ? 'img' : undefined} aria-label={alt || undefined}>
             <span className="o-cover-tile"><i className={`ti ti-${look.icon}`} /></span>

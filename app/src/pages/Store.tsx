@@ -1,79 +1,21 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, API_BASE } from '../lib/api'
 import { useCurrency } from '../context/CurrencyContext'
 import { HomeProductCard } from '../components/home/HomeCards'
 import { useAuth } from '../context/AuthContext'
-import { useToast } from '../components/Toast'
-import { useApi } from '../lib/useApi'
-// ── Info tooltip ─────────────────────────────────────────────────────
-function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
-}
-
-
-import { useWalletBalance } from '../context/WalletBalanceContext'
-import FundJobWalletModal from '../components/FundJobWalletModal'
-import { SkeletonPage } from '../components/SkeletonLoader'
-import { formatCompact } from '../lib/currency'
-import { sized } from '../lib/img'
 import { itemCategoryLabel } from '../components/ItemCover'
 
-const OGAPAY_BLUE = 'var(--accent)'
-
-function timeAgo(dateStr?: string) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  if (isNaN(date.getTime())) return ''
-  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000)
-  const diffMin = Math.floor(diffSec / 60)
-  const diffHr = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHr / 24)
-  if (diffDay >= 30) return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  if (diffDay >= 7) { const w = Math.floor(diffDay / 7); return `${w} week${w !== 1 ? 's' : ''} ago` }
-  if (diffDay >= 1) return `${diffDay} day${diffDay !== 1 ? 's' : ''} ago`
-  if (diffHr >= 1) return `${diffHr} hour${diffHr !== 1 ? 's' : ''} ago`
-  if (diffMin >= 1) return `${diffMin} minute${diffMin !== 1 ? 's' : ''} ago`
-  return 'Just now'
-}
-
-function SafeImage({ src, alt, style }: { src: string; alt: string; style?: React.CSSProperties }) {
-  const [failed, setFailed] = useState(false)
-  if (!src || failed) {
-    return (
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 32, background: 'var(--bg2)' }}>
-        <i className="ti ti-box" />
-      </div>
-    )
-  }
-  return <img src={sized(src, 320)} alt={alt} loading="lazy" style={{ ...style, position: 'absolute', inset: 0 }} onError={() => setFailed(true)} />
-}
+// 2026-11-10: the old buy-from-the-list modal is gone (nothing opened it any
+// more, and it paid without the double-tap and price checks). Cards link to
+// the product page, and checkout (StorePayment) is the only way to buy.
 
 interface StoreItem {
   id: string
   title: string
-  description: string
+  excerpt?: string
+  description?: string
   price: number
   currency: string
   seller: string
@@ -86,57 +28,19 @@ interface StoreItem {
   createdAt: string
 }
 
-const S = {
-  card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1.5px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)' },
-  grid: { display: 'grid', gap: 16 } as React.CSSProperties,
-  btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
-  btnOutline: { height: 38, padding: '0 18px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
+// The last answers for each list page, kept while the app is open, so Back
+// shows the list at once and refreshes it quietly (2026-11-10)
+const LIST_FRESH_MS = 5 * 60 * 1000
+const listCache = new Map<string, { items: StoreItem[]; total: number; at: number }>()
+let knownCategories: string[] = []
+function freshListFor(query: string) {
+  const hit = listCache.get(query)
+  return hit && Date.now() - hit.at < LIST_FRESH_MS ? hit : null
 }
-
-// ═══════════════════════════════════════════════
-// CATEGORIES (from API, fallback icons)
-// ═══════════════════════════════════════════════
-const CATEGORY_ICONS: Record<string, string> = {
-  'All': 'ti ti-layout-grid',
-  'design': 'ti ti-palette', 'Design': 'ti ti-palette',
-  'social': 'ti ti-share', 'Social': 'ti ti-share',
-  'marketing': 'ti ti-trending-up', 'Marketing': 'ti ti-trending-up',
-  'dev': 'ti ti-code', 'Development': 'ti ti-code',
-  'communities': 'ti ti-users', 'Communities': 'ti ti-users',
-  'content': 'ti ti-edit', 'Content': 'ti ti-edit',
-  'crypto': 'ti ti-coin', 'Crypto': 'ti ti-coin',
-  'ai': 'ti ti-robot', 'AI': 'ti ti-robot',
-  'templates': 'ti ti-files', 'Templates': 'ti ti-files',
-}
-
-// ═══════════════════════════════════════════════
-// STARS COMPONENT
-// ═══════════════════════════════════════════════
-function ProductStars({ rating, compact }: { rating: number; compact?: boolean }) {
-  const full = Math.floor(rating)
-  const half = rating - full >= 0.5 ? 1 : 0
-  const empty = 5 - full - half
-  const size = compact ? 11 : 13
-  return (
-    <span style={{ display: 'inline-flex', gap: compact ? 1 : 2, alignItems: 'center' }}>
-      {Array.from({ length: full }).map((_, i) => (
-        <svg key={`f${i}`} width={size} height={size} viewBox="0 0 24 24" fill="#f59e0b" style={{ filter: 'drop-shadow(0 1px 1px rgba(251,191,36,0.3))', transition: 'transform 0.2s' }}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      ))}
-      {half === 1 && (
-        <svg key="half" width={size} height={size} viewBox="0 0 24 24" fill="#f59e0b" opacity={0.7}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      )}
-      {Array.from({ length: empty }).map((_, i) => (
-        <svg key={`e${i}`} width={size} height={size} viewBox="0 0 24 24" fill="var(--border)" opacity={0.5}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      ))}
-      <span style={{ fontSize: compact ? 10.5 : 11, fontWeight: 700, color: 'var(--text2)', marginLeft: 2 }}>{rating.toFixed(1)}</span>
-    </span>
-  )
+function rememberList(query: string, items: StoreItem[], total: number) {
+  listCache.delete(query)
+  listCache.set(query, { items, total, at: Date.now() })
+  if (listCache.size > 30) listCache.delete(listCache.keys().next().value as string)
 }
 
 // ═══════════════════════════════════════════════
@@ -148,33 +52,34 @@ function ProductStars({ rating, compact }: { rating: number; compact?: boolean }
 const STORE_SORTS: [string, string][] = [['', 'Newest'], ['price_low', 'Price: low to high'], ['price_high', 'Price: high to low'], ['rating', 'Highest rated'], ['reviews', 'Most reviewed']]
 const SORT_KEYS = STORE_SORTS.map(([v]) => v)
 
-function StorePage({
-  onViewProduct,
-  onBuyProduct,
-  setActiveView,
-  navigate
-}: {
-  onViewProduct: (p: StoreItem) => void
-  onBuyProduct: (p: StoreItem) => void
-  setActiveView: (v: string) => void
-  navigate: (path: string) => void
-}) {
+function StorePage({ navigate }: { navigate: (path: string) => void }) {
   const { user } = useAuth()
   const { convert } = useCurrency()
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
-  const [products, setProducts] = useState<StoreItem[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [allCategories, setAllCategories] = useState<string[]>([])
   const limit = 12
-
   const category = searchParams.get('category') || ''
   const search = searchParams.get('search') || ''
   // An old link's sort (stars_desc, random, newest) falls back to the default
   const sort = SORT_KEYS.includes(searchParams.get('sort') || '') ? searchParams.get('sort') || '' : ''
   const page = Number(searchParams.get('page')) || 1
+
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  if (search) params.set('search', search)
+  if (sort) params.set('sort', sort)
+  params.set('page', String(page))
+  params.set('limit', String(limit))
+  const query = params.toString()
+
+  // Coming Back from a product, the last answer for this page shows at once
+  // (it used to show skeleton cards and load again) (2026-11-10)
+  const cached = freshListFor(query)
+  const [products, setProducts] = useState<StoreItem[]>(cached?.items || [])
+  const [total, setTotal] = useState(cached?.total || 0)
+  const [loading, setLoading] = useState(!cached)
+  const [error, setError] = useState<string | null>(null)
+  const [allCategories, setAllCategories] = useState<string[]>(knownCategories)
 
   const updateURL = (updates: Record<string, string | undefined>) => {
     setSearchParams(prev => {
@@ -184,42 +89,47 @@ function StorePage({
     }, { replace: false })
   }
 
+  const addCategories = (list: string[]) => setAllCategories(prev => {
+    const next = Array.from(new Set([...prev, ...list.filter(Boolean)])).sort()
+    knownCategories = next
+    return next
+  })
+
   // Each change of filter, sort or page cancels the load before it, so a slow
-  // older answer can't replace the newer one (2026-11-08)
+  // older answer can't replace the newer one (2026-11-08). With a recent answer
+  // on screen the load runs quietly: no skeleton, and a failure keeps it.
   const [reloadTick, setReloadTick] = useState(0)
   const fetchProducts = () => setReloadTick((n) => n + 1)
   useEffect(() => {
     const ctl = new AbortController()
+    const shown = freshListFor(query)
+    if (shown) { setProducts(shown.items); setTotal(shown.total); setLoading(false) } else setLoading(true)
+    setError(null)
     ;(async () => {
-      setLoading(true); setError(null)
       try {
-        const params = new URLSearchParams()
-        if (category) params.set('category', category)
-        if (search) params.set('search', search)
-        if (sort) params.set('sort', sort)
-        params.set('page', String(page))
-        params.set('limit', String(limit))
         // Raw fetch: apiRequest unwraps `data` and drops `pagination`, which paging needs
-        const res = await fetch(`${API_BASE}/store?${params.toString()}`, { signal: ctl.signal })
+        const res = await fetch(`${API_BASE}/store?${query}`, { signal: ctl.signal })
         const json = await res.json().catch(() => null)
         if (ctl.signal.aborted) return
         if (!res.ok) throw new Error(json?.message || 'Failed to load products')
         const items: StoreItem[] = Array.isArray(json?.data) ? json.data : []
+        const count = Number(json?.pagination?.total ?? items.length)
+        rememberList(query, items, count)
         setProducts(items)
-        setTotal(Number(json?.pagination?.total ?? items.length))
-        setAllCategories(prev => Array.from(new Set([...prev, ...items.map(p => p.category).filter(Boolean)])).sort())
+        setTotal(count)
+        addCategories(items.map(p => p.category))
       } catch (e) {
-        if (ctl.signal.aborted) return
+        if (ctl.signal.aborted || shown) return
         setError((e as any)?.message || 'Failed to load products')
       } finally { if (!ctl.signal.aborted) setLoading(false) }
     })()
     return () => ctl.abort()
-  }, [category, search, sort, page, reloadTick])
+  }, [query, reloadTick])
 
   // Every category with a listed product, not just the ones on this page (2026-11-08)
   useEffect(() => {
     apiRequest<{ categories?: string[] }>('/store/categories', { auth: false })
-      .then((d) => { if (Array.isArray(d?.categories)) setAllCategories(prev => Array.from(new Set([...prev, ...d.categories!.filter(Boolean)])).sort()) })
+      .then((d) => { if (Array.isArray(d?.categories)) addCategories(d.categories) })
       .catch(() => { /* the list still fills from the products shown */ })
   }, [])
 
@@ -244,6 +154,8 @@ function StorePage({
         <div className="ui-actions">
           <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/workers')}>Browse creators <i className="ti ti-arrow-up-right" /></button>
           {user && <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/store/orders')}>My orders <i className="ti ti-receipt" /></button>}
+          {/* Admins and store moderators: the store queue (2026-11-10) */}
+          {(user?.role === 'ADMIN' || user?.isModerator) && <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/admin/store')}>Store queue <i className="ti ti-shield" /></button>}
           <button className="ui-btn ui-btn-dark" onClick={() => navigate(user ? '/my-store' : '/login?redirect=/my-store')}>My store <i className="ti ti-user" /></button>
         </div>
       </header>
@@ -313,251 +225,11 @@ function StorePage({
   )
 }
 
-
-// ═══════════════════════════════════════════════
-// MAIN STORE COMPONENT
-// ═══════════════════════════════════════════════
 export default function Store() {
   const navigate = useNavigate()
-  const [activeView, setActiveView] = useState('store')
-  const { user } = useAuth()
-  const { balances, refresh: refreshBalance } = useWalletBalance()
-
-  // Purchase state
-  const [buyingProduct, setBuyingProduct] = useState<StoreItem | null>(null)
-  const [purchaseStep, setPurchaseStep] = useState<'idle' | 'confirm' | 'processing' | 'done' | 'error'>('idle')
-  const [purchaseError, setPurchaseError] = useState('')
-  const [showFundModal, setShowFundModal] = useState(false)
-  // purchase conversation created server-side — user will see it in /messages
-
-  const handleViewProduct = (product: any) => {
-    navigate('/store/' + product.id)
-  }
-
-  const handleBuyProduct = (product: StoreItem) => {
-    if (!user) {
-      navigate('/login?redirect=/store')
-      return
-    }
-    // OgaPay's own items go through checkout (Task Boost needs a job picked there)
-    if ((product as any).official) { navigate('/store/pay/' + product.id); return }
-    setBuyingProduct(product)
-    setPurchaseStep('confirm')
-    setPurchaseError('')
-  }
-
-  const executePurchase = async () => {
-    if (!buyingProduct) return
-    setPurchaseStep('processing')
-    setPurchaseError('')
-
-    // Check balance
-    const currency = buyingProduct.currency || 'NGN'
-    const walletData = balances?.[currency]
-    const currentBalance = walletData ? (walletData.balance || 0) : 0
-
-    if (currentBalance < buyingProduct.price) {
-      // Insufficient — open fund modal
-      setShowFundModal(true)
-      setPurchaseStep('idle')
-      return
-    }
-
-    try {
-      const res = await apiRequest<any>('/store/' + buyingProduct.id + '/purchase', {
-        method: 'POST',
-        body: JSON.stringify({ quantity: 1 }),
-      })
-      const data = res?.data || res
-      setPurchaseStep('done')
-      // Refresh wallet balance
-      refreshBalance()
-    } catch (e: any) {
-      setPurchaseError(e.message || 'Purchase failed. Please try again.')
-      setPurchaseStep('error')
-    }
-  }
-
-  const handleFunded = async () => {
-    // After wallet funded, retry the purchase
-    setShowFundModal(false)
-    if (buyingProduct) {
-      await executePurchase()
-    }
-  }
-
-  const closePurchaseModal = () => {
-    setBuyingProduct(null)
-    setPurchaseStep('idle')
-    setPurchaseError('')
-    // purchaseConversationId state removed
-  }
-
-  const goToMessages = () => {
-    navigate('/messages')
-    closePurchaseModal()
-  }
-
   return (
     <Layout>
-      <div>
-        {activeView === 'store' && (
-          <StorePage
-            onViewProduct={handleViewProduct}
-            onBuyProduct={handleBuyProduct}
-            setActiveView={setActiveView}
-            navigate={navigate}
-          />
-        )}
-      </div>
-
-      {/* ── Purchase Confirmation Modal ── */}
-      {buyingProduct && purchaseStep === 'confirm' && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 400,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-        }} onClick={closePurchaseModal}>
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 16, maxWidth: 420, width: '100%', padding: 28,
-          }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
-              Confirm Purchase
-            </div>
-            <div style={{
-              display: 'flex', gap: 14, padding: '14px 0', marginBottom: 16,
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 10,
-                background: 'var(--bg2)', overflow: 'hidden', flexShrink: 0,
-              }}>
-                {buyingProduct.image ? (
-                  <img src={sized(buyingProduct.image, 480)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--text3)', fontSize: 20 }}>
-                    <i className="ti ti-box" />
-                  </div>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{buyingProduct.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--text2)' }}>by {buyingProduct.seller}</div>
-                {buyingProduct.stock !== null && (
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
-                    Stock: {buyingProduct.stock} available<InfoBtn text="Number of units currently in stock. For service-type items, this may represent available booking slots rather than physical inventory." />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '12px 0', marginBottom: 20,
-            }}>
-              <div style={{ fontSize: 13, color: 'var(--text2)' }}>Total</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: OGAPAY_BLUE }}>
-                {buyingProduct.currency || 'NGN'} {formatCompact(buyingProduct.price)}
-              </div>
-            </div>
-            {purchaseError && (
-              <div style={{ fontSize: 13, color: 'var(--red)', marginBottom: 12 }}>{purchaseError}</div>
-            )}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={closePurchaseModal} style={{
-                flex: 1, height: 44, borderRadius: 12, border: '1.5px solid var(--border)',
-                background: 'transparent', color: 'var(--text2)',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-              }}>Cancel</button>
-              <button onClick={executePurchase} style={{
-                flex: 1, height: 44, borderRadius: 12, border: 'none',
-                background: OGAPAY_BLUE, color: 'var(--on-accent)',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-              }}>Pay Now</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Purchase Processing / Success / Error ── */}
-      {buyingProduct && (purchaseStep === 'processing' || purchaseStep === 'done' || purchaseStep === 'error') && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 400,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-        }} onClick={purchaseStep === 'done' ? undefined : closePurchaseModal}>
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 16, maxWidth: 400, width: '100%', padding: 32,
-            textAlign: 'center',
-          }} onClick={e => e.stopPropagation()}>
-            {purchaseStep === 'processing' && (
-              <>
-                <div style={{ fontSize: 36, marginBottom: 12, color: 'var(--text2)' }}><i className="ti ti-hourglass" aria-hidden="true" /></div>
-                <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Processing Purchase...</div>
-                <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>
-                  Your payment is being processed. Please wait.
-                </p>
-              </>
-            )}
-            {purchaseStep === 'done' && (
-              <>
-                <div style={{ fontSize: 36, marginBottom: 12 }}><i className="ti ti-circle-check" style={{color:"var(--green)"}} /></div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#16A34A', marginBottom: 8 }}>
-                  Purchase Successful!
-                </div>
-                <p style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 24 }}>
-                  A conversation has been opened with the seller to arrange next steps.
-                </p>
-                <button onClick={goToMessages} style={{
-                  height: 44, padding: '0 24px', borderRadius: 12, border: 'none',
-                  background: OGAPAY_BLUE, color: 'var(--on-accent)',
-                  fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-                }}>
-                  <i className="ti ti-message" style={{ marginRight: 6 }} /> Message Seller
-                </button>
-                <button onClick={closePurchaseModal} style={{
-                  display: 'block', margin: '12px auto 0',
-                  background: 'none', border: 'none', color: 'var(--text3)',
-                  fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline',
-                }}>
-                  Back to Store
-                </button>
-              </>
-            )}
-            {purchaseStep === 'error' && (
-              <>
-                <div style={{ fontSize: 36, marginBottom: 12 }}><i className="ti ti-circle-x" style={{color:"var(--red)"}} /></div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--red)', marginBottom: 8 }}>
-                  Purchase Failed
-                </div>
-                <p style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 20 }}>
-                  {purchaseError || 'Something went wrong. Please try again.'}
-                </p>
-                <button onClick={closePurchaseModal} style={{
-                  height: 44, padding: '0 24px', borderRadius: 12, border: 'none',
-                  background: OGAPAY_BLUE, color: 'var(--on-accent)',
-                  fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-                }}>Try Again</button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Fund Wallet Modal (for insufficient balance) ── */}
-      {showFundModal && buyingProduct && (
-        <FundJobWalletModal
-          currency={buyingProduct.currency || 'NGN'}
-          shortfall={buyingProduct.price}
-          totalToPay={buyingProduct.price}
-          balance={balances?.[buyingProduct.currency || 'NGN']?.balance || 0}
-          onClose={() => { setShowFundModal(false); closePurchaseModal() }}
-          onFunded={handleFunded}
-        />
-      )}
+      <StorePage navigate={navigate} />
     </Layout>
   )
 }

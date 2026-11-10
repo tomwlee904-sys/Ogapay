@@ -110,6 +110,7 @@ const AdminHealth = lazyPage(() => import('./pages/AdminHealth'))
 const AdminBrands = lazyPage(() => import('./pages/AdminBrands'))
 const MyWarnings = lazyPage(() => import('./pages/MyWarnings'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
+const AdminStore = lazyPage(() => import('./pages/AdminStore'))
 const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
 const RankUpgrade = lazyPage(() => import("./pages/RankUpgrade"))
@@ -280,6 +281,7 @@ export default function App() {
             <Route path="/admin/health" element={<AdminGuard><AdminHealth /></AdminGuard>} />
             <Route path="/admin/brands" element={<AdminGuard><AdminBrands /></AdminGuard>} />
             <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
+            <Route path="/admin/store" element={<AdminGuard moderators><AdminStore /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
 

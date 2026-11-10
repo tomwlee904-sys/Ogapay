@@ -19,6 +19,7 @@ const CARDS = [
   { to: '/admin/ranks', icon: 'ti-trophy', title: 'Rank claims', desc: 'Review rank-ups from accounts with warning signs' },
   { to: '/admin/warnings', icon: 'ti-alert-triangle', title: 'Warnings', desc: 'Warnings, appeals and members who cannot take jobs' },
   { to: '/admin/highlights', icon: 'ti-star', title: 'Highlighted jobs', desc: 'Jobs shown first on the homepage and jobs page' },
+  { to: '/admin/store', icon: 'ti-building-store', title: 'Store', desc: 'Every product, reports, remove and put back, store moderators' },
   { to: '/admin/support', icon: 'ti-lifebuoy', title: 'Support and reports', desc: 'Help centre tickets and reports, priority first' },
   { to: '/admin/blog', icon: 'ti-news', title: 'Blog', desc: 'Articles waiting for review, and publishing' },
   { to: '/admin/vault', icon: 'ti-building-bank', title: 'Vault', desc: 'Revenue pool, distributions and $PAY' },

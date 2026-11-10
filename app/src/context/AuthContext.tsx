@@ -31,6 +31,8 @@ export interface User {
   avatar: string | null
   bio: string | null
   role: string
+  // Store moderator (2026-11-10): the store queue and the Moderate bar on products
+  isModerator?: boolean
   walletAddress: string | null
   walletProvider: string | null
   walletConnectedAt: string | null
@@ -106,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         avatar: userData.avatarUrl || userData.avatar || null,
         bio: userData.bio || null,
         role: userData.role || 'WORKER',
+        isModerator: !!userData.isModerator,
         walletAddress: userData.walletAddress || null,
         walletProvider: userData.walletProvider || null,
         walletConnectedAt: userData.walletConnectedAt || null,

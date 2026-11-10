@@ -157,7 +157,8 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
       <div className="hc-pbody">
         <span className="hc-type">{itemCategoryLabel(item.category, item.title)}</span>
         <h3>{item.title}</h3>
-        <p className="hc-pdesc">{plain(item.description)}</p>
+        {/* The list sends a 200-character plain excerpt (2026-11-10); older answers had the description */}
+        <p className="hc-pdesc">{plain(item.excerpt ?? item.description)}</p>
         <div className="hc-by">
           <Avatar src={item.sellerAvatar} name={seller} size={28} />
           <span className="hc-by-txt">
