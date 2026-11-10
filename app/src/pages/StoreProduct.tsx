@@ -12,6 +12,7 @@ import { renderBlog } from '../lib/blogMarkdown'
 import SellerCard from '../components/SellerCard'
 import Money from '../components/Money'
 import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
+import { sized } from '../lib/img'
 
 interface ReviewItem {
   id: string
@@ -45,7 +46,12 @@ interface StoreProductData {
   official?: boolean // sold by OgaPay itself (perks)
   priceOnRequest?: boolean
   sampleFiles?: { url: string; name: string; type: string; size: number | null }[]
-  sellerInfo?: { lastActiveAt: string | null; challengesWon: number; compliments: number; reviews: number; newCreator: boolean } | null
+  // The seller card. bio and the job numbers come with it (2026-11-10: they took a
+  // second /users call); a private profile leaves them out.
+  sellerInfo?: {
+    lastActiveAt: string | null; challengesWon: number; compliments: number; reviews: number; newCreator: boolean
+    bio?: string | null; tasksCompleted?: number; successRate?: number | null; avgRating?: number; totalRatings?: number; level?: string | null; memberSince?: string
+  } | null
   canReview?: boolean // the signed-in member bought it and the order is finished (2026-11-08)
   myReview?: { rating: number; comment: string | null } | null // their review, to change it
 }
@@ -61,22 +67,6 @@ function activeAgo(d: string | null | undefined): string {
 }
 const FILE_ICON: Record<string, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf', text: 'ti-file-text' }
 const fileSize = (n: number | null) => (!n ? '' : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`)
-
-interface SellerProfile {
-  id: string
-  username: string
-  firstName?: string
-  avatarUrl?: string | null
-  bio?: string | null
-  rating?: number
-  reviews?: number
-  tasksCompleted?: number
-  successRate?: number
-  productCount?: number
-  level?: string
-  skills?: string[]
-  memberSince?: string
-}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -177,9 +167,6 @@ export default function StoreProduct() {
   const { convert } = useCurrency()
 
   const [product, setProduct] = useState<StoreProductData | null>(null)
-  const [seller, setSeller] = useState<SellerProfile | null>(null)
-  // 'none': no profile to show (failed, or an OgaPay item), so nothing is reserved for it
-  const [sellerState, setSellerState] = useState<'loading' | 'ok' | 'none'>('loading')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reviewRating, setReviewRating] = useState(0)
@@ -213,42 +200,12 @@ export default function StoreProduct() {
     }
   }, [id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchSeller = useCallback(async (username: string) => {
-    try {
-      const data = await apiRequest<any>('/users/' + username, { auth: false })
-      if (data?.id) {
-        setSeller({
-          id: data.id,
-          username: data.username,
-          firstName: data.firstName,
-          avatarUrl: data.avatarUrl,
-          bio: data.workerProfile?.bio || null,
-          rating: data.workerProfile?.avgRating,
-          reviews: data.workerProfile?.totalRatings,
-          tasksCompleted: data.workerProfile?.tasksCompleted,
-          successRate: data.workerProfile?.successRate,
-          level: data.workerProfile?.level,
-          skills: data.workerProfile?.skills,
-          memberSince: data.createdAt,
-        })
-        setSellerState('ok')
-      } else setSellerState('none')
-    } catch { setSellerState('none') }
-  }, [])
-
   useEffect(() => { fetchProduct() }, [fetchProduct])
   // Another product in the same page: its own review form, no thank-you from the
   // last one (2026-11-08)
   useEffect(() => {
     setReviewDone(false); setReviewError(''); setReviewRating(0); setReviewComment('')
   }, [id])
-  // OgaPay's own items have no member behind them: "OgaPay" here is not a username
-  // to look up (anyone could register it) (2026-11-08)
-  useEffect(() => {
-    setSeller(null)
-    if (product?.seller && !product.official) { setSellerState('loading'); fetchSeller(product.seller) }
-    else setSellerState('none')
-  }, [product?.seller, product?.official, fetchSeller])
 
   // "Leave a review" on an order links here with #review
   const canReview = !!user && !!product?.canReview && !isOwner && !product.official
@@ -339,6 +296,8 @@ export default function StoreProduct() {
   }
 
   const p = product
+  // The seller's bio and job numbers (none for OgaPay's own items or a private profile)
+  const seller = p.official ? null : p.sellerInfo
   const cur = (p.currency || 'NGN') as string
   const delivery = p.metadata?.delivery || '3 days'
   const revisions = p.metadata?.revisions ?? 3
@@ -376,6 +335,8 @@ export default function StoreProduct() {
         <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
       </div>
       {isHidden && !isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />The seller isn't selling this right now.</div>}
+      {/* Hidden products open only for their seller (and admins) since 2026-11-10 */}
+      {isHidden && isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />Hidden from the store: only you can see this.</div>}
       <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={unavailable && !isOwner}>
         {buyLabel} {(isOwner || !unavailable) && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
       </button>
@@ -424,11 +385,8 @@ export default function StoreProduct() {
         </ul>
       )}
       {seller?.bio && <p className="sp-bio">{seller.bio}</p>}
-      {/* The tiles keep their place while the profile loads, so the text below doesn't jump (2026-11-08) */}
-      {sellerState === 'loading' && (
-        <div className="sp-stats" aria-hidden="true"><div className="ui-sk" style={{ height: 58, border: 0 }} /><div className="ui-sk" style={{ height: 58, border: 0 }} /></div>
-      )}
-      {seller && (
+      {/* Comes with the product now, so there is nothing to wait for (2026-11-10) */}
+      {seller && seller.tasksCompleted !== undefined && (
         <div className="sp-stats">
           <div><span>Tasks completed</span><b>{seller.tasksCompleted ?? 0}</b></div>
           {/* A rate needs finished work behind it: "0%" read as a bad seller when there was none yet */}
@@ -452,7 +410,7 @@ export default function StoreProduct() {
         <div className="sp-layout">
           <div>
             <div className="sp-media">
-              <ItemCover src={p.image} category={p.category} title={p.title} alt={p.title} />
+              <ItemCover src={p.image} category={p.category} title={p.title} alt={p.title} priority />
             </div>
 
             <div className="sp-mobile-only">{PriceCard}{CreatorCard}</div>
@@ -471,7 +429,7 @@ export default function StoreProduct() {
                       <div className="sp-file-media">
                         {f.type === 'audio' ? <audio controls preload="none" src={f.url} aria-label={f.name} />
                           : f.type === 'video' ? <video controls preload="metadata" src={f.url} aria-label={f.name} />
-                          : <img src={f.url} alt={f.name} loading="lazy" />}
+                          : <img src={sized(f.url, 760)} alt={f.name} loading="lazy" decoding="async" />}
                       </div>
                     )}
                     <a className="sp-file" href={f.url} target="_blank" rel="noopener noreferrer nofollow">
