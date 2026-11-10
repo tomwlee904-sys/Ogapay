@@ -7,7 +7,8 @@ import { lazyPage } from '../../lib/staleBuild'
 // Loaded on first open, so Supabase and the wallet code stay out of the first page load
 const SignInModal = lazyPage(() => import('./SignInModal'))
 
-const AUTH_PAGES = ['/login', '/pair']
+// /auth/callback: the 2FA step after Google opens over the "signing you in" page
+const AUTH_PAGES = ['/login', '/pair', '/auth/callback']
 
 /* Mounted once in App. Shows the sign-in dialog over whatever page is open. */
 export default function SignInHost() {
@@ -43,7 +44,7 @@ export default function SignInHost() {
 
   return (
     <Suspense fallback={null}>
-      <SignInModal key={req.key} initialView={req.view} initialCode={req.code} initialNotice={req.notice} redirect={safeRedirect(req.redirect)} onClose={close} onSignedIn={signedIn} />
+      <SignInModal key={req.key} initialView={req.view} initialCode={req.code} initialNotice={req.notice} initialChallenge={req.challenge} redirect={safeRedirect(req.redirect)} onClose={close} onSignedIn={signedIn} />
     </Suspense>
   )
 }

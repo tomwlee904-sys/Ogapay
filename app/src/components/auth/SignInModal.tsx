@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient'
 import type { SignInView } from '../../lib/signin'
 import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
 import { trackSignUpConversion } from '../../lib/ads'
+import { chromeIntentUrl, copyText, inAppBrowserName, isAndroid } from '../../lib/inAppBrowser'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -18,6 +19,8 @@ interface Props {
   initialView?: SignInView
   initialCode?: string
   initialNotice?: string
+  /** Opens on the 2FA step with this challenge (Google sign-in, AuthCallback) */
+  initialChallenge?: { token: string; userId: string }
   redirect?: string | null
   onClose: () => void
   onSignedIn: (isNewAccount: boolean) => void
@@ -116,7 +119,7 @@ function Option({ icon, name, desc, tag, onClick, disabled }: { icon: ReactNode;
 
 const Spinner = () => <span className="si-spin" aria-hidden="true" />
 
-export default function SignInModal({ initialView = 'options', initialCode = '', initialNotice = '', redirect, onClose, onSignedIn }: Props) {
+export default function SignInModal({ initialView = 'options', initialCode = '', initialNotice = '', initialChallenge, redirect, onClose, onSignedIn }: Props) {
   const { login } = useAuth()
   const [view, setView] = useState<View>(initialView)
   const [busy, setBusy] = useState('')
@@ -131,8 +134,17 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [country, setCountry] = useState<'NG' | 'GH'>('NG')
   const [intent, setIntent] = useState<Intent | ''>('')
   const [code, setCode] = useState(initialCode.toUpperCase())
-  const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(null)
+  const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(initialChallenge || null)
   const [otp, setOtp] = useState('')
+  // 2FA step: a backup code (10 letters and numbers, from Settings > Security) instead of the app's code
+  const [useBackup, setUseBackup] = useState(false)
+  // Instagram, Facebook, X, Telegram, WhatsApp... built-in browsers: Google
+  // refuses to sign in there, so we say so first and offer to open Chrome/Safari
+  const [inApp] = useState(inAppBrowserName)
+  const [inAppHelp, setInAppHelp] = useState(false)
+  const [copied, setCopied] = useState(false)
+  // Opened from a referral link (the code is kept for Google and email sign-up alike)
+  const [invited] = useState(() => { try { return !!localStorage.getItem('ogapay_referral') } catch { return false } })
   // Email code sign-in: the 6-digit code, and whether one was sent
   const [mailCode, setMailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
@@ -175,6 +187,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     if (result?.requiresTwoFactor && result?.challengeToken) {
       setChallenge({ token: result.challengeToken, userId: result.userId })
       setOtp('')
+      setUseBackup(false)
       go('twofa')
       return
     }
@@ -190,7 +203,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   }
 
   // ── Methods ──────────────────────────────────────────────────────────────
-  const google = () => run('google', async () => {
+  const google = (anyway = false) => run('google', async () => {
+    if (inApp && !anyway) { setInAppHelp(true); return }
     if (redirect) sessionStorage.setItem('ogapay_after_login', redirect)
     try {
       const { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
@@ -290,7 +304,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
 
   const verifyOtp = (e: FormEvent) => {
     e.preventDefault()
-    if (!challenge || otp.length < 6) { setError('Enter the 6-digit code.'); return }
+    if (!challenge) { setError('This sign-in expired. Please start again.'); return }
+    if (!useBackup && otp.length < 6) { setError('Enter the 6-digit code.'); return }
+    if (useBackup && otp.replace(/-/g, '').length < 10) { setError('Enter the 10-character backup code.'); return }
     run('otp', async () => finish(await apiRequest<any>('/auth/2fa/challenge', {
       method: 'POST', auth: false,
       body: JSON.stringify({ challengeToken: challenge.token, userId: challenge.userId, token: otp }),
@@ -323,28 +339,43 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const noticeLine = notice && <p className={`si-notice${notice.ok ? ' ok' : ''}`} role="status">{notice.text}</p>
   const legal = <p className="si-legal">By continuing you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</p>
   const back = BACK[view]
+  const copyLink = async () => {
+    const done = await copyText(window.location.href)
+    setCopied(done)
+    if (!done) setError(`Couldn't copy. Open the ${inApp} menu (⋮ or ···) and choose Open in browser.`)
+  }
+  // Shown before Google inside an app's built-in browser
+  const inAppNote = inApp && (
+    <div className="si-notice ok" role="note" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span>Google sign-in doesn't work inside {inApp === 'an app' ? "this app's browser" : `${inApp}'s browser`}. Open OgaPay in {isAndroid() ? 'Chrome' : 'Safari or Chrome'} to use Google: tap the menu (⋮ or ···) and choose Open in browser, or copy the link and paste it there. Email sign-in works here.</span>
+      <button type="button" className="si-secondary" onClick={copyLink}><i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} aria-hidden="true" /> {copied ? 'Link copied. Paste it in your browser' : 'Copy link'}</button>
+      {isAndroid() && <a className="si-secondary" href={chromeIntentUrl()} style={{ textDecoration: 'none' }}><i className="ti ti-external-link" aria-hidden="true" /> Open in Chrome</a>}
+      {inAppHelp && <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} onClick={() => google(true)}>Try Google here anyway</button>}
+    </div>
+  )
 
   let body: ReactNode = null
   if (view === 'options') {
     // Inside a wallet app (after "Open in Phantom" and the like) Google refuses
     // to sign in, so Email comes first and Google says it likely won't work
     const googleOption = (
-      <Option name="Continue with Google" disabled={busy === 'google'} onClick={google}
-        desc={inWalletApp ? "Usually doesn't work inside wallet apps" : 'Sign in or create an account with your Google account'}
+      <Option name="Continue with Google" disabled={busy === 'google'} onClick={() => google()}
+        desc={inWalletApp ? "Usually doesn't work inside wallet apps" : inApp ? "Doesn't work in this app's browser" : 'Sign in or create an account with your Google account'}
         icon={busy === 'google' ? <Spinner /> : <GoogleIcon />} />
     )
     body = (
       <>
         <p className="si-desc">Choose how you want to sign in or create your OgaPay account.</p>
         {inWalletApp && <p className="si-notice ok" role="note">{WALLET_APP_SIGNIN_LINE}</p>}
+        {!inWalletApp && inAppNote}
         {noticeLine}{errorLine}
         <div className="si-options">
           <Option name="Continue with wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
             icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
-          {!inWalletApp && googleOption}
+          {!inWalletApp && !inApp && googleOption}
           <Option name="Email" desc="Sign in or create an account with your email" onClick={() => go('email')}
             icon={<i className="ti ti-mail" aria-hidden="true" />} />
-          {inWalletApp && googleOption}
+          {(inWalletApp || inApp) && googleOption}
           <Option name="Pair devices" desc="Signed in on another device? Pair this one with a code" onClick={() => go('pair')}
             icon={<i className="ti ti-devices" aria-hidden="true" />} />
         </div>
@@ -405,7 +436,18 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   } else if (view === 'signup') {
     body = (
       <form className="si-form" onSubmit={signup} noValidate>
-        <p className="si-desc">Earn from tasks, hire people and sell in the store. It takes a minute.</p>
+        <p className="si-desc">{invited ? 'A friend invited you. ' : ''}Earn from tasks, hire people and sell in the store. It takes a minute.</p>
+        {/* Referral links open here: Google is one tap too, and keeps the invite (AuthCallback sends the code) */}
+        {!inWalletApp && (
+          <>
+            {inAppHelp && inAppNote}
+            <button type="button" className="si-secondary" disabled={busy === 'google'} onClick={() => google()}>
+              {busy === 'google' ? <Spinner /> : <span style={{ width: 18, height: 18, display: 'inline-flex' }}><GoogleIcon /></span>} Continue with Google
+            </button>
+            {inApp && !inAppHelp && <p className="si-hint" style={{ margin: 0 }}>Google doesn't work in this app's browser. Tap the button to see how to open OgaPay in your browser.</p>}
+            <p className="si-switch" style={{ margin: 0 }}>or sign up with your email</p>
+          </>
+        )}
         <fieldset className="si-intent">
           <legend className="si-label">What brings you to OgaPay?</legend>
           <div className="si-intent-opts">
@@ -516,14 +558,25 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   } else if (view === 'twofa') {
     body = (
       <form className="si-form" onSubmit={verifyOtp} noValidate>
-        <p className="si-desc">Enter the 6-digit code from your authenticator app to finish signing in.</p>
+        <p className="si-desc">{useBackup
+          ? 'Enter one of the backup codes you saved when you turned on 2FA. Each code works once.'
+          : 'Enter the 6-digit code from your authenticator app to finish signing in.'}</p>
         <div className="si-field">
-          <label htmlFor="si-otp">Authentication code</label>
-          <input id="si-otp" className="si-input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
-            value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+          <label htmlFor="si-otp">{useBackup ? 'Backup code' : 'Authentication code'}</label>
+          {useBackup ? (
+            <input key="backup" id="si-otp" className="si-input code" autoComplete="one-time-code" autoCapitalize="characters" spellCheck={false} maxLength={12} placeholder="A1B2C3D4E5"
+              value={otp} onChange={e => setOtp(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 12))} />
+          ) : (
+            <input key="app" id="si-otp" className="si-input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
+              value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+          )}
         </div>
         {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'otp' || otp.length < 6}>{busy === 'otp' ? <><Spinner /> Verifying…</> : 'Verify and sign in'}</button>
+        <button type="submit" className="si-primary" disabled={busy === 'otp' || (useBackup ? otp.replace(/-/g, '').length < 10 : otp.length < 6)}>{busy === 'otp' ? <><Spinner /> Verifying…</> : 'Verify and sign in'}</button>
+        <button type="button" className="si-secondary" onClick={() => { setUseBackup((b) => !b); setOtp(''); setError('') }}>
+          <i className={`ti ${useBackup ? 'ti-device-mobile' : 'ti-key'}`} aria-hidden="true" /> {useBackup ? 'Use the code from my app' : 'Lost your phone? Use a backup code'}
+        </button>
+        {useBackup && <p className="si-hint">No backup codes? Email <a className="si-link" href="mailto:support@ogapay.app">support@ogapay.app</a> from your account's email address.</p>}
       </form>
     )
   }

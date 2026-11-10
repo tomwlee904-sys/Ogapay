@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { openSignIn, safeRedirect } from '../lib/signin'
+import { openSignIn, safeRedirect, SIGN_IN_ERROR_KEY } from '../lib/signin'
 import HomePage from './HomePage'
 
 const ERRORS: Record<string, string> = {
@@ -9,6 +9,16 @@ const ERRORS: Record<string, string> = {
   callback_error: "Google sign-in didn't finish. Please try again.",
   auth_init_failed: "Couldn't start Google sign-in. Please try again.",
   google_auth_failed: 'Google sign-in failed. Please try again.',
+  google_failed: "Google sign-in didn't finish. Please try again.",
+}
+
+// The reason a Google sign-in failed (AuthCallback), shown once
+const takeSignInError = () => {
+  try {
+    const v = sessionStorage.getItem(SIGN_IN_ERROR_KEY)
+    sessionStorage.removeItem(SIGN_IN_ERROR_KEY)
+    return v ? v.slice(0, 300) : ''
+  } catch { return '' }
 }
 
 // Set by AuthContext when a session couldn't be renewed; shown for a minute
@@ -40,7 +50,7 @@ export default function LoginPage() {
     openSignIn({
       view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options',
       code: params.get('code') || '',
-      notice: ERRORS[params.get('error') || ''] || takeSessionNotice(),
+      notice: (params.get('error') === 'google_failed' && takeSignInError()) || ERRORS[params.get('error') || ''] || takeSessionNotice(),
       redirect,
       closeTo: '/',
     })

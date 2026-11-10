@@ -118,9 +118,23 @@ function ls(key: string): string | null {
   try { return localStorage.getItem(key) } catch { return null }
 }
 
+/** Shown when the answer isn't from OgaPay's server (a 502/504 page while it restarts) */
+export const BUSY_MESSAGE = 'OgaPay is busy right now. Please try again in a minute.'
+
 async function parseResponse(res: Response) {
   const text = await res.text()
-  const json = text ? JSON.parse(text) : null
+  let json: any = null
+  try {
+    json = text ? JSON.parse(text) : null
+  } catch {
+    // An HTML error page used to show as "Unexpected token '<'" (2026-11-10)
+    if (!res.ok || /^\s*</.test(text)) {
+      const err: Error & { status?: number } = new Error(BUSY_MESSAGE)
+      err.status = res.status
+      throw err
+    }
+    return text
+  }
   if (!res.ok) {
     let message = json?.message || json?.error || 'Request failed'
     // "Validation failed" alone doesn't say what to fix: add the server's reason

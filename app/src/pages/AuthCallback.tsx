@@ -3,13 +3,31 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { API_BASE, persistAuthSession } from "../lib/api";
 import { trackSignUpConversion } from "../lib/ads";
-import { safeRedirect } from "../lib/signin";
+import { openSignIn, safeRedirect, SIGN_IN_ERROR_KEY } from "../lib/signin";
 
 // Page the user was heading to before Google (set by the sign-in dialog)
 function afterLogin() {
   const to = sessionStorage.getItem("ogapay_after_login");
   sessionStorage.removeItem("ogapay_after_login");
   return safeRedirect(to) || "/dashboard";
+}
+
+// Google sign-in didn't finish: say why on /login instead of signing in with
+// the bare Google session (that ended in "Your session ended" again and again,
+// and a closed account never saw why) (2026-11-10)
+async function failSignIn(message: string) {
+  try { sessionStorage.setItem(SIGN_IN_ERROR_KEY, message) } catch { /* private mode */ }
+  try { await supabase.auth.signOut({ scope: "local" }) } catch { /* nothing to clear */ }
+  window.location.href = "/login?error=google_failed";
+}
+
+// The server's reason, or a plain one when the answer isn't from OgaPay (a 502 page)
+async function exchangeError(res: Response) {
+  let msg = "";
+  try { const j = JSON.parse(await res.text()); msg = j?.message || j?.error || ""; } catch { /* not JSON */ }
+  if (res.status === 429) return "Too many sign-ins from your network right now. Please wait a few minutes and try again.";
+  if (msg && res.status < 500) return msg;
+  return "OgaPay is busy right now. Please try again in a minute.";
 }
 
 export default function AuthCallback() {
@@ -32,47 +50,50 @@ export default function AuthCallback() {
           let appTokens = null;
           let appUser = null;
 
-          try {
-            const exchangeRes = await fetch(
-              API_BASE + '/auth/google/exchange',
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                // The referral link's code (saved by /ref/:code), for a brand-new account
-                body: JSON.stringify({ access_token: session.access_token, referralCode: (() => { try { return localStorage.getItem('ogapay_referral') || undefined } catch { return undefined } })() }),
-              }
-            );
-
-            if (exchangeRes.ok) {
-              const exchangeData = await exchangeRes.json();
-              const result = exchangeData.data || exchangeData;
-              appTokens = result.tokens;
-              appUser = result.user;
-              // Google Ads sign-up conversion: only when this Google sign-in made the
-              // account (the server sends isNewUser on that one exchange only)
-              if (result.isNewUser && appTokens) trackSignUpConversion(appUser?.id);
-              console.log('Backend session synced successfully');
-            } else {
-              console.warn('Backend exchange failed, using Supabase session directly');
+          // Tried twice when the network drops (slow mobile data)
+          let exchangeRes: Response | null = null;
+          for (let i = 0; i < 2 && !exchangeRes; i++) {
+            try {
+              exchangeRes = await fetch(
+                API_BASE + '/auth/google/exchange',
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  // The referral link's code (saved by /ref/:code), for a brand-new account
+                  body: JSON.stringify({ access_token: session.access_token, referralCode: (() => { try { return localStorage.getItem('ogapay_referral') || undefined } catch { return undefined } })() }),
+                }
+              );
+            } catch (exchangeErr) {
+              console.warn('Backend exchange error:', (exchangeErr as Error).message);
             }
-          } catch (exchangeErr) {
-            console.warn('Backend exchange error, using Supabase session directly:', (exchangeErr as Error).message);
+          }
+          if (cancelled) return;
+          if (!exchangeRes) return failSignIn("Couldn't reach OgaPay. Check your connection and try Google again.");
+          if (!exchangeRes.ok) return failSignIn(await exchangeError(exchangeRes));
+
+          let result: any = null;
+          try { const exchangeData = JSON.parse(await exchangeRes.text()); result = exchangeData?.data || exchangeData; } catch { /* not JSON */ }
+          if (!result) return failSignIn("OgaPay is busy right now. Please try again in a minute.");
+
+          // The account has 2FA on: ask for the code here, no tokens until then
+          if (result.requiresTwoFactor && result.challengeToken) {
+            try { await supabase.auth.signOut({ scope: "local" }); } catch { /* nothing to clear */ }
+            setStatus("twofa");
+            openSignIn({ view: "twofa", challenge: { token: result.challengeToken, userId: result.userId }, redirect: afterLogin(), closeTo: "/" });
+            return;
           }
 
-          if (appTokens && appTokens.refreshToken && appTokens.accessToken) {
-            // Use backend app tokens
-            persistAuthSession({
-              user: appUser,
-              tokens: { accessToken: appTokens.accessToken, refreshToken: appTokens.refreshToken },
-            });
-          } else {
-            // Fallback: use Supabase session tokens directly
-            localStorage.setItem("ogapay_access_token", session.access_token);
-            if (session.refresh_token) {
-              localStorage.setItem("ogapay_refresh_token", session.refresh_token);
-            }
-            localStorage.setItem("ogapay-authenticated", "true");
-          }
+          appTokens = result.tokens;
+          appUser = result.user;
+          if (!appTokens?.accessToken || !appTokens?.refreshToken) return failSignIn("Google sign-in didn't finish. Please try again.");
+          // Google Ads sign-up conversion: only when this Google sign-in made the
+          // account (the server sends isNewUser on that one exchange only)
+          if (result.isNewUser) trackSignUpConversion(appUser?.id);
+
+          persistAuthSession({
+            user: appUser,
+            tokens: { accessToken: appTokens.accessToken, refreshToken: appTokens.refreshToken },
+          });
 
           // Store user display info
           const userMeta = session.user?.user_metadata || {};
@@ -175,6 +196,7 @@ export default function AuthCallback() {
     processing: { text: "Verifying your account...", sub: "Please wait while we sign you in." },
     redirecting: { text: "Redirecting...", sub: "Taking you to your dashboard." },
     error: { text: "Something went wrong", sub: "Redirecting to login..." },
+    twofa: { text: "One more step", sub: "Enter your two-factor code to finish signing in." },
   };
 
   const msg = statusMessages[status as keyof typeof statusMessages] || statusMessages.processing;
@@ -196,7 +218,7 @@ export default function AuthCallback() {
         maxWidth: 460,
         boxShadow: "0 18px 50px rgba(16,21,37,.1)",
       }}>
-        {status === "processing" || status === "redirecting" ? (
+        {status === "twofa" ? null : status === "processing" || status === "redirecting" ? (
           <div style={{
             width: 48, height: 48,
             border: "3px solid #4D5DFF",

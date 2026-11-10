@@ -1,7 +1,7 @@
 /* Open the sign-in dialog from anywhere (navbar, drawer, guards) without a
    route change. <SignInHost /> in App listens for this event. */
 
-export type SignInView = 'options' | 'wallets' | 'email' | 'signup' | 'forgot' | 'pair'
+export type SignInView = 'options' | 'wallets' | 'email' | 'signup' | 'forgot' | 'pair' | 'twofa'
 
 export interface SignInRequest {
   view?: SignInView
@@ -13,9 +13,14 @@ export interface SignInRequest {
   closeTo?: string
   /** Message to show on open, e.g. why a Google sign-in didn't finish */
   notice?: string
+  /** A 2FA challenge to finish (a Google sign-in to an account with 2FA on) */
+  challenge?: { token: string; userId: string }
 }
 
 export const SIGN_IN_EVENT = 'ogapay:signin'
+
+/** sessionStorage: why a Google sign-in failed (AuthCallback), shown once on /login */
+export const SIGN_IN_ERROR_KEY = 'ogapay_signin_error'
 
 export function openSignIn(req: SignInRequest = {}) {
   window.dispatchEvent(new CustomEvent<SignInRequest>(SIGN_IN_EVENT, { detail: req }))
