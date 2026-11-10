@@ -24,7 +24,8 @@
     "test:welcome": "node scripts/tests/welcome.test.cjs",
     "test:welcome-flow": "node scripts/tests/welcome-flow.test.cjs",
     "test:support-ticket-link": "node scripts/tests/support-ticket-link.test.cjs",
-    "test:my-store-seller": "node scripts/tests/my-store-seller.test.cjs"
+    "test:my-store-seller": "node scripts/tests/my-store-seller.test.cjs",
+    "test:profile-public": "node scripts/tests/profile-public.test.cjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",

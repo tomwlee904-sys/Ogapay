@@ -6,7 +6,7 @@ import '../../styles/profile-public.css'
 import { sized } from '../../lib/img'
 
 type Media = 'image' | 'audio' | 'video' | 'pdf'
-type Item = { id: string; title: string; description: string | null; url: string | null; imageUrl: string | null; mediaType?: Media | null }
+type Item = { id: string; title: string; description: string | null; url: string | null; imageUrl: string | null; mediaType?: Media | null; position?: number }
 const blank = { title: '', description: '', url: '', imageUrl: '', mediaType: '' as Media | '' }
 const MEDIA_LABEL: Record<Media, string> = { image: 'Picture', audio: 'Audio', video: 'Video', pdf: 'PDF' }
 const MEDIA_ICON: Record<Media, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf' }
@@ -48,7 +48,8 @@ export default function ProfilePortfolioCard() {
       const fd = new FormData()
       fd.append('file', f)
       const d = await apiRequest<{ url: string; mediaType: Media }>('/users/me/portfolio/file', { method: 'POST', body: fd })
-      setForm((x) => ({ ...x, url: d.url, mediaType: d.mediaType, title: x.title || f.name.replace(/\.[^.]+$/, '').slice(0, 100) }))
+      // A picture is the item's picture too, so it shows as a picture on your profile
+      setForm((x) => ({ ...x, url: d.url, mediaType: d.mediaType, ...(d.mediaType === 'image' && { imageUrl: d.url }), title: x.title || f.name.replace(/\.[^.]+$/, '').slice(0, 100) }))
     } catch (e: any) { setErr(e?.message || 'Upload failed') }
     setUploading(false)
     if (mediaRef.current) mediaRef.current.value = ''
@@ -67,6 +68,22 @@ export default function ProfilePortfolioCard() {
       load()
     } catch (e: any) { setErr(e?.message || 'Could not save') }
     setSaving(false)
+  }
+
+  // Move an item up or down: every item whose place changed is saved with its new place
+  const [moving, setMoving] = useState(false)
+  const move = async (from: number, to: number) => {
+    if (!items || moving || to < 0 || to >= items.length) return
+    const next = [...items]
+    const [it] = next.splice(from, 1)
+    next.splice(to, 0, it)
+    setItems(next); setMoving(true); setErr('')
+    try {
+      await Promise.all(next.map((x, i) => (x.position === i ? null
+        : apiRequest('/users/me/portfolio/' + x.id, { method: 'PATCH', body: JSON.stringify({ position: i }) }))))
+    } catch { setErr("Couldn't save the new order. Try again.") }
+    setMoving(false)
+    load()
   }
 
   const remove = async (it: Item) => {
@@ -92,11 +109,13 @@ export default function ProfilePortfolioCard() {
           </div>
         ) : (
           <div className="po-pf">
-            {items.map((it) => (
+            {items.map((it, i) => (
               <div className="po-pf-item" key={it.id}>
-                <div className="img">{it.imageUrl ? <img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /> : <i className={`ti ${it.mediaType ? MEDIA_ICON[it.mediaType] : 'ti-photo'}`} />}</div>
+                <div className="img">{it.imageUrl || it.mediaType === 'image' ? <img src={sized(it.imageUrl || it.url, 400)} alt="" loading="lazy" /> : <i className={`ti ${it.mediaType ? MEDIA_ICON[it.mediaType] : 'ti-photo'}`} />}</div>
                 <div className="b"><b>{it.title}</b>{it.description && <p>{it.description}</p>}</div>
                 <div className="acts">
+                  {items.length > 1 && <button className="po-btn" onClick={() => move(i, i - 1)} disabled={moving || i === 0} aria-label={`Move ${it.title} up`}><i className="ti ti-arrow-up" /></button>}
+                  {items.length > 1 && <button className="po-btn" onClick={() => move(i, i + 1)} disabled={moving || i === items.length - 1} aria-label={`Move ${it.title} down`}><i className="ti ti-arrow-down" /></button>}
                   <button className="po-btn" onClick={() => open(it)}>Edit</button>
                   <button className="po-btn" onClick={() => remove(it)} aria-label={`Remove ${it.title}`}><i className="ti ti-trash" /></button>
                   {it.url && <a className="po-btn" href={it.url} target="_blank" rel="noopener noreferrer nofollow" style={{ height: 30, padding: '0 10px', fontSize: 12 }}>Open</a>}

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import ItemCover from '../components/ItemCover'
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import Layout from "../components/Layout"
@@ -11,7 +11,8 @@ import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
 import { PremiumMark, VerifiedBusinessMark } from "../components/Perks";
-import { sized } from '../lib/img'
+import { sized, isOurMedia } from '../lib/img'
+import { formatMoney } from '../lib/money'
 import CreatorAudiences from "../components/profile/CreatorAudiences"
 import InfoTip from '../components/InfoTip'
 import { XProfileSummary } from '../components/profile/XProfile'
@@ -27,13 +28,39 @@ type Review = {
   text: string | null
   date: string
   subject: { id?: string; title: string }
-  reviewer: { username: string; name: string; avatarUrl: string | null } | null
+  // username is null for a closed or private account (no link)
+  reviewer: { username: string | null; name: string; avatarUrl: string | null } | null
   // Rated by our team from the moderation queue, not by the job's poster
   byTeam?: boolean
 }
 type ReviewData = {
   average: number; total: number; distribution: Record<string, number>; reviews: Review[]
   jobs?: { average: number; total: number }; products?: { average: number; total: number }
+  page?: number; totalPages?: number
+}
+
+// The parts of the page that load after the profile, each on its own, so a
+// slow or failed one shows "Loading" or "Try again" instead of looking empty
+type Section = "reviews" | "products" | "portfolio" | "blogs" | "communities"
+type SectionStatus = "loading" | "ok" | "error"
+const ALL_LOADING: Record<Section, SectionStatus> = { reviews: "loading", products: "loading", portfolio: "loading", blogs: "loading", communities: "loading" }
+const REVIEWS_PER_PAGE = 10
+
+function SectionState({ status, noun, onRetry }: { status: SectionStatus; noun: string; onRetry: () => void }) {
+  if (status === "loading") {
+    return (
+      <div className="up-empty" role="status" aria-busy="true">
+        <div className="up-skel" style={{ height: 12, width: 140, margin: "0 auto 10px" }} />
+        Loading {noun}…
+      </div>
+    )
+  }
+  return (
+    <div className="up-empty" role="alert">
+      <i className="ti ti-cloud-off" />Couldn't load {noun}.
+      <div style={{ marginTop: 10 }}><button type="button" className="up-btn" onClick={onRetry}>Try again</button></div>
+    </div>
+  )
 }
 
 const LEVEL_NAMES: Record<string, string> = {
@@ -75,48 +102,72 @@ export default function UserProfile() {
   // /user/<name>?tab=store opens that tab (Share my store, 2026-11-10)
   const [params] = useSearchParams()
   const askedTab = (["store", "portfolio", "reviews", "communities"] as Tab[]).find((t) => t === params.get("tab")) || null
+  const [sec, setSec] = useState<Record<Section, SectionStatus>>(ALL_LOADING)
+  const [reviewPage, setReviewPage] = useState(1)
   const [tab, setTab] = useState<Tab>(askedTab || "store")
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tipOpen, setTipOpen] = useState(false)
   const [shared, setShared] = useState(false)
+
+  // One section's data. Each call is numbered, so an older answer (another
+  // profile, or a review page clicked past) never replaces a newer one.
+  const reqs = useRef<Record<string, number>>({})
+  const pendingPage = useRef(1)
+  const loadSection = (s: Section, page = 1) => {
+    const n = (reqs.current[s] = (reqs.current[s] || 0) + 1)
+    if (s === "reviews") pendingPage.current = page
+    const u = encodeURIComponent(username)
+    setSec((x) => ({ ...x, [s]: "loading" }))
+    const path = s === "reviews" ? `/users/public/${u}/reviews?page=${page}&limit=${REVIEWS_PER_PAGE}` : `/users/public/${u}/${s}`
+    apiRequest<any>(path, { auth: false })
+      .then((d) => {
+        if (reqs.current[s] !== n) return
+        if (s === "reviews") { setReviews(d); setReviewPage(page) }
+        else {
+          const list = Array.isArray(d) ? d : []
+          if (s === "products") setProducts(list)
+          else if (s === "portfolio") setPortfolio(list)
+          else if (s === "blogs") setBlogs(list)
+          else setCommunities(list)
+        }
+        setSec((x) => ({ ...x, [s]: "ok" }))
+      })
+      .catch(() => { if (reqs.current[s] === n) setSec((x) => ({ ...x, [s]: "error" })) })
+  }
 
   useEffect(() => {
     let live = true
     setState("loading")
     setProfile(null)
     setReviews(null); setProducts([]); setPortfolio([]); setBlogs([]); setCommunities([])
-    const get = <T,>(path: string, fallback: T) => apiRequest<T>(path, { auth: false }).catch(() => fallback)
-    const u = encodeURIComponent(username)
+    setSec(ALL_LOADING); setReviewPage(1)
+    // Answers for the profile opened before this one are ignored
+    for (const k of Object.keys(ALL_LOADING)) reqs.current[k] = (reqs.current[k] || 0) + 1
 
-    apiRequest<any>(`/users/${u}`, { auth: false })
+    apiRequest<any>(`/users/${encodeURIComponent(username)}`, { auth: false })
       .then((p) => {
         if (!live) return
         if (p?.isPublic === false) { setProfile(p); setState("private"); return }
         setProfile(p)
         setState("ok")
-        Promise.all([
-          get<ReviewData | null>(`/users/public/${u}/reviews?limit=50`, null),
-          get<any[]>(`/users/public/${u}/products`, []),
-          get<any[]>(`/users/public/${u}/portfolio`, []),
-          get<any[]>(`/users/public/${u}/blogs`, []),
-          get<any[]>(`/users/public/${u}/communities`, []),
-        ]).then(([r, pr, pf, bl, cm]) => {
-          if (!live) return
-          setReviews(r)
-          setProducts(Array.isArray(pr) ? pr : [])
-          setPortfolio(Array.isArray(pf) ? pf : [])
-          setBlogs(Array.isArray(bl) ? bl : [])
-          setCommunities(Array.isArray(cm) ? cm : [])
-          // Open on the first tab that has something to show
-          if (!askedTab && !(Array.isArray(pr) && pr.length)) {
-            if (Array.isArray(pf) && pf.length) setTab("portfolio")
-            else if (r?.total) setTab("reviews")
-          }
-        })
+        // Open on the first tab with something in it, from the profile's own
+        // counts, so the tab doesn't jump once the lists arrive (unless the
+        // link asked for a tab)
+        const c = p?._count || {}
+        if (!askedTab) setTab(c.storeItems > 0 ? "store" : c.portfolioItems > 0 ? "portfolio" : p?.workerProfile?.totalRatings > 0 ? "reviews" : "store")
+        for (const k of Object.keys(ALL_LOADING) as Section[]) loadSection(k)
       })
       .catch((e) => { if (live) setState(/not found/i.test(e?.message || "") ? "missing" : "error") })
     return () => { live = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username])
+
+  // Reviews page by page (10 at a time), back to the top of the list
+  const reviewsRef = useRef<HTMLElement>(null)
+  const goReviews = (page: number) => {
+    loadSection("reviews", page)
+    reviewsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   const first = profile?.firstName || ""
   const last = profile?.lastName || ""
@@ -253,8 +304,12 @@ export default function UserProfile() {
     { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
     { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]
-  if (profile?.preferences?.showEarnings && wp.totalEarned != null) {
-    stats.push({ icon: "ti-coin", label: "Earned", value: show(Number(wp.totalEarned)) })
+  // One total per currency they were paid in (naira first), never added together
+  const earned: { currency: string; amount: number }[] = Array.isArray(wp.earned) ? wp.earned.filter((e: any) => Number(e?.amount) > 0) : []
+  if (profile?.preferences?.showEarnings && earned.length) {
+    stats.push({ icon: "ti-coin", label: "Earned", value: formatMoney(earned[0].amount, earned[0].currency),
+      sub: earned.slice(1).map((e) => `+ ${formatMoney(e.amount, e.currency)}`).join(" ") || undefined,
+      tip: <p>Money this person was paid for jobs, shown in each currency they were paid in.</p> })
   }
 
   const skills: string[] = Array.isArray(wp.skills) ? wp.skills : []
@@ -263,10 +318,11 @@ export default function UserProfile() {
   const x: XPublic | null = profile?.x?.handle ? profile.x : null
 
   const tabs: { key: Tab; label: string; icon: string; count: number }[] = [
-    { key: "store", label: "Store", icon: "ti-building-store", count: products.length },
-    { key: "portfolio", label: "Portfolio", icon: "ti-photo", count: portfolio.length },
+    // The profile's own counts until each list has loaded
+    { key: "store", label: "Store", icon: "ti-building-store", count: sec.products === "ok" ? products.length : Number(counts.storeItems || 0) },
+    { key: "portfolio", label: "Portfolio", icon: "ti-photo", count: sec.portfolio === "ok" ? portfolio.length : Number(counts.portfolioItems || 0) },
     { key: "reviews", label: "Reviews", icon: "ti-message-star", count: reviewTotal },
-    { key: "communities", label: "Communities", icon: "ti-users", count: communities.length },
+    { key: "communities", label: "Communities", icon: "ti-users", count: sec.communities === "ok" ? communities.length : Number(counts.communityMemberships || 0) },
   ]
 
   return (
@@ -280,7 +336,7 @@ export default function UserProfile() {
         {/* ── Header ── */}
         <section className="up-card up-head">
           <div className="up-id">
-            {profile.avatarUrl
+            {isOurMedia(profile.avatarUrl, true)
               ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={sized(profile.avatarUrl, 128, true)} alt="" />
               : <div className={`up-avatar${profile.frame ? ' oga-frame' : ''}`}>{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
@@ -387,7 +443,9 @@ export default function UserProfile() {
         {tab === "store" && (
           <section>
             <div className="up-sec-h"><h2>Products & services</h2><p>What {first || handle} offers in the OgaPay store.</p></div>
-            {products.length === 0 ? (
+            {sec.products !== "ok" ? (
+              <SectionState status={sec.products} noun="products" onRetry={() => loadSection("products")} />
+            ) : products.length === 0 ? (
               <div className="up-empty"><i className="ti ti-building-store" />No products yet.</div>
             ) : (
               <div className="up-grid">
@@ -418,38 +476,51 @@ export default function UserProfile() {
         {tab === "portfolio" && (
           <section>
             <div className="up-sec-h"><h2>Portfolio</h2><p>A closer look at {first || handle}'s work.</p></div>
-            {portfolio.length === 0 ? (
+            {sec.portfolio !== "ok" ? (
+              <SectionState status={sec.portfolio} noun="portfolio" onRetry={() => loadSection("portfolio")} />
+            ) : portfolio.length === 0 ? (
               <div className="up-empty"><i className="ti ti-photo" />No portfolio items yet.</div>
             ) : (
               <div className="up-grid">
-                {portfolio.map((it) => (
-                  <div className="up-card up-item" key={it.id}>
-                    {it.imageUrl && <div className="img"><img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /></div>}
-                    {/* Uploaded audio and video play here; a PDF opens in a new tab */}
-                    {it.url && it.mediaType === "video" && <video src={it.url} controls preload="metadata" playsInline style={{ width: "100%", display: "block", background: "#000", maxHeight: 280 }} />}
-                    <div className="body">
-                      <h3>{it.title}</h3>
-                      {it.description && <p>{it.description}</p>}
-                      {it.url && it.mediaType === "audio" && <audio src={it.url} controls preload="none" style={{ width: "100%", marginTop: 8 }} />}
-                      {it.url && it.mediaType !== "audio" && it.mediaType !== "video" && (
-                        <div className="foot">
-                          {it.mediaType === "pdf"
-                            ? <a href={it.url} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-file-type-pdf" /> Open PDF</a>
-                            : <a href={it.url} target="_blank" rel="noopener noreferrer nofollow">Open link <i className="ti ti-external-link" /></a>}
-                        </div>
-                      )}
+                {portfolio.map((it) => {
+                  // A picture added with "Upload file" is the item's url (mediaType image).
+                  // Only files in our storage are shown or played; anything else is a link.
+                  const pic: string | null = it.imageUrl || (it.mediaType === "image" ? it.url : null)
+                  const showPic = isOurMedia(pic)
+                  const plays = !!it.url && isOurMedia(it.url) && (it.mediaType === "video" || it.mediaType === "audio")
+                  const picIsUrl = showPic && it.url === pic
+                  const link: string | null = it.url && !plays && !picIsUrl ? it.url : (!showPic && !it.url ? pic : null)
+                  return (
+                    <div className="up-card up-item" key={it.id}>
+                      {showPic && <div className="img"><img src={sized(pic, 400)} alt="" loading="lazy" /></div>}
+                      {/* Uploaded audio and video play here; a PDF opens in a new tab */}
+                      {plays && it.mediaType === "video" && <video src={it.url} controls preload="metadata" playsInline style={{ width: "100%", display: "block", background: "#000", maxHeight: 280 }} />}
+                      <div className="body">
+                        <h3>{it.title}</h3>
+                        {it.description && <p>{it.description}</p>}
+                        {plays && it.mediaType === "audio" && <audio src={it.url} controls preload="none" style={{ width: "100%", marginTop: 8 }} />}
+                        {link && (
+                          <div className="foot">
+                            {it.mediaType === "pdf"
+                              ? <a href={link} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-file-type-pdf" /> Open PDF</a>
+                              : <a href={link} target="_blank" rel="noopener noreferrer nofollow">Open link <i className="ti ti-external-link" /></a>}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </section>
         )}
 
         {tab === "reviews" && (
-          <section>
+          <section ref={reviewsRef} style={{ scrollMarginTop: 80 }}>
             <div className="up-sec-h"><h2>Reviews</h2><p>Ratings from job creators and store buyers.</p></div>
-            {!reviews || reviews.total === 0 ? (
+            {!reviews && sec.reviews !== "ok" ? (
+              <SectionState status={sec.reviews} noun="reviews" onRetry={() => loadSection("reviews", reviewPage)} />
+            ) : !reviews || reviews.total === 0 ? (
               <div className="up-empty"><i className="ti ti-message-star" />No reviews yet.</div>
             ) : (
               <>
@@ -477,13 +548,17 @@ export default function UserProfile() {
                     })}
                   </div>
                 </div>
-                {reviews.reviews.map((r) => (
+                {/* Another page loading (or failed): the totals stay, the list waits */}
+                {sec.reviews !== "ok" ? (
+                  <SectionState status={sec.reviews} noun="reviews" onRetry={() => loadSection("reviews", pendingPage.current)} />
+                ) : reviews.reviews.map((r) => (
                   <article className="up-card up-rev" key={r.id}>
                     <div className="who">
                       {r.byTeam ? <span className="ph" aria-hidden="true"><i className="ti ti-shield-check" /></span>
-                        : r.reviewer?.avatarUrl ? <img src={sized(r.reviewer.avatarUrl, 32, true)} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
+                        : isOurMedia(r.reviewer?.avatarUrl, true) ? <img src={sized(r.reviewer?.avatarUrl, 32, true)} alt="" /> : <span className="ph">{((r.reviewer?.name || "?").replace(/^@/, "")[0] || "?").toUpperCase()}</span>}
                       <div style={{ minWidth: 0 }}>
-                        {r.byTeam ? <b>OgaPay team</b> : r.reviewer ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>OgaPay user</b>}
+                        {/* A closed or private reviewer has no page to link to */}
+                        {r.byTeam ? <b>OgaPay team</b> : r.reviewer?.username ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>{r.reviewer?.name || "OgaPay user"}</b>}
                         <small>{fmtDate(r.date)}</small>
                       </div>
                       <span style={{ marginLeft: "auto" }}><Stars value={r.rating} /></span>
@@ -492,9 +567,16 @@ export default function UserProfile() {
                       {r.kind === "product" ? "Bought " : "Job: "}
                       {r.kind === "product" && r.subject.id ? <Link to={`/store/${r.subject.id}`}>{r.subject.title}</Link> : r.subject.title}
                     </div>
-                    {r.text && <p>{r.text}</p>}
+                    {r.text ? <p>{r.text}</p> : <p className="up-rev-none">No written review provided.</p>}
                   </article>
                 ))}
+                {(reviews.totalPages || 1) > 1 && (
+                  <nav className="up-pager" aria-label="Review pages">
+                    <button type="button" className="up-btn" disabled={reviewPage <= 1 || sec.reviews === "loading"} onClick={() => goReviews(reviewPage - 1)}><i className="ti ti-chevron-left" /> Previous</button>
+                    <span>Page {reviewPage} of {reviews.totalPages}</span>
+                    <button type="button" className="up-btn" disabled={reviewPage >= (reviews.totalPages || 1) || sec.reviews === "loading"} onClick={() => goReviews(reviewPage + 1)}>Next <i className="ti ti-chevron-right" /></button>
+                  </nav>
+                )}
               </>
             )}
           </section>
@@ -503,7 +585,9 @@ export default function UserProfile() {
         {tab === "communities" && (
           <section>
             <div className="up-sec-h"><h2>Communities</h2><p>Where {first || handle} hangs out.</p></div>
-            {communities.length === 0 ? (
+            {sec.communities !== "ok" ? (
+              <SectionState status={sec.communities} noun="communities" onRetry={() => loadSection("communities")} />
+            ) : communities.length === 0 ? (
               <div className="up-empty"><i className="ti ti-users" />Not in any community yet.</div>
             ) : (
               <div className="up-list">
@@ -528,7 +612,9 @@ export default function UserProfile() {
         <section className="up-writing">
           <div className="up-eyebrow">Published writing</div>
           <div className="up-sec-h" style={{ marginTop: 4 }}><h2>From the creator</h2></div>
-          {blogs.length === 0 ? (
+          {sec.blogs !== "ok" ? (
+            <SectionState status={sec.blogs} noun="blogs" onRetry={() => loadSection("blogs")} />
+          ) : blogs.length === 0 ? (
             <div className="up-empty"><i className="ti ti-writing" />No published blogs yet.</div>
           ) : (
             blogs.map((b) => (

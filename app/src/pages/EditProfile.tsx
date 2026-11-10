@@ -17,7 +17,7 @@ const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/
 
 type Form = {
   firstName: string; lastName: string; username: string; bio: string; about: string; skills: string
-  categories: string[]; isAvailable: boolean; isPublic: boolean; showEarnings: boolean; showRank: boolean
+  categories: string[]; isAvailable: boolean; isPublic: boolean; showFullName: boolean; showEarnings: boolean; showRank: boolean
   twitter: string; telegram: string; discord: string; website: string
 }
 
@@ -55,6 +55,7 @@ export default function EditProfile() {
     categories: u.workerProfile?.categories || [],
     isAvailable: u.workerProfile?.isAvailable !== false,
     isPublic: u.isPublic !== false,
+    showFullName: u.showFullName !== false,
     showEarnings: u.preferences?.showEarnings === true,
     showRank: u.preferences?.showRank === true,
     twitter: u.twitter || '', telegram: u.telegram || '', discord: u.discord || '', website: u.website || '',
@@ -92,6 +93,7 @@ export default function EditProfile() {
     if (form.categories.join('|') !== base.categories.join('|')) body.categories = form.categories
     if (form.isAvailable !== base.isAvailable) body.isAvailable = form.isAvailable
     if (form.isPublic !== base.isPublic) body.isPublic = form.isPublic
+    if (form.showFullName !== base.showFullName) body.showFullName = form.showFullName
     // Only the switches that changed: sending every preference back failed the
     // whole save for anyone who never chose job alerts (2026-11-10)
     const prefs: Record<string, boolean> = {}
@@ -249,6 +251,8 @@ export default function EditProfile() {
             <section className="up-card hr-sec">
               <div className="hr-sec-h"><h2>Privacy</h2></div>
               <div className="ep-toggle"><div><b>Public profile</b><small>Off: only your username is shown to others.</small></div><Switch on={form.isPublic} onChange={(v) => set('isPublic', v)} label="Public profile" /></div>
+              {/* Off: others see the first name and last initial, e.g. "Ada O." (2026-11-10) */}
+              <div className="ep-toggle"><div><b>Show my full name</b><small>Off: others see your first name and the first letter of your last name{form.firstName ? `, e.g. ${form.firstName.trim()}${form.lastName.trim() ? ` ${form.lastName.trim()[0].toUpperCase()}.` : ''}` : ''}</small></div><Switch on={form.showFullName} onChange={(v) => set('showFullName', v)} label="Show my full name" /></div>
               <div className="ep-toggle"><div><b>Show rank</b><small>Your worker rank and OgaScore on your profile.</small></div><Switch on={form.showRank} onChange={(v) => set('showRank', v)} label="Show rank" /></div>
               <div className="ep-toggle"><div><b>Show earnings</b><small>Your total earned on your profile.</small></div><Switch on={form.showEarnings} onChange={(v) => set('showEarnings', v)} label="Show earnings" /></div>
             </section>

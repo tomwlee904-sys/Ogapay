@@ -10,6 +10,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const clip = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s)
 
 export function buildHead(profile, username) {
+  // The API already applies "Show my full name" (off: last initial only)
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.username || username
   const handle = profile.username || username
   const wp = profile.workerProfile || {}

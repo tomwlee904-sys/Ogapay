@@ -102,6 +102,12 @@ a.up-item:hover { border-color: var(--text3); }
 .up-rev .subj { font-size: 12px; color: var(--text3); }
 .up-rev .subj a { color: var(--text2); }
 .up-rev p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text2); white-space: pre-line; overflow-wrap: anywhere; }
+.up-rev p.up-rev-none { color: var(--text3); font-style: italic; }
+/* Reviews: 10 a page, Previous / Next */
+.up-pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.up-pager span { font-size: 13px; color: var(--text2); }
+.up-pager .up-btn { min-width: 110px; }
+@media (max-width: 767px) { .up-pager .up-btn { min-width: 0; padding: 0 12px; } }
 
 .up-list { display: grid; gap: 8px; }
 .up-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; }
