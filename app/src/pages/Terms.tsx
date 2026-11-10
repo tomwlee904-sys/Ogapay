@@ -95,6 +95,7 @@ export default function Terms() {
                 <li>Level 2 (a photo of your NIN slip or card, or another ID, with its number, checked by our team): up to ₦10,000 a day</li>
                 <li>Level 3 (given by our team on request through support): up to ₦50,000 a day</li>
               </ul>
+              <p>Sending money to other members, and the ₦1,000 first job bonus, need your NIN or ID (Level 1 by NIN, or Level 2). Level 1 by bank account alone lets you withdraw, but not send money or get the bonus.</p>
               <p>A day means the 24 hours before each withdrawal. Bank and crypto withdrawals count together, crypto at the naira rate on the day; ones that fail or are rejected don't count. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
             </section>
 
