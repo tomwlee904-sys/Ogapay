@@ -5,8 +5,8 @@ import { shrinkImage } from '../../lib/shrinkImage'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
-import { levelsFor, UNLOCKS } from '../../lib/levels'
-import { naira } from '../../lib/wallet'
+import { levelsFor, UNLOCKS, SEND_RULE, BANK_ONLY_NEXT } from '../../lib/levels'
+import { naira, kycOf } from '../../lib/wallet'
 import AddBankForm from '../../components/wallet/AddBankForm'
 import '../../styles/wallet.css'
 
@@ -108,6 +108,16 @@ export async function sendManualLevel2(
   }
 }
 
+type Tone = 'ok' | 'wait' | 'err'
+// VeryAI's tone: only 'failed' is an error; older servers send none (shown calmly)
+const veryTone = (t?: string): Tone => (t === 'failed' ? 'err' : 'wait')
+// A message in its tone: green when done, calm grey while waiting, red only for a real problem
+function ToneMsg({ m }: { m: { tone: Tone; text: string } | null }) {
+  if (!m) return null
+  if (m.tone === 'wait') return <p className="st2-muted" role="status" style={{ margin: '6px 0 0', lineHeight: 1.55 }}><i className="ti ti-hourglass" aria-hidden="true" /> {m.text}</p>
+  return <p className={m.tone === 'ok' ? 'st2-ok' : 'st2-err'} role={m.tone === 'err' ? 'alert' : 'status'}>{m.text}</p>
+}
+
 export default function Verification({ me, reload, providers }: SectionProps & { providers: Record<string, boolean> | null }) {
   const { toast } = useToast()
   const { refreshUser } = useAuth()
@@ -129,7 +139,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const [dob, setDob] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
-  const [ninMsg, setNinMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // tone: ok (verified), wait (sent to our team: calm, not an error), err (a real problem)
+  const [ninMsg, setNinMsg] = useState<{ tone: Tone; text: string } | null>(null)
   const [humanBusy, setHumanBusy] = useState(false)
   const [diditBusy, setDiditBusy] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -175,21 +186,21 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   const submit = async () => {
     if (!want || busy) return
-    if (num.length !== 11) { setNinMsg({ ok: false, text: `Enter all 11 digits of your ${want}.` }); return }
-    if (!dob) { setNinMsg({ ok: false, text: `Enter your date of birth as it is on your ${want} record.` }); return }
+    if (num.length !== 11) { setNinMsg({ tone: 'err', text: `Enter all 11 digits of your ${want}.` }); return }
+    if (!dob) { setNinMsg({ tone: 'err', text: `Enter your date of birth as it is on your ${want} record.` }); return }
     setBusy(true); setNinMsg(null)
     try {
       const r = await apiRequest<any>('/kyc/submit', {
         method: 'POST',
         body: JSON.stringify({ idType: want, idNumber: num, dateOfBirth: new Date(`${dob}T00:00:00Z`).toISOString() }),
       })
-      setNinMsg({ ok: r?.status === 'APPROVED', text: r?.message || 'Submitted' })
+      setNinMsg({ tone: r?.status === 'APPROVED' ? 'ok' : r?.status === 'SUBMITTED' ? 'wait' : 'err', text: r?.message || 'Submitted' })
       if (r?.status === 'APPROVED') toast(r.message, 'success')
       setNum(''); setDob('')
       await reload()
       refreshUser()
     } catch (e: any) {
-      setNinMsg({ ok: false, text: e?.message || 'Verification failed' })
+      setNinMsg({ tone: 'err', text: e?.message || 'Verification failed' })
     } finally { setBusy(false) }
   }
 
@@ -257,7 +268,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   // The result can also have arrived in another browser or tab (VeryAI often
   // opens one on Android), so this reads the server, never this page's copy.
   // Servers before /very/check only have /very/status.
-  const [humanMsg, setHumanMsg] = useState('')
+  // tone from the server (waiting / info / failed): only a real failure is red
+  const [humanMsg, setHumanMsgState] = useState<{ tone: Tone; text: string } | null>(null)
+  const setHumanMsg = useCallback((text: string, tone: Tone = 'wait') => setHumanMsgState(text ? { tone, text } : null), [])
   const [humanChecking, setHumanChecking] = useState(false)
   const lastHumanCheck = useRef(0)
   const checkHuman = useCallback(async (quiet = false) => {
@@ -279,17 +292,18 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         toast("You're verified as a human", 'success')
         await reload(); refreshUser()
       } else if (!quiet) {
-        setHumanMsg(r?.message || r?.check?.message || "You're not verified yet. If the VeryAI app says the scan is complete, go back to the browser page that opened VeryAI, or start a new check.")
+        setHumanMsg(r?.message || r?.check?.message || "You're not verified yet. If the VeryAI app says the scan is complete, go back to the browser page that opened VeryAI, or start a new check.", veryTone(r?.message ? r?.tone : r?.check?.tone))
       } else if (claim && r?.message) {
-        setHumanMsg(r.message)
+        setHumanMsg(r.message, veryTone(r.tone))
       } else if (r?.check?.message) {
-        setHumanMsg(r.check.message)
+        // The quiet look on opening: an old failed check is news, not an error just now
+        setHumanMsg(r.check.message, 'wait')
       }
     } catch (e: any) {
-      if (!quiet) setHumanMsg(e?.message || "Couldn't check right now. Please try again.")
+      if (!quiet) setHumanMsg(e?.message || "Couldn't check right now. Please try again.", 'err')
     }
     setHumanChecking(false)
-  }, [reload, refreshUser, toast])
+  }, [reload, refreshUser, toast, setHumanMsg])
 
   // Look once on opening, and again when the person comes back to this tab
   // (from the VeryAI app, say), so a finished scan shows without a reload
@@ -318,6 +332,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     await reload(); refreshUser()
   }
   const myName = `${me.firstName || ''} ${me.lastName || ''}`.trim()
+  // Level 1 from the bank check only: withdrawals yes, the bonus and sending money no
+  const bankOnly = kycOf(me).verified && !kycOf(me).idVerified
 
   const bankPanel = bankKyc && tier === 0 && !diditOpen && (
     <div className="st2-panel st2-form">
@@ -333,6 +349,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       {bankMsg ? <p className="st2-ok">{bankMsg}</p> : (
         <AddBankForm note="Use your own personal account, not a business account or someone else's." action={{ label: 'Verify me', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
       )}
+      {/* What the bank check turns on, and what it doesn't (ver-1) */}
+      <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>This turns on withdrawals. It doesn't count for the ₦1,000 first job bonus or for sending money: those need your NIN or ID.</p>
       {(ninInstant || !didit) && (
         <p className="st2-muted" style={{ margin: '4px 0 0' }}>
           No bank account in your own name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>
@@ -365,7 +383,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       <label className="st2-f"><span>Date of birth (as on your {want} record)</span>
         <input type="date" value={dob} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setDob(e.target.value)} required />
       </label>
-      {ninMsg && <p className={ninMsg.ok ? 'st2-ok' : 'st2-err'}>{ninMsg.text}</p>}
+      <ToneMsg m={ninMsg} />
       <div className="st2-actions"><button className={`up-btn${useDidit ? '' : ' primary'}`} disabled={busy}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
     </form>
   )
@@ -448,7 +466,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             )
           })}
         </div>
-        <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>Any level lets you {UNLOCKS}. Without one you can still earn and add money by card or USSD.</p>
+        <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>Any level lets you {UNLOCKS}. {SEND_RULE} Without a level you can still earn and add money by card or USSD.</p>
+        {bankOnly && tier === 1 && <div className="st2-banner"><i className="ti ti-info-circle" aria-hidden="true" /> {BANK_ONLY_NEXT}</div>}
 
         {status === 'REJECTED' && tier === 0 && (
           <div className="st2-banner"><i className="ti ti-alert-circle" /> Your last attempt wasn't approved{me.kyc?.rejectionReason ? `: ${me.kyc.rejectionReason}` : ''}. You can try again below.</div>
@@ -463,7 +482,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           <>
             <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.{bankPanel ? ' Or skip the wait with your bank account below.' : ''}</div>
             {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
-            {ninMsg && <p className={ninMsg.ok ? 'st2-ok' : 'st2-err'}>{ninMsg.text}</p>}
+            {ninMsg?.tone !== 'wait' && <ToneMsg m={ninMsg} />}
             {me.kyc?.provider !== 'didit' && bankPanel}
           </>
         ) : bankPanel ? (
@@ -510,7 +529,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             </ol>
           </>
         )}
-        {humanPending && humanMsg && <p className="st2-err">{humanMsg}</p>}
+        {humanPending && <ToneMsg m={humanMsg} />}
       </Card>
     </>
   )

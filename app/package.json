@@ -27,7 +27,8 @@
     "test:my-store-seller": "node scripts/tests/my-store-seller.test.cjs",
     "test:profile-public": "node scripts/tests/profile-public.test.cjs",
     "test:profile-page": "node scripts/tests/profile-page.test.cjs",
-    "test:profile-meta": "node scripts/tests/profile-meta.test.mjs"
+    "test:profile-meta": "node scripts/tests/profile-meta.test.mjs",
+    "test:verification-text": "node scripts/tests/verification-text.test.cjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",

@@ -204,8 +204,8 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
               <p>{name} will be able to withdraw and send money. With an approved NIN or ID, their first paid job earns the ₦1,000 first job bonus (if they haven't had it); the inviter's referral bonus also waits for that first paid job.</p>
               <label htmlFor={`lvl-${r.id}`}>Level</label>
               <select id={`lvl-${r.id}`} className="ui-input" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
-                <option value={1}>Level 1: NIN (₦10,000 per withdrawal)</option>
-                <option value={2}>Level 2: Didit ID + selfie check (₦20,000 per withdrawal)</option>
+                <option value={1}>Level 1: NIN (₦5,000 a day)</option>
+                <option value={2}>Level 2: ID photo (₦10,000 a day)</option>
                 <option value={3}>Level 3: approved by our team (₦50,000 a day)</option>
               </select>
             </>
