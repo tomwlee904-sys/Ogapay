@@ -38,3 +38,23 @@ if (typeof document !== 'undefined') {
     img.src = u.toString().replace(RENDER, OBJECT).replace(/\?$/, '')
   }, true)
 }
+
+// Pictures, video and audio on public pages (2026-11-10): only files in our own
+// storage are shown or played. A picture on someone's own server would let them
+// log the address and device of everyone who opens the page; those stay plain
+// links. Avatars may also come from Google or X sign-in (`signIn`).
+const OUR_HOST = (() => {
+  try { return import.meta.env.VITE_SUPABASE_URL ? new URL(import.meta.env.VITE_SUPABASE_URL).host.toLowerCase() : '' } catch { return '' }
+})()
+const SIGN_IN_HOSTS = /^(lh[0-9]+\.googleusercontent\.com|pbs\.twimg\.com)$/i
+
+export function isOurMedia(url: string | null | undefined, signIn = false): boolean {
+  if (!url) return false
+  let u: URL
+  try { u = new URL(url) } catch { return false }
+  if (u.protocol !== 'https:') return false
+  const host = u.host.toLowerCase()
+  if (signIn && SIGN_IN_HOSTS.test(host)) return true
+  if (!/^\/storage\/v1\/(object|render\/image)\/public\//.test(u.pathname)) return false
+  return OUR_HOST ? host === OUR_HOST : host.endsWith('.supabase.co')
+}
