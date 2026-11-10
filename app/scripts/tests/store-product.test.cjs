@@ -259,7 +259,7 @@ const RELATED = {
     { username: 'bola', name: 'Bola K', avatarUrl: null, bio: '', verified: null, productCount: 1, salesCount: 0, reviewsCount: 0, rating: 0, categories: ['Music'] },
   ];
   const sellerCalls = (page) => page.evaluate(() => window.__calls.filter((c) => c.path === '/store/sellers').map((c) => c.query));
-  p = await open('?case=creators', null, { __sellers: SELLERS, __categories: { categories: ['Design', 'Music'] } });
+  p = await open('?case=creators', null, { __sellers: SELLERS, __categories: [{ name: 'Design', subcategories: [] }, { name: 'Music', subcategories: [] }] });
   await p.waitForSelector('.wk2-card');
   v = await p.evaluate(() => [...document.querySelectorAll('.wk2-card')].map((c) => ({ text: c.innerText, verified: c.querySelector('[role="img"]')?.getAttribute('aria-label') || null, store: c.querySelector('.up-btn.primary')?.getAttribute('href') })));
   ok('F5 lists the sellers with products, sales and reviews', v.length === 2 && /7 products/.test(v[0].text) && /3 sales/.test(v[0].text) && /4\.5/.test(v[0].text) && /Design/.test(v[0].text), v);
