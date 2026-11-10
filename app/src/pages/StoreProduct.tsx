@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
@@ -13,6 +13,8 @@ import SellerCard from '../components/SellerCard'
 import Money from '../components/Money'
 import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
 import { sized } from '../lib/img'
+import { ModerateBar, ReportProductSheet } from '../components/StoreModeration'
+import { useToast } from '../context/ToastContext'
 
 interface ReviewItem {
   id: string
@@ -54,6 +56,11 @@ interface StoreProductData {
   } | null
   canReview?: boolean // the signed-in member bought it and the order is finished (2026-11-08)
   myReview?: { rating: number; comment: string | null } | null // their review, to change it
+  // Seller and staff only (2026-11-10): why buyers can't see it, and OgaPay's reason
+  hiddenBecause?: 'removed' | 'private' | 'review' | 'draft' | null
+  delistReason?: string | null
+  // Admins and store moderators: open reports and the removal
+  moderation?: { delistedAt: string | null; delistReason: string | null; openReports: number } | null
 }
 
 // "Last active 6h ago"
@@ -89,6 +96,14 @@ function formatAlt(price: number, currency: string, solRate: number): string {
   return `\u2248 ${formatPrice(price / solRate, 'SOL')}`
 }
 
+// What staff are told when buyers can't see a product (2026-11-10)
+const HIDDEN_STAFF: Record<string, string> = {
+  removed: "Removed by OgaPay. Buyers can't see it.",
+  private: "The seller's profile is private, so buyers can't see it.",
+  review: "The seller's account is being checked, so buyers can't see it.",
+  draft: "The seller hid this. Buyers can't see it.",
+}
+
 // The product page's styles, shared by the page and its loading skeleton
 const SP_CSS = `
         .sp-page{padding-top:24px}
@@ -114,6 +129,8 @@ const SP_CSS = `
         .sp-facts span{display:inline-flex;align-items:center;gap:8px;color:var(--text2)}
         .sp-facts b{font-weight:600}
         .sp-protect{display:flex;gap:8px;margin:12px 2px 0;font-size:12px;line-height:1.5;color:var(--text2)}.sp-protect i{font-size:15px;color:var(--green);flex-shrink:0;margin-top:1px}
+        .sp-report{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:40px;margin-top:8px;background:none;border:0;cursor:pointer;font:500 12px var(--font);color:var(--text2)}
+        .sp-report:hover{color:var(--text)}
         .sp-note{display:flex;align-items:center;gap:6px;font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:10px}
         .sp-note-err{background:rgba(220,38,38,.08);color:#dc2626}
         .sp-note-ok{background:rgba(var(--green-rgb),.1);color:var(--green)}
@@ -165,6 +182,8 @@ export default function StoreProduct() {
   const { user } = useAuth()
   const { sol } = useLivePrice()
   const { convert } = useCurrency()
+  const { toast } = useToast()
+  const [reporting, setReporting] = useState(false)
 
   const [product, setProduct] = useState<StoreProductData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -180,7 +199,8 @@ export default function StoreProduct() {
   const isOwner = user && product && user.id === product.sellerId
   const isSoldOut = product && product.stock !== null && product.stock <= 0
   // A product the seller hid still opens from old links: it can't be bought (2026-11-08)
-  const isHidden = !!product && product.isActive === false
+  const isHidden = !!product && (product.isActive === false || !!product.hiddenBecause)
+  const isStaff = !!user && (user.role === 'ADMIN' || !!user.isModerator)
 
   // Signed in, the answer also says whether this member can review it (canReview).
   // Only a new product shows the skeleton; reloading the same one (after a review,
@@ -334,9 +354,19 @@ export default function StoreProduct() {
         <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
         <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
       </div>
-      {isHidden && !isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />The seller isn't selling this right now.</div>}
-      {/* Hidden products open only for their seller (and admins) since 2026-11-10 */}
-      {isHidden && isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />Hidden from the store: only you can see this.</div>}
+      {isHidden && !isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />{isStaff && p.hiddenBecause ? HIDDEN_STAFF[p.hiddenBecause] : "The seller isn't selling this right now."}</div>}
+      {/* Hidden products open only for their seller (and staff) since 2026-11-10; the seller is told why */}
+      {isHidden && isOwner && (
+        <div className="sp-note sp-note-err" style={{ alignItems: 'flex-start' }}>
+          <i className="ti ti-eye-off" style={{ marginTop: 2 }} />
+          <span>
+            {p.hiddenBecause === 'removed' ? <>Removed by OgaPay: {p.delistReason || 'it broke the store rules'}. Only you can see this.</>
+              : p.hiddenBecause === 'private' ? <>Buyers can't see this because your profile is private. <Link to="/edit-profile" style={{ color: 'inherit', fontWeight: 600 }}>Make it public</Link> to show your store.</>
+              : p.hiddenBecause === 'review' ? <>Hidden from the store while our team checks your account.</>
+              : <>Hidden from the store: only you can see this.</>}
+          </span>
+        </div>
+      )}
       <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={unavailable && !isOwner}>
         {buyLabel} {(isOwner || !unavailable) && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
       </button>
@@ -348,8 +378,18 @@ export default function StoreProduct() {
       {!isOwner && !p.official && !onRequest && (
         <p className="sp-protect"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: your payment is held until you confirm you received the order.</p>
       )}
+      {/* Report product (2026-11-10): buyers can flag a fake or a scam */}
+      {!isOwner && !p.official && (
+        <button type="button" className="sp-report" onClick={() => (user ? setReporting(true) : navigate('/login?redirect=/store/' + p.id))}>
+          <i className="ti ti-flag" aria-hidden="true" /> Report this product
+        </button>
+      )}
     </div>
   )
+
+  const Moderate = isStaff ? (
+    <ModerateBar product={p} isAdmin={user?.role === 'ADMIN'} onChanged={(msg) => { toast(msg, 'success'); fetchProduct() }} />
+  ) : null
 
   // OgaPay's own items: a fixed card, no profile link (2026-11-08)
   const CreatorCard = p.official ? (
@@ -413,7 +453,7 @@ export default function StoreProduct() {
               <ItemCover src={p.image} category={p.category} title={p.title} alt={p.title} priority />
             </div>
 
-            <div className="sp-mobile-only">{PriceCard}{CreatorCard}</div>
+            <div className="sp-mobile-only">{PriceCard}{CreatorCard}{Moderate}</div>
 
             <section className="ui-card sp-about">
               <h2>About this product</h2>
@@ -486,9 +526,11 @@ export default function StoreProduct() {
           <aside className="sp-side sp-desktop-only">
             {PriceCard}
             {CreatorCard}
+            {Moderate}
           </aside>
         </div>
       </div>
+      {reporting && <ReportProductSheet product={p} onClose={() => setReporting(false)} />}
     </Layout>
   )
 }

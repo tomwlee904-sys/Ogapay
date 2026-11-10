@@ -17,6 +17,8 @@ type Ticket = {
   // Files sent with a support message, and who a "Report this user" is about
   attachments?: string[]
   reportedUser?: { id: string; username: string; firstName?: string; lastName?: string } | null
+  // A "Report this product" (2026-11-10): the product by name, and whether it was removed
+  reportedProduct?: { id: string; name: string; delistedAt?: string | null } | null
   messages?: TicketMessage[]
 }
 // Files that came in by email (support@): kept by Resend, so the links are
@@ -114,6 +116,7 @@ export default function AdminSupport() {
                   <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>{t.subject || t.category}</h2>
                   <p style={{ margin: '0 0 10px', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{t.description}</p>
                   {t.reportedUser && <p style={{ margin: '0 0 8px', fontSize: 13 }}>About <Link to={`/user/${t.reportedUser.username}`} style={{ color: 'var(--text)', fontWeight: 600 }}>@{t.reportedUser.username}</Link></p>}
+                  {t.reportedProduct && <p style={{ margin: '0 0 8px', fontSize: 13 }}>About <Link to={`/store/${t.reportedProduct.id}`} style={{ color: 'var(--text)', fontWeight: 600 }}>{t.reportedProduct.name}</Link>{t.reportedProduct.delistedAt ? ' (removed)' : ''} · <Link to={`/admin/store?q=${encodeURIComponent(t.reportedProduct.name.slice(0, 80))}`} style={{ color: 'var(--text)' }}>Store queue</Link></p>}
                   {!!t.attachments?.length && (
                     <p style={{ margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {t.attachments.map((u, i) => (

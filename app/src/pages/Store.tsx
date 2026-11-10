@@ -154,6 +154,8 @@ function StorePage({ navigate }: { navigate: (path: string) => void }) {
         <div className="ui-actions">
           <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/workers')}>Browse creators <i className="ti ti-arrow-up-right" /></button>
           {user && <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/store/orders')}>My orders <i className="ti ti-receipt" /></button>}
+          {/* Admins and store moderators: the store queue (2026-11-10) */}
+          {(user?.role === 'ADMIN' || user?.isModerator) && <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/admin/store')}>Store queue <i className="ti ti-shield" /></button>}
           <button className="ui-btn ui-btn-dark" onClick={() => navigate(user ? '/my-store' : '/login?redirect=/my-store')}>My store <i className="ti ti-user" /></button>
         </div>
       </header>

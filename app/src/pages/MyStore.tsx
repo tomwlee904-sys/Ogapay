@@ -16,7 +16,9 @@ import LoadError from '../components/LoadError'
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
-  category: string; subcategory?: string; stock: number | null; isActive: boolean; status: 'Active' | 'Draft'
+  category: string; subcategory?: string; stock: number | null; isActive: boolean; status: 'Active' | 'Draft' | 'Removed'
+  // Taken down by OgaPay (2026-11-10): the reason the team gave; it can't be published again
+  delistedAt?: string | null; delistReason?: string | null
   sales: number; orders: number; avgRating: number; reviewsCount: number; delivery?: string; revisions?: number; tags?: string[]
   priceOnRequest?: boolean; sampleFiles?: UploadedFile[]; searchTags?: string
   sellerReceives?: number; buyerPays?: number; feePercent?: number
@@ -46,6 +48,8 @@ export default function MyStore() {
   // Prices and revenue in the display currency; order payments and refunds stay real
   const show = useMoney()
   const { user } = useAuth()
+  // Buyers can't see a private profile's or a checked account's products (B17, 2026-11-10)
+  const [visibility, setVisibility] = useState<{ visible: boolean; reason: 'private' | 'review' | null } | null>(null)
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'orders' ? 'orders' : 'products'
   const [products, setProducts] = useState<Product[] | null>(null)
@@ -63,6 +67,7 @@ export default function MyStore() {
   const load = () => {
     // A failed load shows Try again, never "0 products" or "no orders"
     setFailed({ products: false, orders: false })
+    apiRequest<{ visible: boolean; reason: 'private' | 'review' | null }>('/store/my-visibility').then(setVisibility).catch(() => {})
     apiRequest<any>('/store/my-products').then((d) => setProducts(Array.isArray(d?.products) ? d.products : [])).catch(() => setFailed((f) => ({ ...f, products: true })))
     apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setFailed((f) => ({ ...f, orders: true })))
   }
@@ -129,6 +134,15 @@ export default function MyStore() {
           </div>
         </div>
 
+        {visibility && !visibility.visible && (
+          <div className="up-note err" role="status" style={{ marginBottom: 12 }}>
+            <i className="ti ti-eye-off" aria-hidden="true" />{' '}
+            {visibility.reason === 'private'
+              ? <>Your profile is private, so buyers can't see your products. <Link to="/edit-profile" style={{ color: 'inherit', fontWeight: 600 }}>Make your profile public</Link> to show your store.</>
+              : <>Your products are hidden from the store while our team checks your account. <Link to="/support" style={{ color: 'inherit', fontWeight: 600 }}>Contact support</Link> if you think this is a mistake.</>}
+          </div>
+        )}
+
         <div className="ms2-stats">
           <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} hidden` : ''}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{orders ? orders.length : '…'}</b><small>{orders ? `${open} to deliver` : ''}</small></div>
@@ -168,7 +182,7 @@ export default function MyStore() {
               <div style={{ minWidth: 0 }}>
                 <h3>{p.name}</h3>
                 <div className="meta">
-                  <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Hidden'}</span>
+                  <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.delistedAt ? 'Removed by OgaPay' : p.isActive ? 'Live' : 'Hidden'}</span>
                   <span><b>{p.priceOnRequest ? 'Price on request' : show(p.price, p.currency)}</b></span>
                   {!!p.sampleFiles?.length && <span><i className="ti ti-paperclip" aria-hidden="true" /> {p.sampleFiles.length}</span>}
                   <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
@@ -176,11 +190,12 @@ export default function MyStore() {
                   {p.stock !== null && <span>{p.stock} in stock</span>}
                   <span>{p.delivery}</span>
                 </div>
+                {p.delistedAt && <p style={{ margin: '6px 0 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--red)' }}>Removed by OgaPay: {p.delistReason || 'it broke the store rules'}. You can't publish it again. <Link to="/support" style={{ color: 'inherit', fontWeight: 600 }}>Contact support</Link> if you think this is a mistake.</p>}
               </div>
               <div className="ms2-row-acts">
                 {p.isActive && <Link className="up-btn" to={`/store/${p.id}`}>View</Link>}
                 <button className="up-btn" disabled={busy === p.id} onClick={() => setEditing(p)}>Edit</button>
-                <button className="up-btn" disabled={busy === p.id} onClick={() => setStatus(p, !p.isActive)}>{p.isActive ? 'Unpublish' : 'Publish'}</button>
+                {!p.delistedAt && <button className="up-btn" disabled={busy === p.id} onClick={() => setStatus(p, !p.isActive)}>{p.isActive ? 'Unpublish' : 'Publish'}</button>}
                 <button className="up-btn" disabled={busy === p.id} onClick={() => remove(p)} aria-label={`Delete ${p.name}`}><i className="ti ti-trash" /></button>
               </div>
             </div>
