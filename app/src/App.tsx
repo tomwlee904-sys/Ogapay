@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { lazyPage } from './lib/staleBuild'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { registerTarget } from './lib/registerRedirect'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
@@ -116,6 +117,12 @@ const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
 const RankUpgrade = lazyPage(() => import("./pages/RankUpgrade"))
 
+// Old /register?ref=CODE links keep the invite code (lib/registerRedirect)
+function RegisterRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={registerTarget(search)} replace />
+}
+
 // ─── Auth Guard ───
 function AuthGuard({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -153,7 +160,7 @@ export default function App() {
             <Route path="/pair" element={<LoginPage />} />
             <Route path="/join" element={<LoginPage />} />
             <Route path="/ref/:code" element={<LoginPage />} />
-            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route path="/register" element={<RegisterRedirect />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
