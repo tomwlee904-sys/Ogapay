@@ -413,8 +413,8 @@ export default function Profile() {
   const onHold = Math.max(0, lockedNgn - onItsWay);
   const ghana = authUser?.country === 'GH';
 
-  // Success rate from the counts /users/me returns (the saved successRate is never
-  // updated, so it always read 0%); "—" until something was approved or rejected (2026-11-07)
+  // Success rate from the counts /users/me returns (the saved successRate was never
+  // updated before 2026-11-10, so it read 0%); "—" until something was approved or rejected (2026-11-07)
   const wp = profileData?.workerProfile;
   const decided = (Number(wp?.tasksCompleted) || 0) + (Number(wp?.tasksRejected) || 0);
   const successRate = decided ? Math.round((Number(wp?.tasksCompleted) || 0) / decided * 100) + '%' : '—';
