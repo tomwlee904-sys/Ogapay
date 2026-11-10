@@ -1,0 +1,53 @@
+/* Store purchase extras (2026-11-10): listing at purchase (F22), order and offer
+   cards in Messages (F17, F13), the offer form, product download files (F21). */
+
+/* Listing when it was bought */
+.ol-facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; }
+.ol-facts li { display: flex; flex-direction: column; gap: 1px; padding: 6px 10px; border-radius: 8px; background: var(--bg2); }
+.ol-facts span { font-size: 11px; color: var(--text3); }
+.ol-facts b { font-size: 13px; font-weight: 600; color: var(--text); }
+.ol-desc { max-height: 360px; overflow-y: auto; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+.ol-when { font-size: 11.5px; color: var(--text3); line-height: 1.5; }
+
+/* Order and offer cards inside a chat message */
+.cc-card { display: grid; gap: 8px; min-width: min(260px, 100%); margin: 0 0 6px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); white-space: normal; }
+.cc-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--text3); }
+.cc-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cc-img { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; flex-shrink: 0; display: grid; place-items: center; background: var(--bg2); color: var(--text3); font-size: 18px; }
+.cc-img img { width: 100%; height: 100%; object-fit: cover; }
+.cc-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cc-mid b { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-mid small { font-size: 12px; color: var(--text2); }
+.cc-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ms-msg .cc-acts a, .cc-acts a, .cc-acts button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.ms-msg .cc-acts a.pri, .cc-acts .pri { background: var(--text); color: var(--bg); border-color: var(--text); }
+.cc-acts button:disabled { opacity: .6; cursor: default; }
+.cc-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cc-err { margin: 0; font-size: 12px; color: var(--red); }
+.ms-offer-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+
+/* The send-an-offer form */
+.of-form { display: grid; gap: 12px; padding: 16px 20px 20px; }
+.of-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--text); }
+.of-form small { font-size: 12px; font-weight: 400; color: var(--text2); line-height: 1.5; }
+.of-form input, .of-form select, .of-form textarea { width: 100%; box-sizing: border-box; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; }
+.of-form textarea { min-height: 84px; resize: vertical; }
+.of-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.of-prod { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--bg2); font-size: 13px; }
+.of-err { margin: 0; font-size: 12.5px; color: var(--red); }
+@media (max-width: 767px) { .of-row { grid-template-columns: 1fr; } }
+
+/* My Store: offers list */
+.mo-list { display: grid; gap: 10px; }
+.mo-item { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; }
+.mo-item .cc-mid small { white-space: normal; }
+.mo-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 767px) { .mo-item { grid-template-columns: 1fr; } .mo-acts { justify-content: flex-start; } }
+
+/* Product download files (editor) and upload progress */
+.df-list { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; }
+.df-list li { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 4px 0 10px; border-radius: 8px; background: var(--bg2); font-size: 13px; }
+.df-list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.df-list li small { font-size: 12px; color: var(--text3); flex-shrink: 0; }
+.df-bar { display: block; height: 3px; border-radius: 3px; background: var(--border); overflow: hidden; flex-basis: 100%; }
+.df-bar span { display: block; height: 100%; background: var(--text); transition: width .2s; }

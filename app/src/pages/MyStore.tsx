@@ -17,6 +17,10 @@ import '../styles/edit-profile.css'
 import '../styles/my-store.css'
 import { sized } from '../lib/img'
 import LoadError from '../components/LoadError'
+// 2026-11-10: private offers (F13) and download files (F21)
+import OfferSheet from '../components/OfferSheet'
+import MyOffers from '../components/MyOffers'
+import DeliverableFiles, { useDeliverables } from '../components/DeliverableFiles'
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
@@ -94,7 +98,9 @@ export default function MyStore() {
   // Buyers can't see a private profile's or a checked account's products (B17, 2026-11-10)
   const [visibility, setVisibility] = useState<{ visible: boolean; reason: 'private' | 'review' | null } | null>(null)
   const [params, setParams] = useSearchParams()
-  const tab = params.get('tab') === 'orders' ? 'orders' : 'products'
+  const tab = params.get('tab') === 'orders' ? 'orders' : params.get('tab') === 'offers' ? 'offers' : 'products'
+  // The product a private offer is being sent for (F13)
+  const [offerFor, setOfferFor] = useState<Product | null>(null)
   const [products, setProducts] = useState<Product[] | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [filter, setFilter] = useState<OrderFilter>('open')
@@ -230,6 +236,7 @@ export default function MyStore() {
           <div className="up-tabs" role="tablist">
             <button role="tab" aria-selected={tab === 'products'} className={`up-tab ${tab === 'products' ? 'on' : ''}`} onClick={() => setParams({})}><i className="ti ti-package" /> Products {products?.length ? <em>{products.length}</em> : null}</button>
             <button role="tab" aria-selected={tab === 'orders'} className={`up-tab ${tab === 'orders' ? 'on' : ''}`} onClick={() => setParams({ tab: 'orders' })}><i className="ti ti-receipt" /> Orders {open ? <em>{open} open</em> : null}</button>
+            <button role="tab" aria-selected={tab === 'offers'} className={`up-tab ${tab === 'offers' ? 'on' : ''}`} onClick={() => setParams({ tab: 'offers' })}><i className="ti ti-send" /> Offers</button>
           </div>
         </div>
 
@@ -238,7 +245,7 @@ export default function MyStore() {
         {notice && <div className="up-note ok" role="status" style={{ marginBottom: 12 }}>{notice} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setNotice('')}>OK</button></div>}
         {tab === 'products' && products !== null && (needs.length > 0 || errorNeeds.length > 0) && <div style={{ marginBottom: 14 }}><VerifyToSell needs={needs.length ? needs : errorNeeds} /></div>}
 
-        {tab === 'products' ? (
+        {tab === 'offers' ? <MyOffers /> : tab === 'products' ? (
           products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
           : products.length === 0 ? (
             <div className="up-empty">
@@ -273,6 +280,7 @@ export default function MyStore() {
               </div>
               <div className="ms2-row-acts">
                 {p.isActive && <Link className="up-btn" to={`/store/${p.id}`}>View</Link>}
+                {p.isActive && !p.delistedAt && <button className="up-btn" disabled={busy === p.id} onClick={() => { setNotice(''); setOfferFor(p) }}>Send offer</button>}
                 <button className="up-btn" disabled={busy === p.id} onClick={() => setEditing(p)}>Edit</button>
                 {!p.delistedAt && <button className="up-btn" disabled={busy === p.id} onClick={() => setStatus(p, !p.isActive)}>{p.isActive ? 'Unpublish' : 'Publish'}</button>}
                 <button className="up-btn" disabled={busy === p.id} onClick={() => remove(p)} aria-label={`Delete ${p.name}`}><i className="ti ti-trash" /></button>
@@ -339,6 +347,8 @@ export default function MyStore() {
       </div>
 
       {editing && <ProductEditor product={editing === 'new' ? null : editing} needs={needs} ghana={user?.country === 'GH'} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setNotice(''); load() }} />}
+      {offerFor && <OfferSheet product={{ id: offerFor.id, name: offerFor.name, currency: offerFor.currency, price: offerFor.price, priceOnRequest: offerFor.priceOnRequest, delivery: offerFor.delivery }}
+        onClose={() => setOfferFor(null)} onSent={(msg) => { setOfferFor(null); setNotice(msg) }} />}
     </Layout>
   )
 }
@@ -347,10 +357,14 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
   const { convert } = useCurrency()
   const [form, setForm] = useState<Form>(() => startForm(product))
   const [files, setFiles] = useState<UploadedFile[]>(product?.sampleFiles || [])
+  // Files buyers download after paying (F21), saved after the product
+  const dl = useDeliverables(product?.id)
   // What the form held when it opened: closing with changes asks first (2026-11-10)
   const [initial] = useState(() => JSON.stringify([startForm(product), product?.sampleFiles || []]))
-  const dirty = JSON.stringify([form, files]) !== initial
+  const dirty = JSON.stringify([form, files]) !== initial || dl.dirty
   const [filesBusy, setFilesBusy] = useState(false)
+  // Upload progress of the sample file being sent (SP8)
+  const [filePct, setFilePct] = useState(0)
   const [descTab, setDescTab] = useState<'write' | 'preview'>('write')
   const [tagsBusy, setTagsBusy] = useState(false)
   const sampleRef = useRef<HTMLInputElement>(null)
@@ -403,7 +417,8 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     const failed: string[] = []
     for (const f of Array.from(list).slice(0, room)) {
       try {
-        const up = await uploadFile(f, 'store-file')
+        setFilePct(0)
+        const up = await uploadFile(f, 'store-file', setFilePct)
         setFiles((cur) => [...cur, up].slice(0, MAX_FILES))
         added++
       } catch (e: any) { failed.push(`${f.name} (${e?.message || 'upload failed'})`) }
@@ -453,8 +468,13 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
     }
     setSaving(true); setMsg(''); setSaveNeeds([])
     try {
-      if (product) await apiRequest(`/store/products/${product.id}`, { method: 'PATCH', body: JSON.stringify(body) })
-      else await apiRequest('/store/products', { method: 'POST', body: JSON.stringify(body) })
+      const saved = product
+        ? await apiRequest<{ id: string }>(`/store/products/${product.id}`, { method: 'PATCH', body: JSON.stringify(body) })
+        : await apiRequest<{ id: string }>('/store/products', { method: 'POST', body: JSON.stringify(body) })
+      // The download files go after the product (it needs an id first)
+      try { await dl.save(product?.id || saved.id) } catch (e: any) {
+        window.alert(`The product was saved, but its download files were not: ${e?.message || 'please try again'}. Open the product again to add them.`)
+      }
       onSaved()
     } catch (e: any) {
       // The server's field errors ([{ field, message }]) highlight those fields
@@ -595,12 +615,14 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
           )}
           <div>
             <button type="button" className="up-btn" disabled={filesBusy || files.length >= MAX_FILES} onClick={() => sampleRef.current?.click()}>
-              <i className="ti ti-paperclip" /> {filesBusy ? 'Uploading…' : files.length >= MAX_FILES ? `${MAX_FILES} files added` : 'Add files'}
+              <i className="ti ti-paperclip" /> {filesBusy ? `Uploading… ${filePct}%` : files.length >= MAX_FILES ? `${MAX_FILES} files added` : 'Add files'}
             </button>
             <input ref={sampleRef} type="file" multiple hidden accept="image/*,audio/*,video/mp4,video/webm,video/quicktime,application/pdf,.txt,.csv,.md,text/plain,text/csv,text/markdown" onChange={(e) => addFiles(e.target.files)} />
           </div>
           {errors.files ? <em>{errors.files}</em> : <small>Up to {MAX_FILES} files, {MAX_FILE_MB} MB each: images, audio, video, PDF, TXT, CSV or Markdown. Buyers can open them before paying.</small>}
         </div>
+
+        <DeliverableFiles dl={dl} />
 
         <div className="ep-field">
           <span>Thumbnail</span>
@@ -619,8 +641,8 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
         {(publishBlocked || saveNeeds.length > 0) && <div style={{ marginTop: 12 }}><VerifyToSell needs={publishBlocked ? needs : saveNeeds} /></div>}
         <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
           {/* Not while files upload or tags are being made: they'd be left out */}
-          <button className="up-btn" disabled={saving || uploading || filesBusy || tagsBusy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
-          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy || tagsBusy || publishBlocked} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
+          <button className="up-btn" disabled={saving || uploading || filesBusy || tagsBusy || dl.busy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
+          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy || tagsBusy || dl.busy || publishBlocked} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
         </div>
       </div>
     </div>

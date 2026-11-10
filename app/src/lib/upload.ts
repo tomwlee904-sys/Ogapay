@@ -126,28 +126,91 @@ export async function uploadProof(file: File, taskId?: string, watermark = false
   return { url: j.data.url, ...(j.data.originalUrl && { originalUrl: j.data.originalUrl }) }
 }
 
-// A sample file for a store product or an attachment on a support message:
-// sent as-is (no compression), up to 25 MB. Returns what the server saved.
-export type UploadedFile = { url: string; name: string; type: string; size: number | null }
-export const MAX_FILE_MB = 25
-export async function uploadFile(file: File, purpose: 'store-file' | 'support'): Promise<UploadedFile> {
+// ── Direct uploads (SP8, 2026-11-10) ──────────────
+// Big files go straight from the phone to storage: the server signs a one-time
+// upload link (/uploads/sign), the file is sent there with real progress, then
+// the server checks what arrived (/uploads/confirm) and returns what the old
+// upload route would have. If the server can't sign (an older server, or
+// storage is down), the file goes through the old route instead, still with
+// progress. signal cancels either way.
+type DirectPurpose = 'store-file' | 'support' | 'order-attachment' | 'store-deliverable'
+const LEGACY_ROUTE: Record<DirectPurpose, string> = {
+  'store-file': '/uploads/store-file', support: '/uploads/support',
+  'order-attachment': '/uploads/order-attachment', 'store-deliverable': '/uploads/store-deliverable',
+}
+const cancelled = () => Object.assign(new Error('Upload cancelled'), { cancelled: true })
+
+// One XHR with upload progress (0-99 while it goes, the caller says 100)
+function send(method: string, url: string, body: Blob | FormData, opts: { headers?: Record<string, string>; onProgress?: (pct: number) => void; signal?: AbortSignal }): Promise<{ status: number; json: any }> {
+  return new Promise((resolve, reject) => {
+    if (opts.signal?.aborted) return reject(cancelled())
+    const xhr = new XMLHttpRequest()
+    xhr.open(method, url)
+    for (const [k, v] of Object.entries(opts.headers || {})) xhr.setRequestHeader(k, v)
+    xhr.timeout = 300_000
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && opts.onProgress) opts.onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100))) }
+    xhr.onload = () => {
+      let json: any = {}
+      try { json = JSON.parse(xhr.responseText || '{}') } catch { /* not JSON */ }
+      resolve({ status: xhr.status, json })
+    }
+    xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
+    xhr.ontimeout = () => reject(new Error('Upload took too long. Try again.'))
+    xhr.onabort = () => reject(cancelled())
+    opts.signal?.addEventListener('abort', () => xhr.abort(), { once: true })
+    xhr.send(body)
+  })
+}
+
+async function directUpload(file: File, purpose: DirectPurpose, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<any> {
   const token = getAccessToken()
   if (!token) throw new Error('Not authenticated')
-  if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${MAX_FILE_MB} MB`)
-  const formData = new FormData()
-  formData.append('file', file)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 300_000)
-  try {
-    const res = await fetch(`${API_BASE}/uploads/${purpose}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData, signal: controller.signal })
-    const json = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(json?.message || 'Upload failed')
-    const d = json.data || json
-    return { url: d.url, name: d.name || file.name, type: d.type || 'image', size: d.size ?? file.size }
-  } finally {
-    clearTimeout(timeout)
+  const auth = { Authorization: `Bearer ${token}` }
+  const legacy = async () => {
+    const fd = new FormData()
+    fd.append('file', file)
+    const r = await send('POST', `${API_BASE}${LEGACY_ROUTE[purpose]}`, fd, { headers: auth, onProgress, signal })
+    if (r.status < 200 || r.status >= 300 || !r.json?.data) throw new Error(r.json?.message || 'Upload failed')
+    return r.json.data
   }
+  const post = async (path: string, body: object) => {
+    const res = await fetch(`${API_BASE}${path}`, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal })
+    return { status: res.status, json: await res.json().catch(() => ({})) }
+  }
+  let ticket: { status: number; json: any }
+  try { ticket = await post('/uploads/sign', { purpose, name: file.name, type: file.type, size: file.size }) } catch (e: any) {
+    if (signal?.aborted) throw cancelled()
+    return legacy()
+  }
+  // The rules said no (too big, wrong kind): say why. Anything else: the old route.
+  if (ticket.status === 400) throw new Error(ticket.json?.message || 'This file can\'t be uploaded')
+  const t = ticket.json?.data
+  if (ticket.status !== 201 || !t?.uploadUrl) return legacy()
+  try {
+    const put = await send('PUT', t.uploadUrl, file, { headers: { 'Content-Type': t.contentType, 'x-upsert': 'false' }, onProgress, signal })
+    if (put.status < 200 || put.status >= 300) return legacy()
+  } catch (e: any) {
+    if (e?.cancelled) throw e
+    return legacy()
+  }
+  const done = await post('/uploads/confirm', { purpose, path: t.path, name: file.name, type: file.type })
+  if (done.status === 400) throw new Error(done.json?.message || 'Upload failed')
+  if (done.status !== 201 || !done.json?.data) return legacy()
+  return done.json.data
 }
+
+// A sample file for a store product or an attachment on a support message:
+// sent as-is (no compression), up to 25 MB. Returns what the server saved.
+// 2026-11-10: straight to storage with progress (directUpload).
+export type UploadedFile = { url: string; name: string; type: string; size: number | null }
+export const MAX_FILE_MB = 25
+export async function uploadFile(file: File, purpose: 'store-file' | 'support', onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<UploadedFile> {
+  if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${MAX_FILE_MB} MB`)
+  const d = await directUpload(file, purpose, onProgress, signal)
+  onProgress?.(100)
+  return { url: d.url, name: d.name || file.name, type: d.type || 'image', size: d.size ?? file.size }
+}
+
 
 // A file for a store order's brief, chosen at checkout (2026-11-10). It goes to
 // private storage: the server returns where it saved it, never a public link,
@@ -156,27 +219,22 @@ export async function uploadFile(file: File, purpose: 'store-file' | 'support'):
 export type OrderFile = { path: string; name: string; type: string; size: number }
 export const ORDER_FILE_MB = 25
 export const ORDER_FILE_ACCEPT = 'image/*,audio/*,video/mp4,video/webm,video/quicktime,video/3gpp,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.md'
-export function uploadOrderFile(file: File, onProgress?: (pct: number) => void): Promise<OrderFile> {
-  const token = getAccessToken()
-  if (!token) return Promise.reject(new Error('Not authenticated'))
-  if (file.size > ORDER_FILE_MB * 1024 * 1024) return Promise.reject(new Error(`${file.name} is over ${ORDER_FILE_MB} MB`))
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${API_BASE}/uploads/order-attachment`)
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-    xhr.timeout = 300_000
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100))) }
-    xhr.onload = () => {
-      let json: any = {}
-      try { json = JSON.parse(xhr.responseText || '{}') } catch { /* not JSON */ }
-      const d = json?.data
-      if (xhr.status >= 200 && xhr.status < 300 && d?.path) { onProgress?.(100); resolve({ path: d.path, name: d.name || file.name, type: d.type || file.type, size: d.size ?? file.size }) }
-      else reject(new Error(json?.message || 'Upload failed'))
-    }
-    xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
-    xhr.ontimeout = () => reject(new Error('Upload took too long. Try again.'))
-    const fd = new FormData()
-    fd.append('file', file)
-    xhr.send(fd)
-  })
+// 2026-11-10: straight to storage (directUpload); signal cancels it.
+export async function uploadOrderFile(file: File, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<OrderFile> {
+  if (file.size > ORDER_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${ORDER_FILE_MB} MB`)
+  const d = await directUpload(file, 'order-attachment', onProgress, signal)
+  if (!d?.path) throw new Error('Upload failed')
+  onProgress?.(100)
+  return { path: d.path, name: d.name || file.name, type: d.type || file.type, size: d.size ?? file.size }
+}
+
+// A file buyers download straight after paying for a product (F21, 2026-11-10):
+// private, like order files, and may also be a ZIP or EPUB. Up to 25 MB.
+export const DELIVERABLE_ACCEPT = `${ORDER_FILE_ACCEPT},.zip,.epub,application/zip,application/epub+zip`
+export async function uploadDeliverable(file: File, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<OrderFile> {
+  if (file.size > ORDER_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${ORDER_FILE_MB} MB`)
+  const d = await directUpload(file, 'store-deliverable', onProgress, signal)
+  if (!d?.path) throw new Error('Upload failed')
+  onProgress?.(100)
+  return { path: d.path, name: d.name || file.name, type: d.type || file.type, size: d.size ?? file.size }
 }

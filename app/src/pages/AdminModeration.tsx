@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import OrderBrief from '../components/OrderBrief'
+import OrderListing from '../components/OrderListing'
 import { apiRequest } from '../lib/api'
 import RateWork from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
@@ -272,7 +273,9 @@ export default function AdminModeration() {
                   </div>
                   {/* What the buyer asked for, saved with the payment (2026-11-10) */}
                   <OrderBrief brief={o.brief} files={o.briefFiles || []} />
-                  <OrderBrief label="What the seller delivered" more="Read more" brief={o.deliveryNote} files={o.deliveryFiles || []} />
+                  <OrderBrief label={o.instantDelivery ? 'Delivered instantly (download files)' : 'What the seller delivered'} more="Read more" brief={o.deliveryNote} files={o.deliveryFiles || []} />
+                  {/* What the listing promised when the buyer paid (F22) */}
+                  <OrderListing listing={o.listing} label="The listing when the buyer paid" />
                   <OrderBrief label={`Why @${o.buyer?.username} reported it`} more="Read more" brief={o.disputeReason} files={o.disputeFiles || []} />
                   {o.sellerResponse
                     ? <OrderBrief label={`@${o.seller?.username}'s side`} more="Read more" brief={o.sellerResponse} files={o.sellerResponseFiles || []} />

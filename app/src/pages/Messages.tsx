@@ -6,16 +6,20 @@ import { useAuth } from '../context/AuthContext'
 import '../styles/messages.css'
 import { sized } from '../lib/img'
 import { shrinkImage } from '../lib/shrinkImage'
+import { ChatOfferCard, ChatOrderCard, type ChatOffer, type ChatOrder } from '../components/ChatCards'
+import OfferSheet from '../components/OfferSheet'
 
 type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
 // The store product a chat is about ("Contact seller" on a product page)
-type ChatProduct = { id: string; name: string; image: string; price: number; currency: string; priceOnRequest?: boolean; removed?: boolean }
+type ChatProduct = { id: string; name: string; image: string; price: number; currency: string; priceOnRequest?: boolean; removed?: boolean; sellerId?: string | null }
 type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string; product?: ChatProduct | null
   // A private job chat (Selection jobs): the job it's about
   job?: { id: string; title: string } | null }
 // Files sent with a message: links from private storage that last an hour
 type MsgFile = { name: string; type: string; size: number; isImage: boolean; url: string | null }
-type Msg = { id: string; content: string; createdAt: string; senderId: string; files?: MsgFile[] }
+// 2026-11-10: a message about a store order carries an order card (kind ORDER:
+// the automatic "order placed" message), and a seller's private offer an offer card
+type Msg = { id: string; content: string; createdAt: string; senderId: string; files?: MsgFile[]; kind?: string | null; order?: ChatOrder | null; offer?: ChatOffer | null }
 type Typing = { id: string; name: string }
 
 // What can be sent (backend chatFiles.service): photos, PDF, Word, Excel, text; 4 files of 10 MB
@@ -60,6 +64,9 @@ export default function Messages() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
+  // The seller's "Send an offer" form (F13), and what it said after sending
+  const [offering, setOffering] = useState(false)
+  const [offerNote, setOfferNote] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
   const stick = useRef(true)
   // Files picked to send with the next message, and the other person typing
@@ -88,7 +95,7 @@ export default function Messages() {
   }, [loadConvs])
 
   useEffect(() => {
-    setMsgs(null); setErr(''); setTyping([]); setFiles([]); stick.current = true; lastMsgId.current = null
+    setMsgs(null); setErr(''); setOfferNote(''); setTyping([]); setFiles([]); stick.current = true; lastMsgId.current = null
     if (!openId) return
     loadThread(openId)
     // Every few seconds a light check: who's typing, and whether a new message
@@ -139,7 +146,7 @@ export default function Messages() {
   useEffect(() => {
     if (!productParam) { setPendingProduct(null); return }
     apiRequest<any>('/store/' + encodeURIComponent(productParam), { auth: false })
-      .then((d) => setPendingProduct(d?.id ? { id: d.id, name: d.title || d.name, image: d.image || '', price: Number(d.price), currency: d.currency, priceOnRequest: !!d.priceOnRequest } : null))
+      .then((d) => setPendingProduct(d?.id ? { id: d.id, name: d.title || d.name, image: d.image || '', price: Number(d.price), currency: d.currency, priceOnRequest: !!d.priceOnRequest, sellerId: d.sellerId || null } : null))
       .catch(() => setPendingProduct(null))
   }, [productParam])
 
@@ -158,6 +165,8 @@ export default function Messages() {
   const other = active?.participants[0] || (!openId ? newTo || undefined : undefined)
   const composing = !!openId || !!newTo
   const chatProduct = pendingProduct || active?.product || null
+  // The seller can send the other person a private offer for their own product (F13)
+  const canOffer = !!openId && !active?.job && !!chatProduct && !chatProduct.removed && !!user?.id && chatProduct.sellerId === user.id
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!convs) return []
@@ -257,9 +266,12 @@ export default function Messages() {
                       <b>{chatProduct.name}</b>
                       <small>{chatProduct.removed ? 'No longer listed' : chatProduct.priceOnRequest ? 'Price on request' : chatProduct.currency === 'NGN' ? '₦' + chatProduct.price.toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${chatProduct.price} ${chatProduct.currency}`}</small>
                     </span>
-                    {!chatProduct.removed && <Link className="ms-product-btn" to={`/store/${chatProduct.id}`}>View product</Link>}
+                    {canOffer
+                      ? <button type="button" className="ms-offer-btn" onClick={() => { setOfferNote(''); setOffering(true) }}><i className="ti ti-receipt" aria-hidden="true" /> Send an offer</button>
+                      : !chatProduct.removed && <Link className="ms-product-btn" to={`/store/${chatProduct.id}`}>View product</Link>}
                   </div>
                 )}
+                {offerNote && <div className="ms-err" role="status" style={{ color: 'var(--text2)' }}>{offerNote}</div>}
                 <div className="ms-thread" ref={threadRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60 }}>
                   {msgs === null ? <div className="ms-empty">Loading…</div>
                     : msgs.length === 0 ? <div className="ms-empty">{newTo ? `Start a conversation with @${newTo.username}.` : 'No messages yet. Say hello.'}</div>
@@ -271,6 +283,8 @@ export default function Messages() {
                         <div key={m.id} style={{ display: 'contents' }}>
                           {showDay && <div className="ms-day">{new Date(m.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>}
                           <div className={`ms-msg ${m.senderId === user?.id ? 'me' : ''}`}>
+                            {m.offer && <ChatOfferCard offer={m.offer} onChanged={() => openId && loadThread(openId)} />}
+                            {m.order && <ChatOrderCard order={m.order} auto={m.kind === 'ORDER'} />}
                             {!!m.files?.length && (
                               <div className="ms-files">
                                 {m.files.map((f, i) => (f.isImage && f.url
@@ -280,7 +294,8 @@ export default function Messages() {
                                     </a>))}
                               </div>
                             )}
-                            {m.content && <Linkified text={m.content} />}
+                            {/* An offer card already says what the offer text says */}
+                            {m.content && !m.offer && <Linkified text={m.content} />}
                             <time>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time>
                           </div>
                         </div>
@@ -324,6 +339,12 @@ export default function Messages() {
           </section>
         </div>
       </div>
+      {offering && chatProduct && openId && (
+        <OfferSheet product={{ id: chatProduct.id, name: chatProduct.name, currency: chatProduct.currency, price: chatProduct.price, priceOnRequest: chatProduct.priceOnRequest }}
+          conversationId={openId} buyer={other?.username || undefined}
+          onClose={() => setOffering(false)}
+          onSent={(msg) => { setOffering(false); setOfferNote(msg); stick.current = true; loadThread(openId); loadConvs() }} />
+      )}
     </Layout>
   )
 }
