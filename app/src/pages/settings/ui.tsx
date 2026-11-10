@@ -32,9 +32,9 @@ export async function savePref(key: keyof Prefs | 'isPublic', value: boolean | s
   return r.preferences
 }
 
-export function Card({ title, sub, children, danger }: { title: string; sub?: ReactNode; children: ReactNode; danger?: boolean }) {
+export function Card({ title, sub, children, danger, id }: { title: string; sub?: ReactNode; children: ReactNode; danger?: boolean; id?: string }) {
   return (
-    <section className={`up-card st2-card${danger ? ' danger' : ''}`}>
+    <section id={id} className={`up-card st2-card${danger ? ' danger' : ''}`}>
       <h2>{title}</h2>
       {sub && <p className="st2-card-sub">{sub}</p>}
       {children}

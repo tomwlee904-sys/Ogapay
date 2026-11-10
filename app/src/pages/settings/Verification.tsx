@@ -294,6 +294,12 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   // Look once on opening, and again when the person comes back to this tab
   // (from the VeryAI app, say), so a finished scan shows without a reload
   const humanPending = !me.humanVerifiedAt && !!providers?.very
+  // A job that needs it links to #human: show that card, not the top of the page
+  useEffect(() => {
+    if (window.location.hash !== '#human') return
+    const t = setTimeout(() => document.getElementById('human')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300)
+    return () => clearTimeout(t)
+  }, [])
   useEffect(() => {
     if (!humanPending) return
     if (!lastHumanCheck.current) checkHuman(true)
@@ -480,7 +486,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         )}
       </Card>
 
-      <Card title="Human verification" sub="Proves you're a real person (VeryAI palm scan). Some jobs require it, and it adds to your OgaScore.">
+      <Card id="human" title="Human verification" sub="Proves you're a real person (VeryAI palm scan). Some jobs require it, and it adds to your OgaScore.">
         <Row
           title="Status"
           sub={me.humanVerifiedAt ? <span className="st2-ok"><i className="ti ti-circle-check" /> Verified</span> : <span className="st2-muted">Not verified</span>}
@@ -493,9 +499,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             : <span className="st2-muted">Coming soon</span>)}
         </Row>
         {humanPending && (
-          <p className="st2-row-sub" style={{ margin: '0 0 4px' }}>
-            After the scan, go back to the browser page that opened VeryAI: it brings you back here. Already scanned? Tap Check again.
-          </p>
+          <>
+            {/* Members found the scan hard to follow (2026-11-10): the whole trip, step by step */}
+            <p className="st2-row-sub" style={{ margin: '6px 0 0' }}>How it works. It takes about 2 minutes and uses your phone's camera.</p>
+            <ol className="st2-steps" style={{ margin: '6px 0 8px' }}>
+              <li>Tap <b>Verify with VeryAI</b>. A VeryAI page opens.</li>
+              <li>If it asks, install the free <b>VeryAI</b> app from the Play Store or App Store, then open it.</li>
+              <li>Hold your open hand in front of the camera, palm facing it, until the app says it's done.</li>
+              <li>Come back to OgaPay. This page updates by itself. If it still says Not verified, tap <b>Check again</b>.</li>
+            </ol>
+          </>
         )}
         {humanPending && humanMsg && <p className="st2-err">{humanMsg}</p>}
       </Card>

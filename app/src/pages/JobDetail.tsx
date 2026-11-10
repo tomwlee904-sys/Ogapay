@@ -570,7 +570,7 @@ export default function JobDetail() {
 const FIXES: Record<string, { label: string; to: string }> = {
   KYC: { label: 'Verify your ID', to: '/settings/verification' },
   KYC2: { label: 'Send a photo of your ID (Level 2)', to: '/settings/verification' },
-  HUMAN: { label: 'Verify you are human', to: '/settings/verification' },
+  HUMAN: { label: 'Verify in 2 minutes', to: '/settings/verification#human' },
   OGASCORE: { label: 'Raise your OgaScore', to: '/settings/verification' },
   WALLET: { label: 'Connect a wallet', to: '/settings/connections' },
   X: { label: 'Connect X', to: '/settings/connections' },
