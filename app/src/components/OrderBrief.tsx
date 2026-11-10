@@ -6,13 +6,14 @@ import '../styles/order-brief.css'
 // on the order page, the seller's order card and the admin dispute card. Files
 // come as links that work for about an hour (reload the page for fresh ones);
 // lists only know how many files there are, and link to the order page.
+// 2026-11-10: also what the seller delivered and both sides of a reported problem.
 
 export type BriefFile = { name: string; type: string; size: number; isImage: boolean; url: string | null }
 
 const sizeText = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`)
 
-export default function OrderBrief({ label = "Buyer's brief", brief, files, fileCount = 0, orderId }: {
-  label?: string; brief?: string | null; files?: BriefFile[]; fileCount?: number; orderId?: string
+export default function OrderBrief({ label = "Buyer's brief", more = 'Read full brief', brief, files, fileCount = 0, orderId }: {
+  label?: string; more?: string; brief?: string | null; files?: BriefFile[]; fileCount?: number; orderId?: string
 }) {
   const [open, setOpen] = useState(false)
   const text = (brief || '').trim()
@@ -23,7 +24,7 @@ export default function OrderBrief({ label = "Buyer's brief", brief, files, file
     <div className="ob">
       <span className="ob-label"><i className="ti ti-file-text" aria-hidden="true" /> {label}</span>
       {text && <p className={`ob-text${open || !long ? ' open' : ''}`}>{text}</p>}
-      {text && long && <button type="button" className="ob-more" onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Read full brief'}</button>}
+      {text && long && <button type="button" className="ob-more" onClick={() => setOpen(!open)}>{open ? 'Show less' : more}</button>}
       {files && files.length > 0 ? (
         <ul className="ob-files">
           {files.map((f, i) => (
