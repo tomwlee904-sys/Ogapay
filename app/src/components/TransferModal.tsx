@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { kycOf } from '../lib/wallet'
+import { SEND_RULE } from '../lib/levels'
 import TwoFactorField, { is2FAError } from './TwoFactorField'
 
 // Send NGN to another OgaPay user (POST /wallet/send — internal ledger, instant).
@@ -84,8 +85,11 @@ function Person({ r }: { r: Recipient }) {
 
 export default function TransferModal({ onClose, onSuccess, to, tip = false, submissionId, forLabel }: Props) {
   const { user } = useAuth()
-  // Sending money and tips need Level 1 (the server checks it too)
-  const verified = kycOf(user).verified
+  // Sending money and tips need Level 1 by NIN or ID, not only the bank check; a
+  // poster tipping approved work on their own job only needs Level 1 (the server
+  // checks both: requireKyc + wallet.service assertCanSend)
+  const kyc = kycOf(user)
+  const verified = kyc.verified && (kyc.idVerified || (tip && !!submissionId))
   const [step, setStep] = useState<'form' | 'confirm' | 'done'>('form')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Recipient[]>([])
@@ -167,7 +171,7 @@ export default function TransferModal({ onClose, onSuccess, to, tip = false, sub
       const msg = e?.message || (tip ? "The tip didn't go through. Please try again." : 'Transfer failed. Please try again.')
       // The server's not-verified message names NIN; say it simply (its daily-limit and
       // bonus messages also mention a level, and are shown as they are)
-      setError(/Level 1 KYC/i.test(msg) ? 'Sending money and tips needs Level 1. Verify your identity first.' : msg)
+      setError(/Level 1 KYC/i.test(msg) ? 'Sending money and tips needs your NIN or ID. Verify your identity first.' : msg)
       // A missing or wrong 2FA code: stay here so the code can be entered
       if (is2FAError(e?.message)) { setOtpAsked(true); setOtp('') }
       else setStep('form')
@@ -198,7 +202,7 @@ export default function TransferModal({ onClose, onSuccess, to, tip = false, sub
           <>
             {header(tip ? 'Send a tip' : 'Send money')}
             <div style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.55, marginBottom: 18 }}>
-              Sending money and tips needs Level 1. Verify your identity first. It's free and takes a few minutes.
+              {kyc.verified ? `${SEND_RULE} Send a photo of your ID to our team for Level 2.` : 'Sending money and tips needs your NIN or ID. Verify your identity first.'}
             </div>
             <Link to="/settings/verification" onClick={onClose} style={{ ...BTN, textDecoration: 'none' }}>
               <i className="ti ti-shield-check" /> Verify now

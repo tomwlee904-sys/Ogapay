@@ -4,6 +4,7 @@ import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { sized } from '../lib/img'
 import { kycOf } from '../lib/wallet'
+import { SEND_RULE } from '../lib/levels'
 import { useMoney } from '../lib/useMoney'
 
 // Likes, comments and tips under a blog post. A tip is a naira transfer from your
@@ -159,8 +160,10 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const value = Number(amount.replace(/[^0-9]/g, '')) || 0
-  // A tip sends money, which needs Level 1 (the server checks it too)
-  const verified = kycOf(useAuth().user).verified
+  // A tip sends money, which needs Level 1 by NIN or ID, not only the bank check
+  // (the server checks it too)
+  const kyc = kycOf(useAuth().user)
+  const verified = kyc.idVerified
 
   const send = async () => {
     setBusy(true)
@@ -171,7 +174,7 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
     } catch (e: any) {
       const msg = e?.message || 'Could not send the tip'
       if (/2FA|authenticator/i.test(msg)) setNeedOtp(true)
-      setError(/Level 1/i.test(msg) ? 'Tipping needs Level 1. Verify your identity first.' : msg)
+      setError(/Level 1/i.test(msg) ? 'Tipping needs your NIN or ID. Verify your identity first.' : msg)
     } finally {
       setBusy(false)
     }
@@ -186,7 +189,7 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
         </div>
         {!verified ? (
           <>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--text2)' }}>Sending money and tips needs Level 1. Verify your identity first. It's free and takes a few minutes.</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--text2)' }}>{kyc.verified ? `${SEND_RULE} Send a photo of your ID to our team for Level 2.` : 'Sending money and tips needs your NIN or ID. Verify your identity first.'}</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button type="button" className="ui-btn ui-btn-ghost" onClick={onClose}>Cancel</button>
               <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
