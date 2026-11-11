@@ -28,6 +28,10 @@ const CASES: Record<string, { user: any; path: string; welcome: any; push: strin
   done: { user: worker, path: '/tasks', welcome: { ...full, show: false, completedAt: '2026-11-01T09:00:00Z', referral: { eligible: false } }, push: 'off' },
   admin: { user: { ...worker, role: 'ADMIN' }, path: '/dashboard', welcome: full, push: 'off' },
   out: { user: null, path: '/dashboard', welcome: full, push: 'off' },
+  // ver-18: "Connect X" last, after verify; and X alone
+  verifyX: { user: worker, path: '/dashboard', welcome: { ...full, referral: { eligible: false }, rules: { acceptedAt: '2026-10-01T00:00:00Z' }, xConnected: false }, push: 'blocked' },
+  xOnly: { user: worker, path: '/dashboard', welcome: { ...full, referral: { eligible: false }, rules: { acceptedAt: '2026-10-01T00:00:00Z' }, level1: true, xConnected: false }, push: 'on' },
+  xDone: { user: worker, path: '/dashboard', welcome: { ...full, referral: { eligible: false }, rules: { acceptedAt: '2026-10-01T00:00:00Z' }, level1: true, xConnected: true }, push: 'on' },
   old: { user: worker, path: '/dashboard', welcome: null, push: 'off' },
 }
 const c = CASES[new URLSearchParams(location.search).get('case') || 'new']

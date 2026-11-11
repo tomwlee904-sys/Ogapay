@@ -17,6 +17,7 @@ const TITLES: Record<WelcomeStep, string> = {
   rules: 'Before you start',
   alerts: 'Get job alerts',
   verify: 'Verify Level 1',
+  x: 'Connect X',
 }
 
 interface Props {
@@ -149,6 +150,18 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
             <div className="ui-actions wf-actions">
               <button type="button" className="ui-btn ui-btn-ghost" onClick={next}>Later</button>
               <Link to="/settings/verification" className="ui-btn ui-btn-dark" onClick={onFinish}>Verify now</Link>
+            </div>
+          </>
+        )}
+
+        {/* Many jobs are on X (ver-18): connecting is optional, but those jobs need it */}
+        {step === 'x' && (
+          <>
+            <p className="wf-text">Many OgaPay jobs are on X: follow, like, repost or comment. To take them, connect your X account. It's free and takes a minute.</p>
+            <p className="wf-text">No X account? Skip this. There are plenty of other jobs.</p>
+            <div className="ui-actions wf-actions">
+              <button type="button" className="ui-btn ui-btn-ghost" onClick={next}>Skip</button>
+              <Link to="/settings/connections" className="ui-btn ui-btn-dark" onClick={onFinish}><i className="ti ti-brand-x" aria-hidden="true" /> Connect X</Link>
             </div>
           </>
         )}

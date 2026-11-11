@@ -8,9 +8,10 @@ import type { PushState } from './push'
 //   2. Before you start  (the rules; new accounts need them to take a place on a job)
 //   3. Get job alerts    (only where push alerts can be turned on)
 //   4. Verify Level 1    (only below Level 1)
+//   5. Connect X         (only while X isn't connected; many jobs are on X, ver-18)
 // The server keeps onboardingCompletedAt and rulesAcceptedAt, so it shows once, whatever the device.
 
-export type WelcomeStep = 'invite' | 'rules' | 'alerts' | 'verify'
+export type WelcomeStep = 'invite' | 'rules' | 'alerts' | 'verify' | 'x'
 
 // GET /users/me/welcome (also `welcome` in GET /users/me)
 export interface WelcomeState {
@@ -19,6 +20,7 @@ export interface WelcomeState {
   referral?: { eligible?: boolean; reason?: string | null; until?: string | null } | null
   rules?: { acceptedAt?: string | null; required?: boolean } | null
   level1?: boolean
+  xConnected?: boolean // an older server sends nothing: then no X step
 }
 
 const MAX_CODE = 40
@@ -49,6 +51,7 @@ export function welcomeSteps(w: WelcomeState, push: PushState | null): WelcomeSt
   if (w.rules && !w.rules.acceptedAt) steps.push('rules')
   if (push === 'off') steps.push('alerts') // already on, blocked or not possible here: skipped
   if (w.level1 === false) steps.push('verify')
+  if (w.xConnected === false) steps.push('x') // last, skippable
   return steps
 }
 
