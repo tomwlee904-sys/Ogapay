@@ -58,6 +58,11 @@ for (const p of ['on', 'blocked', 'unsupported', 'install-first', 'unavailable',
 }
 s = welcomeSteps({ ...fresh, level1: true }, 'off'); ok('Level 1 or more: no verify step', !s.includes('verify'), s);
 s = welcomeSteps({ ...fresh, level1: undefined }, 'off'); ok('no level from the server: no verify step', !s.includes('verify'), s);
+// ver-18: "Connect X" is the last step, only while X isn't connected
+s = welcomeSteps({ ...fresh, xConnected: false }, 'off'); ok('X not connected: "Connect X" comes last', JSON.stringify(s) === '["invite","rules","alerts","verify","x"]', s);
+s = welcomeSteps({ ...fresh, xConnected: true }, 'off'); ok('X connected: no X step', !s.includes('x'), s);
+s = welcomeSteps(fresh, 'off'); ok('an older server (no xConnected): no X step', !s.includes('x'), s);
+s = welcomeSteps({ ...fresh, level1: true, rules: { acceptedAt: '2026-11-01T10:00:00Z', required: true }, referral: undefined, xConnected: false }, 'on'); ok('only X left: just the X step', JSON.stringify(s) === '["x"]', s);
 s = welcomeSteps({ show: true, referral: { eligible: false }, rules: { acceptedAt: '2026-10-01' }, level1: true }, 'on');
 ok('an older member with everything done: no steps', s.length === 0, s);
 

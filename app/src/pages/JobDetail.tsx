@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
+import { withNext } from '../lib/nextPath'
 import Layout from '../components/Layout'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
@@ -589,7 +590,10 @@ const FIXES: Record<string, { label: string; to: string }> = {
 
 // The red "Eligibility requirements" box: what you're missing and how to fix it
 function EligibilityBanner({ eligibility, joinPath, onReload }: { eligibility: { eligible: boolean; reasons: { code: string; text: string }[] } | null; joinPath?: string; onReload?: () => void }) {
+  // Verification links bring the member back to this job once verified (ver-10)
+  const { pathname } = useLocation()
   if (!eligibility || eligibility.eligible || !eligibility.reasons?.length) return null
+  const link = (to: string) => (to.startsWith('/settings/verification') ? withNext(to, pathname) : to)
   return (
     <section className="wjd-elig" role="alert" aria-label="Why you can't take this job">
       <b><i className="ti ti-lock" aria-hidden="true" /> You can't take this job yet</b>
@@ -602,7 +606,7 @@ function EligibilityBanner({ eligibility, joinPath, onReload }: { eligibility: {
               {/* The OgaPay rules open in the welcome sheet; accepting them reloads the job (2026-11-01) */}
               {r.code === 'RULES_REQUIRED'
                 ? <button type="button" onClick={() => openRules(onReload)}>Read the rules <i className="ti ti-arrow-right" aria-hidden="true" /></button>
-                : fix && <Link to={fix.to}>{fix.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>}
+                : fix && <Link to={link(fix.to)}>{fix.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>}
             </li>
           )
         })}

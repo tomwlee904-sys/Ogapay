@@ -10,12 +10,19 @@ import { naira, kycOf } from '../../lib/wallet'
 import { DOB_MONTHS, MIN_AGE, dobIso, dobProblem, dobYears } from '../../lib/dob'
 import AddBankForm from '../../components/wallet/AddBankForm'
 import EmailCodeBox from '../../components/auth/EmailCodeBox'
+import { safeNext, saveNext, readNext, clearNext, type NextVisit } from '../../lib/nextPath'
 import '../../styles/wallet.css'
 
 // Where VeryCallback keeps the claim key from a scan that came back signed out
 const VERY_CLAIM_KEY = 'ogapay_very_claim'
 // Once any level is approved the name can't be changed (user.service updateProfile)
 const NAME_LOCK = "You can't change it after you're verified."
+// The VeryAI app in the stores (ver-12). No official store links are in our code
+// or VeryAI's docs we have, so these open a store search for "VeryAI".
+export const VERYAI_PLAY = 'https://play.google.com/store/search?q=VeryAI&c=apps'
+export const VERYAI_APPSTORE = 'https://apps.apple.com/search?term=VeryAI'
+// "Connect X" card closed with "Not now" (ver-18), per browser
+const HIDE_X_KEY = 'ogapay_hide_connect_x'
 
 // Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
@@ -153,6 +160,22 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const [checking, setChecking] = useState(false)
   const [useNin, setUseNin] = useState(false)
   const synced = useRef(false)
+
+  // Came from a job's "Verify..." link (?next=/tasks/ID): once verified, a
+  // "Back to the job" button (ver-10). What they had when they arrived is kept
+  // in this browser, so it works after VeryAI or Didit bring them back without ?next.
+  const [nextVisit] = useState<NextVisit | null>(() => {
+    const path = safeNext(params.get('next'))
+    if (!path) return readNext()
+    const v = { path, tier, human: !!me.humanVerifiedAt }
+    saveNext(v)
+    return { ...v, at: Date.now() }
+  })
+  const backTo = nextVisit && (tier > nextVisit.tier || (!!me.humanVerifiedAt && !nextVisit.human)) ? nextVisit.path : null
+
+  // "Connect X" for X jobs (ver-18), until connected or closed with "Not now"
+  const [xHidden, setXHidden] = useState(() => { try { return localStorage.getItem(HIDE_X_KEY) === '1' } catch { return false } })
+  const hideX = () => { setXHidden(true); try { localStorage.setItem(HIDE_X_KEY, '1') } catch { /* storage off */ } }
 
   // Level 2 checked by our team, when Didit doesn't work for someone
   const [manualReq, setManualReq] = useState<ManualReq | undefined>(undefined)
@@ -475,9 +498,20 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   )
   // Shown when they ask for it, or when Didit failed for them
   const manualWanted = tier < 2 && manualReq !== undefined && (manualReq?.status === 'PENDING' || showManual || (!!msg && !msg.ok))
+  // On slow data, wait for the checks that are on and the member's ID request
+  // before showing a form, so nobody sees the wrong one first (a Level 1 told
+  // to ask for Level 3, a NIN form that turns into the bank form while typing) (ver-7)
+  const ready = providers !== null && (tier >= 2 || manualReq !== undefined)
 
   return (
     <>
+      {backTo && (
+        <div className="st2-banner st2-back" role="status">
+          <i className="ti ti-circle-check" aria-hidden="true" />
+          <span>You're verified. Go back and take the job.</span>
+          <Link className="up-btn primary" to={backTo} onClick={clearNext}><i className="ti ti-arrow-back-up" aria-hidden="true" /> {backTo.startsWith('/tasks/') ? 'Back to the job' : 'Go back'}</Link>
+        </div>
+      )}
       {/* Email by a code typed here (ver-11); a wallet account adds its email first */}
       {user && !user.isEmailVerified && (
         <Card title={user.hasEmail === false ? 'Add your email' : 'Verify your email'} sub={user.hasEmail === false
@@ -487,6 +521,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         </Card>
       )}
       <Card title="Verify your identity" sub="You need this before you can withdraw your earnings or send money. Your details are private and never shown to other users.">
+        {!ready ? <p className="st2-muted" role="status" style={{ margin: '6px 0 0' }}><i className="ti ti-loader-2" aria-hidden="true" /> Loading your verification…</p> : <>
         <div className="st2-levels">
           {levelsFor(didit, ninInstant, bankKyc).map((l) => {
             const done = tier >= l.tier
@@ -538,6 +573,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             <Link className="up-btn" to="/support">Contact support</Link>
           </Row>
         )}
+        </>}
       </Card>
 
       <Card id="human" title="Human verification" sub="Proves you're a real person (VeryAI palm scan). Some jobs require it, and it adds to your OgaScore.">
@@ -550,15 +586,24 @@ export default function Verification({ me, reload, providers }: SectionProps & {
                 <button className="up-btn primary" onClick={startHuman} disabled={humanBusy}>{humanBusy ? 'Opening VeryAI…' : 'Verify with VeryAI'}</button>
                 <button className="up-btn" onClick={() => checkHuman()} disabled={humanChecking}>{humanChecking ? 'Checking…' : 'Check again'}</button>
               </>
-            : <span className="st2-muted">Coming soon</span>)}
+            : <span className="st2-muted">{providers === null ? 'Loading…' : 'Coming soon'}</span>)}
         </Row>
         {humanPending && (
           <>
+            {/* Said up front, with the stores (ver-12) */}
+            <div className="st2-panel st2-very-app">
+              <strong>You need the free VeryAI app</strong>
+              <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>Install it on your phone before you start. Search for “VeryAI” if the store shows other apps.</p>
+              <div className="st2-actions">
+                <a className="up-btn" href={VERYAI_PLAY} target="_blank" rel="noopener noreferrer"><i className="ti ti-download" aria-hidden="true" /> Play Store (Android)</a>
+                <a className="up-btn" href={VERYAI_APPSTORE} target="_blank" rel="noopener noreferrer"><i className="ti ti-download" aria-hidden="true" /> App Store (iPhone)</a>
+              </div>
+            </div>
             {/* Members found the scan hard to follow (2026-11-10): the whole trip, step by step */}
             <p className="st2-row-sub" style={{ margin: '6px 0 0' }}>How it works. It takes about 2 minutes and uses your phone's camera.</p>
             <ol className="st2-steps" style={{ margin: '6px 0 8px' }}>
               <li>Tap <b>Verify with VeryAI</b>. A VeryAI page opens.</li>
-              <li>If it asks, install the free <b>VeryAI</b> app from the Play Store or App Store, then open it.</li>
+              <li>Open the <b>VeryAI</b> app when the page asks (install it first, see above).</li>
               <li>Hold your open hand in front of the camera, palm facing it, until the app says it's done.</li>
               <li>Come back to OgaPay. This page updates by itself. If it still says Not verified, tap <b>Check again</b>.</li>
             </ol>
@@ -566,6 +611,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         )}
         {humanPending && <ToneMsg m={humanMsg} />}
       </Card>
+
+      {/* Many jobs are on X and need it connected (ver-18); skippable */}
+      {!me.connections?.twitter?.connected && !xHidden && (
+        <Card id="connect-x" title="Connect X for X jobs" sub="Many jobs are on X: follow, like, repost or comment. To take them, connect your X account first. It's free and takes a minute.">
+          <div className="st2-actions">
+            <button type="button" className="up-btn" onClick={hideX}>Not now</button>
+            <Link className="up-btn primary" to="/settings/connections"><i className="ti ti-brand-x" aria-hidden="true" /> Connect X</Link>
+          </div>
+        </Card>
+      )}
     </>
   )
 }

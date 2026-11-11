@@ -12,7 +12,7 @@ const puppeteer = require('puppeteer');
 const SRC = path.join(__dirname, '../../src');
 const stubs = path.join(__dirname, 'welcome-flow.stubs.tsx');
 // The signed-in person and the device's push alerts are stand-ins; everything else is real
-const stubPlugin = { name: 'stubs', setup(b) { b.onResolve({ filter: /(context\/AuthContext|lib\/push)$/ }, () => ({ path: stubs })) } };
+const stubPlugin = { name: 'stubs', setup(b) { b.onResolve({ filter: /(context\/AuthContext|context\/CurrencyContext|lib\/push)$/ }, () => ({ path: stubs })) } };
 
 let fails = 0;
 const ok = (name, cond, got) => { console.log((cond ? 'PASS ' : 'FAIL ') + name + (cond ? '' : '\n   got: ' + JSON.stringify(got))); if (!cond) fails++; };
@@ -161,6 +161,31 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await click(p, 'Verify now');
   v = await until(p, (s) => !s.open);
   ok('5b "Verify now" opens /settings/verification and marks it done', v.loc === '/settings/verification' && v.dones === 1, v);
+  await p.close();
+
+  // 8. ver-18: "Connect X" is the last step, skippable, and links to Connections
+  p = await open('verifyX');
+  v = await until(p, (s) => s.open);
+  ok('8a verify then X: "Verify Level 1" is step 1 of 2', v.title === 'Verify Level 1' && v.count === 'Step 1 of 2', v);
+  await click(p, 'Later');
+  v = await until(p, (s) => s.title === 'Connect X');
+  ok('8b "Later" moves on to "Connect X", step 2 of 2 (not finished yet)', v.title === 'Connect X' && v.count === 'Step 2 of 2' && v.dones === 0, v);
+  ok('8c it says X jobs need it and that it can be skipped', /Many OgaPay jobs are on X/.test(v.text) && /To take them, connect your X account/.test(v.text) && /No X account\? Skip this/.test(v.text), v.text);
+  ok('8d Skip and Connect X', JSON.stringify(v.buttons) === '["Skip","Connect X"]', v.buttons);
+  await click(p, 'Skip');
+  v = await until(p, (s) => !s.open);
+  ok('8e Skip on the last step closes it and marks it done once', !v.open && v.dones === 1, v);
+  await p.close();
+  p = await open('xOnly');
+  v = await until(p, (s) => s.open);
+  ok('8f only X left: just "Connect X", no step count', v.title === 'Connect X' && v.count === '', v);
+  await click(p, 'Connect X');
+  v = await until(p, (s) => !s.open);
+  ok('8g "Connect X" opens /settings/connections and marks it done', v.loc === '/settings/connections' && v.dones === 1, v);
+  await p.close();
+  p = await open('xDone');
+  v = await until(p, (s) => s.dones === 1);
+  ok('8h X already connected (bad case): no X step, nothing to show', !v.open && v.dones === 1, v);
   await p.close();
 
   // 6. No sheet for admins, signed-out visitors, or an older server
