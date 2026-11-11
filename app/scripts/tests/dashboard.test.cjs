@@ -9,7 +9,7 @@
 //  dash-5  "Your first job" and starter jobs only offer jobs you can take (or
 //          could, after verifying or a first job); never Nigeria-only to a Ghanaian
 //  dash-6  bank Level 1 is not "ID verified"; the bonus text says NIN or ID
-//  dash-7  the logo goes to the dashboard when signed in; Dashboard is first in the menu
+//  dash-7  the logo goes to the homepage for everyone (owner, 2026-11-11); Dashboard is first in the menu
 //  dash-9  the Balance card shows every currency held (cedis, USDC), not naira only
 //  dash-20 "Jobs for you" is jobs you can take, your kind of work first, then the best paid
 //  fix pass: a failed work list hides "Your first job" and starter jobs (they could
@@ -171,7 +171,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok('5e dash-9: naira and USDC added up in naira (₦3,000 + 2 USDC at ₦1,500 = ₦6,000)', v.balance === '₦6,000', v.balance);
   ok('5f dash-9: each currency listed under it; an empty cedi wallet left out', /₦3,000/.test(v.balanceSmall) && /USDC/.test(v.balanceSmall) && !/GH/.test(v.balanceSmall), v.balanceSmall);
   ok('5g NIN-verified Level 1 can send money (no "verify to send" line)', v.stats.some((s) => /Level 1/.test(s)) && !v.stats.some((s) => /To send money/.test(s)), v.stats);
-  ok('5h dash-7: signed in, both logos go to the dashboard', v.logo === '/dashboard' && v.logoMobile === '/dashboard', { logo: v.logo, mobile: v.logoMobile });
+  ok('5h signed in, both logos go to the homepage', v.logo === '/' && v.logoMobile === '/', { logo: v.logo, mobile: v.logoMobile });
   ok('5i dash-7: Dashboard is the first item in the menu, not folded away', v.drawerFirst?.href === '/dashboard' && /Dashboard/.test(v.drawerFirst?.text || ''), v.drawerFirst);
   await p.close();
 

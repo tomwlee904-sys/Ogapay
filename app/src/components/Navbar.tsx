@@ -45,9 +45,6 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   // Shared with the dock: one check for both (lib/shared)
   const unreadNotifs = useUnreadCount(isAuthed)
   const [scrolled, setScrolled] = useState(false)
-  // Signed in, the logo goes back to your dashboard (phones had no other quick way
-  // back to it); signed out, to the homepage
-  const home = isAuthed ? '/dashboard' : '/'
   const navRef = useRef<HTMLElement>(null)
 
   const { balances: walletBalances } = useWalletBalance()
@@ -93,7 +90,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
 
       {/* ── Desktop ── */}
       <div className="nav-inner nav-desktop">
-        <Link className="brand" to={home} aria-label={isAuthed ? 'OgaPay, your dashboard' : 'OgaPay home'}>
+        <Link className="brand" to="/" aria-label="OgaPay home">
           <span className="logo-mark"><OgaLogo /></span>
           OgaPay
         </Link>
@@ -143,7 +140,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
       </div>
       {/* ── Mobile ── */}
       <div className="nav-mobile flex justify-between items-center w-full px-4 h-full">
-        <Link to={home} aria-label={isAuthed ? 'OgaPay, your dashboard' : 'OgaPay home'} className="tap flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
+        <Link to="/" aria-label="OgaPay home" className="tap flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
           <Logo size={28} />
           <span>OgaPay</span>
         </Link>
