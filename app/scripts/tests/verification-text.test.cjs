@@ -57,6 +57,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     banners: [...document.querySelectorAll('.st2-banner')].map((e) => e.textContent.trim()),
     calls: window.__calls,
     forms: document.querySelectorAll('input').length,
+    selects: document.querySelectorAll('select').length,
+    links: [...document.querySelectorAll('a')].map((a) => ({ href: a.getAttribute('href'), text: a.textContent.trim(), around: a.parentElement?.textContent.replace(/\s+/g, ' ').trim() })),
   }));
   const until = async (page, fn, ms = 4000) => { const end = Date.now() + ms; let v; while (Date.now() < end) { v = await view(page); if (fn(v)) return v; await sleep(40); } return view(page); };
   const clickText = (page, label) => page.evaluate((label) => {
@@ -64,10 +66,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (!b) throw new Error('no button ' + label);
     b.click();
   }, label);
-  const setDob = (page, value) => page.$eval('input[type=date]', (el, value) => {
-    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    set.call(el, value); el.dispatchEvent(new Event('input', { bubbles: true }));
-  }, value);
+  // Date of birth is three selects (day, month, year) since ver-16; value 'YYYY-MM-DD'
+  const setDob = async (page, value) => {
+    const [y, m, d] = value.split('-').map(Number);
+    await page.select('select[aria-label=Day]', String(d));
+    await page.select('select[aria-label=Month]', String(m));
+    await page.select('select[aria-label=Year]', String(y));
+  };
   let p, v;
 
   // ── ver-1 / ver-3: the levels card and the bank panel ──
@@ -102,7 +107,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // ── ver-6: NIN sent to our team ──
   p = await open('nin0');
-  await until(p, (s) => s.forms >= 2);
+  await until(p, (s) => s.forms >= 1 && s.selects >= 3);
   await p.type('input[inputmode=numeric]', '20419385761');
   await setDob(p, '1995-04-02');
   await clickText(p, 'Verify NIN');
@@ -189,6 +194,80 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   v = await until(p, (s) => /Available:/.test(s.text));
   ok('4e a poster tipping approved work on their own job (bank Level 1 is enough on the server): the form opens', /Tip @tunde/.test(v.text) && /Available:/.test(v.text), v.text);
   await p.close();
+
+  // ── ver-15: every name link goes to Edit profile, in the same words ──
+  const nameLinks = (v) => v.links.filter((l) => /name/i.test(l.around || '') && /change it|add your name|Edit profile|account/i.test(l.around || ''));
+  p = await open('bank0');
+  await until(p, (s) => /Verify with your bank account/.test(s.text));
+  await clickText(p, 'Use your NIN instead');
+  v = await until(p, (s) => s.selects >= 3);
+  let nl = nameLinks(v);
+  ok('6a bank panel + NIN form: two name links, both to /edit-profile, both called "Edit profile"', nl.length === 2 && nl.every((l) => l.href === '/edit-profile' && l.text === 'Edit profile'), nl);
+  ok('6b both say "Change it in Edit profile first" and that it can\'t change after verifying', nl.every((l) => /change it in Edit profile first\. You can't change it after you're verified\./i.test(l.around)), nl.map((l) => l.around));
+  ok('6c no link to Settings, Account for the name', !v.links.some((l) => l.href === '/settings/account'), v.links);
+  await p.close();
+  p = await open('bank0NoName');
+  v = await until(p, (s) => /Verify with your bank account/.test(s.text));
+  nl = nameLinks(v);
+  ok('6d no name yet: "First, add your name in Edit profile"', nl.length === 1 && nl[0].href === '/edit-profile' && nl[0].text === 'Edit profile' && /First, add your name in Edit profile, exactly as it is on your bank account\./.test(nl[0].around), nl);
+  await p.close();
+  p = await open('ninInstant0');
+  v = await until(p, (s) => s.selects >= 3);
+  nl = nameLinks(v);
+  ok('6e NIN checked with NIMC: the name link is Edit profile too', nl.length === 1 && nl[0].href === '/edit-profile' && nl[0].text === 'Edit profile' && /must match your NIN\. If it doesn't, change it in Edit profile first\./.test(nl[0].around), nl);
+  await p.close();
+  p = await open('nin1');
+  v = await until(p, (s) => /Get Level 2/.test(s.text));
+  ok('6f already verified (name locked): no "change your name" link', nameLinks(v).length === 0, nameLinks(v));
+  await p.close();
+
+  // ── ver-16: date of birth opens near 2000, 18+ only ──
+  p = await open('nin0');
+  v = await until(p, (s) => s.selects >= 3);
+  const years = await p.$$eval('select[aria-label=Year] option', (os) => os.map((o) => o.value).filter(Boolean).map(Number));
+  const top = new Date().getFullYear() - 18;
+  ok('7a no date picker that opens on today: day / month / year selects', v.selects === 3 && !(await p.$('input[type=date]')), v.selects);
+  ok('7b the year list starts at 18 years ago, newest first, and 2000 is in the first 30', years[0] === top && years[1] === top - 1 && years.indexOf(2000) >= 0 && years.indexOf(2000) < 30, years.slice(0, 12));
+  ok('7c no year that would make you younger than 18; goes back 100 years', Math.max(...years) === top && Math.min(...years) === top - 82, [Math.max(...years), Math.min(...years)]);
+  ok('7d the form says you must be 18 or older', /You must be 18 or older\./.test(v.text), v.text);
+  const sentBefore = v.calls.filter((x) => x.path === '/kyc/submit').length;
+  await p.type('input[inputmode=numeric]', '20419385761');
+  // Born later this year, 18 years ago: still 17 today
+  const t = new Date(); const later = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1);
+  if (later.getFullYear() === t.getFullYear()) {
+    await setDob(p, `${top}-${String(later.getMonth() + 1).padStart(2, '0')}-${String(later.getDate()).padStart(2, '0')}`);
+    await clickText(p, 'Verify NIN');
+    v = await until(p, (s) => s.red.length > 0);
+    ok('7e 17 years old (birthday tomorrow): refused before sending', v.red.some((x) => /You must be 18 or older to verify on OgaPay/.test(x)) && v.calls.filter((x) => x.path === '/kyc/submit').length === sentBefore, v.red);
+  } else ok('7e (skipped on 31 December)', true, null);
+  await setDob(p, '2000-02-31');
+  await clickText(p, 'Verify NIN');
+  v = await until(p, (s) => s.red.some((x) => /doesn't exist/.test(x)));
+  ok('7f 31 February: "That date doesn\'t exist", not sent', v.red.some((x) => /That date doesn't exist/.test(x)) && v.calls.filter((x) => x.path === '/kyc/submit').length === sentBefore, v.red);
+  await p.select('select[aria-label=Day]', '');
+  await clickText(p, 'Verify NIN');
+  v = await until(p, (s) => s.red.some((x) => /day, month and year/.test(x)));
+  ok('7g a missing day: asked for day, month and year, not sent', v.red.some((x) => /Choose the day, month and year you were born/.test(x)) && v.calls.filter((x) => x.path === '/kyc/submit').length === sentBefore, v.red);
+  await setDob(p, '2000-03-15');
+  await clickText(p, 'Verify NIN');
+  v = await until(p, (s) => s.calls.filter((x) => x.path === '/kyc/submit').length > sentBefore);
+  const sent = v.calls.filter((x) => x.path === '/kyc/submit').pop();
+  ok('7h a real adult date is sent as 2000-03-15 (midnight UTC, as before)', JSON.parse(sent.body).dateOfBirth === '2000-03-15T00:00:00.000Z', sent.body);
+  await p.close();
+
+  // ── ver-17: Level 2 takes any government ID; daily limit next to Thursday payouts ──
+  p = await open('bank1');
+  v = await until(p, (s) => /Get Level 2: send your ID to our team/.test(s.text));
+  ok('8a the Level 2 row names any government ID', /Level 2: withdraw up to ₦10,000 a day\s*A photo of any government ID \(NIN slip or card, international passport, driver's licence or voter's card; Ghana Card in Ghana\), checked by our team/.test(v.text), v.text.match(/Level 2:[^\n]*\n?[^\n]*/)?.[0]);
+  ok('8b the Level 2 form says the same', /Take a clear photo of any government ID \(NIN slip or card, international passport, driver's licence or voter's card; Ghana Card in Ghana\) and type its number\./.test(v.text), v.text);
+  ok('8c the limit is explained next to the Thursday payout', /The daily limit is how much you can ask to withdraw in a day\. Bank withdrawals are then paid out together every Thursday\./.test(v.text), v.text);
+  const idOpts = await p.$$eval('option', (os) => os.map((o) => o.textContent));
+  ok('8d the ID list matches what the form (and the server) accept', ['National ID (NIN slip or card)', 'International passport', "Driver's licence", "Voter's card", 'Ghana Card'].every((o) => idOpts.includes(o)), idOpts);
+  await p.close();
+  const levelCard = fs.readFileSync(path.join(SRC, 'components/wallet/LevelCard.tsx'), 'utf8');
+  ok('8e Wallet level card: "ask to withdraw up to … a day. Bank withdrawals are paid out every Thursday."', /You can ask to withdraw up to <b>.*<\/b> a day\. Bank withdrawals are paid out every Thursday\./.test(levelCard), null);
+  const withdraw = fs.readFileSync(path.join(SRC, 'components/wallet/WithdrawModal.tsx'), 'utf8');
+  ok('8f Withdraw: the bank note puts the daily limit next to Thursday', /You can ask for up to \$\{naira\(dayLimit, 0\)\} a day; bank withdrawals are paid out every Thursday/.test(withdraw) && /ask to withdraw up to \{naira\(withdrawLimit\(1\), 0\)\} a day, paid out every Thursday/.test(withdraw), null);
 
   // The Terms say the same as SEND_RULE / BONUS_RULE (lib/levels.ts)
   const terms = fs.readFileSync(path.join(SRC, 'pages/Terms.tsx'), 'utf8');

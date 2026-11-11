@@ -19,7 +19,7 @@ export default function LevelCard({ tier, didit, ninInstant = false, bank = fals
       </div>
       <p className="wl-level-head">
         {tier > 0
-          ? <>You can withdraw up to <b>{naira(current?.limit ?? 0, 0)}</b> a day.</>
+          ? <>You can ask to withdraw up to <b>{naira(current?.limit ?? 0, 0)}</b> a day. Bank withdrawals are paid out every Thursday.</>
           : <>Verify your identity to {UNLOCKS}.</>}
       </p>
       <ol className="wl-steps" aria-label="Verification levels">

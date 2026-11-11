@@ -5,13 +5,16 @@ import { shrinkImage } from '../../lib/shrinkImage'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
-import { levelsFor, UNLOCKS, SEND_RULE, BANK_ONLY_NEXT } from '../../lib/levels'
+import { levelsFor, UNLOCKS, SEND_RULE, BANK_ONLY_NEXT, ANY_ID, LIMIT_AND_PAYDAY } from '../../lib/levels'
 import { naira, kycOf } from '../../lib/wallet'
+import { DOB_MONTHS, MIN_AGE, dobIso, dobProblem, dobYears } from '../../lib/dob'
 import AddBankForm from '../../components/wallet/AddBankForm'
 import '../../styles/wallet.css'
 
 // Where VeryCallback keeps the claim key from a scan that came back signed out
 const VERY_CLAIM_KEY = 'ogapay_very_claim'
+// Once any level is approved the name can't be changed (user.service updateProfile)
+const NAME_LOCK = "You can't change it after you're verified."
 
 // Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
@@ -136,7 +139,10 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const useDidit = (didit && tier < 2) || diditOpen
   const nextTier = useDidit ? 2 : tier + 1
   const [num, setNum] = useState('')
-  const [dob, setDob] = useState('')
+  // Date of birth as day / month / year selects (lib/dob)
+  const [dobD, setDobD] = useState('')
+  const [dobM, setDobM] = useState('')
+  const [dobY, setDobY] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   // tone: ok (verified), wait (sent to our team: calm, not an error), err (a real problem)
@@ -187,7 +193,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const submit = async () => {
     if (!want || busy) return
     if (num.length !== 11) { setNinMsg({ tone: 'err', text: `Enter all 11 digits of your ${want}.` }); return }
-    if (!dob) { setNinMsg({ tone: 'err', text: `Enter your date of birth as it is on your ${want} record.` }); return }
+    const dobErr = dobProblem(dobD, dobM, dobY)
+    if (dobErr) { setNinMsg({ tone: 'err', text: !dobD && !dobM && !dobY ? `Enter your date of birth as it is on your ${want} record.` : dobErr }); return }
+    const dob = dobIso(dobD, dobM, dobY)
     setBusy(true); setNinMsg(null)
     try {
       const r = await apiRequest<any>('/kyc/submit', {
@@ -196,7 +204,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       })
       setNinMsg({ tone: r?.status === 'APPROVED' ? 'ok' : r?.status === 'SUBMITTED' ? 'wait' : 'err', text: r?.message || 'Submitted' })
       if (r?.status === 'APPROVED') toast(r.message, 'success')
-      setNum(''); setDob('')
+      setNum(''); setDobD(''); setDobM(''); setDobY('')
       await reload()
       refreshUser()
     } catch (e: any) {
@@ -343,9 +351,10 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         <li>Type your 10-digit account number.</li>
         <li>If the name on the account is <b>{myName || 'your name'}</b>, you're verified. Your earnings will be paid into this account.</li>
       </ol>
+      {/* Every name link on this page goes to Edit profile, in the same words (ver-15) */}
       {!me.firstName || !me.lastName
-        ? <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>First, <Link className="st2-linkbtn" to="/edit-profile">add your name</Link> exactly as it is on your bank account.</span></div>
-        : <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Is your name different on your bank account? <Link className="st2-linkbtn" to="/edit-profile">Change it here first</Link>. You can't change it after you're verified.</span></div>}
+        ? <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>First, add your name in <Link className="st2-linkbtn" to="/edit-profile">Edit profile</Link>, exactly as it is on your bank account.</span></div>
+        : <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Is your name different on your bank account? Change it in <Link className="st2-linkbtn" to="/edit-profile">Edit profile</Link> first. {NAME_LOCK}</span></div>}
       {bankMsg ? <p className="st2-ok">{bankMsg}</p> : (
         <AddBankForm note="Use your own personal account, not a business account or someone else's." action={{ label: 'Verify me', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
       )}
@@ -373,16 +382,32 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       {ninInstant && (
         <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>
           We confirm your NIN, date of birth and name with NIMC through Didit, our verification partner. It takes a few seconds.
-          The name on your OgaPay account, <b>{`${me.firstName || ''} ${me.lastName || ''}`.trim() || 'not set'}</b>, must match your NIN: <Link className="st2-linkbtn" to="/settings/account">change it</Link> first if it doesn't.
+          The name on your OgaPay account, <b>{`${me.firstName || ''} ${me.lastName || ''}`.trim() || 'not set'}</b>, must match your NIN. If it doesn't, change it in <Link className="st2-linkbtn" to="/edit-profile">Edit profile</Link> first. {NAME_LOCK}
         </p>
       )}
-      {!ninInstant && <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>Our team checks your NIN, usually within a day. The name on your OgaPay account must match it.</p>}
+      {!ninInstant && <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>Our team checks your NIN, usually within a day. The name on your OgaPay account must match it. If it doesn't, change it in <Link className="st2-linkbtn" to="/edit-profile">Edit profile</Link> first. {NAME_LOCK}</p>}
       <label className="st2-f"><span>{want} (11 digits)</span>
         <input inputMode="numeric" autoComplete="off" value={num} maxLength={11} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="National Identification Number" required />
       </label>
-      <label className="st2-f"><span>Date of birth (as on your {want} record)</span>
-        <input type="date" value={dob} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setDob(e.target.value)} required />
-      </label>
+      {/* Day, month, year: the date picker opened on today (ver-16); years start at 18 */}
+      <fieldset className="st2-f st2-dob">
+        <legend><span>Date of birth (as on your {want} record)</span></legend>
+        <div className="st2-dob-row">
+          <select aria-label="Day" value={dobD} onChange={(e) => setDobD(e.target.value)}>
+            <option value="">Day</option>
+            {Array.from({ length: 31 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+          </select>
+          <select aria-label="Month" value={dobM} onChange={(e) => setDobM(e.target.value)}>
+            <option value="">Month</option>
+            {DOB_MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+          <select aria-label="Year" value={dobY} onChange={(e) => setDobY(e.target.value)}>
+            <option value="">Year</option>
+            {dobYears().map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <small className="st2-muted">You must be {MIN_AGE} or older.</small>
+      </fieldset>
       <ToneMsg m={ninMsg} />
       <div className="st2-actions"><button className={`up-btn${useDidit ? '' : ' primary'}`} disabled={busy}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
     </form>
@@ -423,7 +448,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); sendManual() }}>
       <strong>Get Level 2: send your ID to our team</strong>
       <p className="st2-muted" style={{ margin: '6px 0 0', lineHeight: 1.55 }}>
-        Take a clear photo of your NIN slip or card (or another ID) and type its number. The photo must show the ID itself with your name and number readable. A selfie or a photo of your face is not an ID and will be rejected. Our team checks it by hand, usually within a day. Your photo is private and only our verification team can see it.
+        Take a clear photo of {ANY_ID} and type its number. The photo must show the ID itself with your name and number readable. A selfie or a photo of your face is not an ID and will be rejected. Our team checks it by hand, usually within a day. Your photo is private and only our verification team can see it.
       </p>
       {manualReq?.status === 'REJECTED' && <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Your last request wasn't approved{manualReq.reason ? `: ${manualReq.reason}` : ''}. You can send a new photo.</span></div>}
       <label className="st2-f"><span>Type of ID</span>
@@ -466,7 +491,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             )
           })}
         </div>
-        <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>Any level lets you {UNLOCKS}. {SEND_RULE} Without a level you can still earn and add money by card or USSD.</p>
+        <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>{LIMIT_AND_PAYDAY} Any level lets you {UNLOCKS}. {SEND_RULE} Without a level you can still earn and add money by card or USSD.</p>
         {/* not while their ID photo is already with our team: the panel below says so */}
         {bankOnly && tier === 1 && manualReq?.status !== 'PENDING' && <div className="st2-banner"><i className="ti ti-info-circle" aria-hidden="true" /> {BANK_ONLY_NEXT}</div>}
 

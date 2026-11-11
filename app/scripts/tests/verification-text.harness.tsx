@@ -27,6 +27,8 @@ const CASES: Record<string, Case> = {
   // Settings → Verification
   bank0: { me: { ...base, kyc: null }, providers: { bankKyc: true } },
   nin0: { me: { ...base, kyc: null }, providers: {} },
+  bank0NoName: { me: { ...base, firstName: '', lastName: '', kyc: null }, providers: { bankKyc: true } },
+  ninInstant0: { me: { ...base, kyc: null }, providers: { ninInstant: true } },
   bank1: { me: { ...base, kyc: kyc('APPROVED', 1, 'bank-name', 'BANK') }, providers: { bankKyc: true } },
   nin1: { me: { ...base, kyc: kyc('APPROVED', 1, 'admin', 'NIN') }, providers: { bankKyc: true } },
   // bank Level 1 whose ID photo (Level 2) is already with our team
