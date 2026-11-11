@@ -1,6 +1,8 @@
 /* Open the sign-in dialog from anywhere (navbar, drawer, guards) without a
    route change. <SignInHost /> in App listens for this event. */
 
+// email: one field, a code by email (signs in, or makes the account); signup is
+// the same with Google offered first and the invite line (referral links)
 export type SignInView = 'options' | 'wallets' | 'email' | 'signup' | 'forgot' | 'pair' | 'twofa'
 
 export interface SignInRequest {
