@@ -19,8 +19,8 @@ const VERY_CLAIM_KEY = 'ogapay_very_claim'
 const NAME_LOCK = "You can't change it after you're verified."
 // The VeryAI app in the stores (ver-12). No official store links are in our code
 // or VeryAI's docs we have, so these open a store search for "VeryAI".
-export const VERYAI_PLAY = 'https://play.google.com/store/search?q=VeryAI&c=apps'
-export const VERYAI_APPSTORE = 'https://apps.apple.com/search?term=VeryAI'
+export const VERYAI_PLAY = 'https://play.google.com/store/apps/details?id=xyz.veros.app'
+export const VERYAI_APPSTORE = 'https://apps.apple.com/us/app/veryai-proof-of-reality/id6746761869'
 // "Connect X" card closed with "Not now" (ver-18), per browser
 const HIDE_X_KEY = 'ogapay_hide_connect_x'
 

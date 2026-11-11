@@ -396,8 +396,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   v = await until(p, (s) => /You need the free VeryAI app/.test(s.text));
   const stores = v.links.filter((l) => /Play Store|App Store/.test(l.text));
   ok('12a the VeryAI card says "You need the free VeryAI app" before the steps', /You need the free VeryAI app/.test(v.text) && v.text.indexOf('You need the free VeryAI app') < v.text.indexOf('How it works'), v.text);
-  ok('12b ...with Play Store and App Store links that open VeryAI in the stores', stores.length === 2
-    && stores.some((l) => /^https:\/\/play\.google\.com\/store\/.*VeryAI/.test(l.href)) && stores.some((l) => /^https:\/\/apps\.apple\.com\/.*VeryAI/.test(l.href)), stores);
+  ok('12b ...with Play Store and App Store links to the official VeryAI app pages', stores.length === 2
+    && stores.some((l) => l.href === 'https://play.google.com/store/apps/details?id=xyz.veros.app') && stores.some((l) => l.href === 'https://apps.apple.com/us/app/veryai-proof-of-reality/id6746761869'), stores);
   const storeAttrs = await p.$$eval('a[href^="https://play.google.com"], a[href^="https://apps.apple.com"]', (as) => as.map((a) => [a.target, a.rel]));
   ok('12c ...in a new tab, safely (noopener)', storeAttrs.length === 2 && storeAttrs.every(([t, r]) => t === '_blank' && /noopener/.test(r)), storeAttrs);
   await p.close();
