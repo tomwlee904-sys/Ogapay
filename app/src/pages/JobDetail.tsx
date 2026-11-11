@@ -28,6 +28,7 @@ import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
 import { openRules } from '../lib/welcome'
 import { jobsListPath } from '../lib/jobsList'
 import InfoTip from '../components/InfoTip'
+import { openSignIn } from '../lib/signin'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -421,7 +422,7 @@ export default function JobDetail() {
   }
 
   const handleBookmark = async () => {
-    if (!authUser) { navigate('/login?redirect=' + encodeURIComponent('/tasks/' + id)); return }
+    if (!authUser) { openSignIn({ redirect: '/tasks/' + id }); return }
     const newState = !bookmarked
     setBookmarked(newState)
     try { await setSaved(job!.id, newState) } catch { setBookmarked(!newState) }
@@ -1144,7 +1145,7 @@ function WurkJobDetailView(props: any) {
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                     {canManage ? 'Manage submissions' : isOpen ? (job.isSelection ? 'Apply' : 'Take a place') : 'Job closed'}
                   </button>
-                : <button className="ui-btn ui-btn-dark" type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>Sign in to apply</button>}
+                : <button className="ui-btn ui-btn-dark" type="button" onClick={() => openSignIn({ redirect: '/tasks/' + job.id })}>Sign in to apply</button>}
             </div>
           </header>
           {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
@@ -1172,7 +1173,7 @@ function WurkJobDetailView(props: any) {
                 <span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8' }} />
                 {isOpen ? 'Open' : 'Closed'}
               </span>
-              <button className="wjd-link" type="button" onClick={() => authUser ? setShowReportModal(true) : navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>
+              <button className="wjd-link" type="button" onClick={() => authUser ? setShowReportModal(true) : openSignIn({ redirect: '/tasks/' + job.id })}>
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 Report
               </button>
@@ -1355,7 +1356,7 @@ function WurkJobDetailView(props: any) {
             {!authUser ? (
               <div className="wjd-signin-card">
                 <div className="wjd-signin-text">Sign in to apply for this task</div>
-                <button className="wjd-primary" type="button" onClick={() => navigate('/login')} style={{ width: '100%', maxWidth: 300 }}>
+                <button className="wjd-primary" type="button" onClick={() => openSignIn({ redirect: '/tasks/' + job.id })} style={{ width: '100%', maxWidth: 300 }}>
                   Sign In
                 </button>
               </div>

@@ -9,6 +9,7 @@
     "test:store-product": "node scripts/tests/store-product.test.cjs",
     "test:signin-google": "node scripts/tests/signin-google.test.cjs",
     "test:signin-email-code": "node scripts/tests/signin-email-code.test.cjs",
+    "test:signin-return": "node scripts/tests/signin-return.test.cjs",
     "test:email-verify": "node scripts/tests/email-verify.test.cjs",
     "test:wallet-labels": "node scripts/tests/wallet-labels.test.cjs",
     "test:share-gets": "node scripts/tests/share-gets.test.cjs",

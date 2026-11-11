@@ -3,11 +3,12 @@ import bs58 from 'bs58'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE, apiRequest } from '../../lib/api'
 import { supabase } from '../../lib/supabaseClient'
-import type { SignInView } from '../../lib/signin'
+import { safeRedirect, type SignInView } from '../../lib/signin'
 import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
 import { trackSignUpConversion } from '../../lib/ads'
 import { chromeIntentUrl, copyText, inAppBrowserName, isAndroid } from '../../lib/inAppBrowser'
 import { RESEND_SECONDS, retryAfterOf, useResendTimer } from '../../lib/emailCode'
+import { suggestEmail } from '../../lib/emailTypos'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -26,6 +27,8 @@ interface Props {
   initialNotice?: string
   /** Opens on the 2FA step with this challenge (Google sign-in, AuthCallback) */
   initialChallenge?: { token: string; userId: string }
+  /** A new Google account's sign-in, held until its last step is done (AuthCallback) */
+  initialPending?: any
   redirect?: string | null
   onClose: () => void
   onSignedIn: (isNewAccount: boolean) => void
@@ -89,6 +92,18 @@ const nameProblem = (raw: string) => {
   return null
 }
 
+// The country for a new account's last step: Ghana when this phone's clock is
+// set to Ghana's time zone, else Nigeria (the person can change it; login-23)
+const guessCountry = (): 'NG' | 'GH' => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Africa/Accra' ? 'GH' : 'NG' } catch { return 'NG' }
+}
+// The name a Google account came with ("Member" is the server's stand-in for none)
+const pendingName = (p: any) => {
+  const u = p?.user || {}
+  const n = [u.firstName, u.lastName].filter(Boolean).join(' ').trim()
+  return n === 'Member' ? '' : n
+}
+
 // Official icons, from each wallet's @solana/wallet-adapter package (Trust cropped to its shield)
 interface WalletDef { id: string; name: string; icon: string; detect: () => any; install: string; openIn?: (url: string) => string }
 const win = () => window as any
@@ -126,7 +141,7 @@ function Option({ icon, name, desc, tag, onClick, disabled }: { icon: ReactNode;
 
 const Spinner = () => <span className="si-spin" aria-hidden="true" />
 
-export default function SignInModal({ initialView = 'options', initialCode = '', initialNotice = '', initialChallenge, redirect, onClose, onSignedIn }: Props) {
+export default function SignInModal({ initialView = 'options', initialCode = '', initialNotice = '', initialChallenge, initialPending, redirect, onClose, onSignedIn }: Props) {
   const { login } = useAuth()
   const [view, setView] = useState<View>(initialView)
   const [busy, setBusy] = useState('')
@@ -138,8 +153,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [showPw, setShowPw] = useState(false)
   // Ticked unless unticked last time: unticked = a short session (lib/api setShortSession)
   const [remember, setRemember] = useState(() => localStorage.getItem('ogapay_remember_off') !== '1')
-  const [name, setName] = useState('')
-  const [country, setCountry] = useState<'NG' | 'GH'>('NG')
+  const [name, setName] = useState(() => pendingName(initialPending))
+  const [country, setCountry] = useState<'NG' | 'GH'>(guessCountry)
   const [intent, setIntent] = useState<Intent | ''>('')
   const [code, setCode] = useState(initialCode.toUpperCase())
   const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(initialChallenge || null)
@@ -160,7 +175,12 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   // A new account (email code or wallet) before its last step: signed in on the
   // server, but saved here only when the step is done or skipped (or the sheet is
   // closed), so the sheet stays open for it
-  const [pending, setPending] = useState<any>(null)
+  const [pending, setPending] = useState<any>(initialPending || null)
+  // "Did you mean …?" for a mistyped email (login-21): the address it was shown
+  // for; sending again with the same address sends it as typed
+  const [typo, setTypo] = useState<{ typed: string; fix: string } | null>(null)
+  // The last code check got no answer (slow data): its code may be used up
+  const timedOut = useRef(false)
   // Checked again shortly after opening: some wallet apps add their wallet to
   // the page a moment after it loads
   const [inWalletApp, setInWalletApp] = useState(inWalletAppBrowser)
@@ -224,7 +244,10 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   // ── Methods ──────────────────────────────────────────────────────────────
   const google = (anyway = false) => run('google', async () => {
     if (inApp && !anyway) { setInAppHelp(true); return }
-    if (redirect) sessionStorage.setItem('ogapay_after_login', redirect)
+    // Back to the page it was opened on after Google, not always the dashboard
+    // (login-14); on /login itself there is none and the dashboard opens
+    const back = redirect || safeRedirect(window.location.pathname + window.location.search)
+    if (back) sessionStorage.setItem('ogapay_after_login', back)
     try {
       const { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
       if (err) throw err
@@ -280,6 +303,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     const to = email.trim()
     if (!to) { setError('Enter your email address.'); return }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { setError('Check your email address. It should look like name@example.com.'); return }
+    const fix = suggestEmail(to)
+    if (fix && typo?.typed !== to) { setError(''); setTypo({ typed: to, fix }); return }
+    setTypo(null)
     run('mailcode', async () => {
       try {
         if (view === 'addemail') await apiRequest('/auth/email/add/request', { method: 'POST', auth: false, headers: asNew(), body: JSON.stringify({ email: to }) })
@@ -293,6 +319,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
       }
       setCodeSent(true)
       setMailCode('')
+      timedOut.current = false
       timer.wait(RESEND_SECONDS)
       setNotice({ text: `We sent a 6-digit code to ${to}. It works for 10 minutes. Not there? Check your spam folder.`, ok: true })
     })
@@ -312,9 +339,19 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     }
     run('mailcodein', async () => {
       const ref = referral()
-      const result = await apiRequest<any>('/auth/email-code/verify', {
-        method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), code: mailCode, ...(ref && { referralCode: ref }) }),
-      })
+      // Slow data (login-11): a longer wait, and a lost answer is explained. The
+      // code may already have made the account and be used up; a new code then
+      // signs in, where retrying the old one only said "wrong code".
+      let result: any
+      try {
+        result = await apiRequest<any>('/auth/email-code/verify', {
+          method: 'POST', auth: false, timeoutMs: 30000, body: JSON.stringify({ email: email.trim(), code: mailCode, ...(ref && { referralCode: ref }) }),
+        })
+      } catch (err: any) {
+        if (/timed out|failed to fetch|network/i.test(err?.message || '')) { timedOut.current = true; throw new Error('Your connection dropped before we heard back. Tap Send a new code and enter it: it signs you in, even if your account was just made.') }
+        if (timedOut.current && err?.status === 401) throw new Error('That code was probably used when your connection dropped. Tap Send a new code and enter the new one.')
+        throw err
+      }
       try { localStorage.setItem('ogapay_remember_email', email.trim()) } catch { /* private mode */ }
       if (result?.isNewUser) startNew(result, 'profile')
       else finish(result)
@@ -330,6 +367,16 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     const { firstName, lastName } = splitName(name)
     run('profile', async () => {
       await apiRequest('/users/me', { method: 'PATCH', auth: false, headers: asNew(), body: JSON.stringify({ firstName, lastName, country, ...(intent && { signupIntent: intent }) }) })
+      completePending()
+    })
+  }
+
+  // Skip: nothing is saved, except Ghana (an account starts as Nigeria, and a
+  // Ghanaian skipping shouldn't be treated as Nigerian; login-23)
+  const skipProfile = () => {
+    if (country === 'NG') { completePending(); return }
+    run('profile', async () => {
+      try { await apiRequest('/users/me', { method: 'PATCH', auth: false, headers: asNew(), body: JSON.stringify({ country }) }) } catch { /* set later in Settings */ }
       completePending()
     })
   }
@@ -469,8 +516,17 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         {noticeLine}
         <div className="si-field">
           <label htmlFor="si-email">Email address</label>
-          <input id="si-email" className="si-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+          <input id="si-email" className="si-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="you@example.com" value={email} onChange={e => { setEmail(e.target.value); setTypo(null) }} />
         </div>
+        {typo && (
+          <div className="si-notice" role="alert" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span>Did you mean <b>{typo.fix}</b>?</span>
+            <div className="si-row">
+              <button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => { setEmail(typo.fix); setTypo(null) }}>Yes, use {typo.fix.slice(typo.fix.lastIndexOf('@'))}</button>
+              <button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => sendMailCode()}>No, send to what I typed</button>
+            </div>
+          </div>
+        )}
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'mailcode'}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Send code'}</button>
         {adding
@@ -528,7 +584,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         </fieldset>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'profile'}>{busy === 'profile' ? <><Spinner /> Saving…</> : 'Continue'}</button>
-        <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} disabled={busy === 'profile'} onClick={completePending}>Skip for now</button>
+        <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} disabled={busy === 'profile'} onClick={skipProfile}>Skip for now</button>
       </form>
     )
   } else if (view === 'password') {

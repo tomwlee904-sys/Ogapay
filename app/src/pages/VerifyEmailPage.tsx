@@ -7,6 +7,9 @@ import { useAuth } from '../context/AuthContext'
 // Without a valid link this page sends a new one: signed in, straight away;
 // signed out, to the email typed (the answer is the same whether or not an
 // account exists). It used to offer "send me a code", which the API never had.
+// Opened signed out (the Gmail app's own browser, another phone), a good link
+// shows "Email verified" with Open OgaPay: it used to move on to the dashboard,
+// which asked to sign in and looked like the link had failed (login-25).
 
 type Step = 'checking' | 'resend' | 'sent' | 'success'
 
@@ -35,8 +38,10 @@ export default function VerifyEmailPage() {
         const data = await res.json().catch(() => ({}))
         if (res.ok) {
           setStep('success')
-          refreshUser?.()
-          setTimeout(() => navigate('/dashboard'), 2500)
+          if (signedIn) {
+            refreshUser?.()
+            setTimeout(() => navigate('/dashboard'), 2500)
+          }
         } else {
           setLinkProblem(/expired/i.test(data.message || '') ? 'This link has expired.' : "This link doesn't work any more.")
           setStep('resend')
@@ -55,7 +60,7 @@ export default function VerifyEmailPage() {
       })
       const data = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(data.message || "Couldn't send the email. Try again.")
-      if (/already verified/i.test(data.message || '')) { setStep('success'); setTimeout(() => navigate('/dashboard'), 1500); return }
+      if (/already verified/i.test(data.message || '')) { setStep('success'); if (signedIn) setTimeout(() => navigate('/dashboard'), 1500); return }
       setMsg(data.message || 'Verification email sent')
       setStep('sent')
     } catch (e: any) { setErr(e.message) }
@@ -76,7 +81,14 @@ export default function VerifyEmailPage() {
       <div style={{ textAlign: 'center' }}>
         <i className="ti ti-circle-check" style={{ fontSize: 44, color: 'var(--green)' }} />
         <h1 style={{ margin: '10px 0 6px', fontSize: 20, fontWeight: 600 }}>Email verified</h1>
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--text2)' }}>Taking you to your dashboard…</p>
+        {signedIn ? (
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text2)' }}>Taking you to your dashboard…</p>
+        ) : (
+          <>
+            <p style={{ margin: '0 0 18px', fontSize: 13, lineHeight: 1.6, color: 'var(--text2)' }}>All done. You can close this page and go back to OgaPay, or open it here.</p>
+            <Link to="/" className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }}>Open OgaPay</Link>
+          </>
+        )}
       </div>,
     )
   }
