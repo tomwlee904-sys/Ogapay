@@ -7,6 +7,8 @@ export const API_BASE =
 export type AuthTokens = {
   accessToken: string
   refreshToken: string
+  /** From the server: false = "Remember me" was unticked (ends when the browser closes) */
+  rememberMe?: boolean
 }
 
 export type AuthUser = {
@@ -34,6 +36,8 @@ type ApiOptions = RequestInit & {
 }
 
 export const REQUEST_TIMEOUT_MS = 15000
+/** Wait before the one retry of a failed session renewal (well inside the server's 60 s) */
+export const REFRESH_RETRY_DELAY_MS = 1500
 
 const ACCESS_TOKEN_KEY = 'ogapay_access_token'
 const REFRESH_TOKEN_KEY = 'ogapay_refresh_token'
@@ -64,6 +68,32 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
+// "Remember me" unticked (2026-11-11): the server gives a 1-day session and the
+// website drops it when the browser closes. A cookie without an expiry date is
+// shared by every tab and is gone once the browser closes; the flag says this
+// sign-in needs it. Tokens stay in localStorage like any other session.
+const SHORT_SESSION_KEY = 'ogapay_short_session'
+const SESSION_COOKIE = 'ogapay_sess'
+
+function setShortSession(short: boolean) {
+  try {
+    if (short) {
+      localStorage.setItem(SHORT_SESSION_KEY, '1')
+      document.cookie = `${SESSION_COOKIE}=1; path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`
+    } else {
+      localStorage.removeItem(SHORT_SESSION_KEY)
+      document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0`
+    }
+  } catch { /* storage blocked */ }
+}
+
+/** A "don't remember me" sign-in whose browser was closed since */
+export function shortSessionEnded(): boolean {
+  try {
+    return localStorage.getItem(SHORT_SESSION_KEY) === '1' && !document.cookie.split(/;\s*/).includes(`${SESSION_COOKIE}=1`)
+  } catch { return false }
+}
+
 export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<AuthTokens>; accessToken?: string; refreshToken?: string }) {
   const tokens = payload.tokens || {}
   const accessToken = tokens.accessToken || (payload as any).accessToken || ''
@@ -72,6 +102,10 @@ export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<
   if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
   if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user))
   if (accessToken || payload.user) localStorage.setItem(LEGACY_AUTH_KEY, 'true')
+  // The server says how long this sign-in lasts (sign-in and refresh replies).
+  // A new sign-in from a path without the box (Google, wallet) is a normal one.
+  if (typeof tokens.rememberMe === 'boolean') setShortSession(!tokens.rememberMe)
+  else if (refreshToken && payload.user) setShortSession(false)
 }
 
 export function clearAuthSession() {
@@ -98,6 +132,7 @@ export function clearAuthSession() {
     localStorage.removeItem('ogapay_role_override')
     localStorage.removeItem('ogapay_task_history')
     localStorage.removeItem('ogapay_temp_pw')
+    setShortSession(false)
     // Clear all user drafts
     clearAllDrafts()
     // Note: ogapay_remember_email is intentionally NOT cleared here
@@ -112,6 +147,24 @@ export function clearAuthSession() {
     }
   } catch {}
 }
+
+// "Remember me" was unticked and the browser was closed since: sign out before
+// anything reads the tokens, and tell the server (best effort; it ends by itself within a day)
+export function endClosedShortSession() {
+  if (!shortSessionEnded()) return false
+  const access = getAccessToken()
+  const refreshToken = getRefreshToken()
+  clearAuthSession()
+  if (access && refreshToken) {
+    fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access}` },
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => {})
+  }
+  return true
+}
+endClosedShortSession()
 
 /** Safely read localStorage value */
 function ls(key: string): string | null {
@@ -190,29 +243,41 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
     const refreshToken = getRefreshToken()
     if (!refreshToken) { refreshRejected = true; return null }
 
-    try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      })
-      if (res.status === 401 || res.status === 403) {
-        // Each refresh token works once. If another tab renewed the session
-        // meanwhile, use what it stored instead of signing out.
-        const now = getRefreshToken()
-        const access = getAccessToken()
-        if (now && now !== refreshToken && access) return { accessToken: access, refreshToken: now }
-        refreshRejected = true
+    // A reply lost on bad data is tried once more: the server gives the same new
+    // pair for the same token for 60 s (auth.service refreshTokens, 2026-11-11)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, REFRESH_RETRY_DELAY_MS))
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+      try {
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+          signal: controller.signal,
+        })
+        if (res.status === 401 || res.status === 403) {
+          // Each refresh token works once. If another tab renewed the session
+          // meanwhile, use what it stored instead of signing out.
+          const now = getRefreshToken()
+          const access = getAccessToken()
+          if (now && now !== refreshToken && access) return { accessToken: access, refreshToken: now }
+          refreshRejected = true
+          return null
+        }
+        const data = await parseResponse(res)
+        const tokenObj = data?.tokens || data
+        if (tokenObj?.accessToken) {
+          persistAuthSession({ tokens: tokenObj })
+          return tokenObj
+        }
         return null
+      } catch {
+        // Network trouble or a server restart (502 page): try once more, then
+        // keep the session and try again next time
+      } finally {
+        clearTimeout(timer)
       }
-      const data = await parseResponse(res)
-      const tokenObj = data?.tokens || data
-      if (tokenObj?.accessToken) {
-        persistAuthSession({ tokens: tokenObj })
-        return tokenObj
-      }
-    } catch {
-      // Network trouble: keep the session and try again next time
     }
     return null
   })()

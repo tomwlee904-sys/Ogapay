@@ -42,7 +42,7 @@ const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options'
 const toSession = (r: any) => {
   const accessToken = r?.tokens?.accessToken || r?.accessToken || r?.token
   const refreshToken = r?.tokens?.refreshToken || r?.refreshToken || accessToken
-  return { user: r?.user || r, tokens: accessToken ? { accessToken, refreshToken } : undefined }
+  return { user: r?.user || r, tokens: accessToken ? { accessToken, refreshToken, rememberMe: r?.tokens?.rememberMe } : undefined }
 }
 
 const friendly = (msg = '') => {
@@ -129,7 +129,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [email, setEmail] = useState(() => localStorage.getItem('ogapay_remember_email') || '')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
-  const [remember, setRemember] = useState(() => !!localStorage.getItem('ogapay_remember_email'))
+  // Ticked unless unticked last time: unticked = a short session (lib/api setShortSession)
+  const [remember, setRemember] = useState(() => localStorage.getItem('ogapay_remember_off') !== '1')
   const [name, setName] = useState('')
   const [country, setCountry] = useState<'NG' | 'GH'>('NG')
   const [intent, setIntent] = useState<Intent | ''>('')
@@ -218,9 +219,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     e.preventDefault()
     if (!email.trim() || !password) { setError('Enter your email and password.'); return }
     run('email', async () => {
-      const result = await apiRequest<any>('/auth/login', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), password }) })
-      if (remember) localStorage.setItem('ogapay_remember_email', email.trim())
-      else localStorage.removeItem('ogapay_remember_email')
+      const result = await apiRequest<any>('/auth/login', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), password, rememberMe: remember }) })
+      if (remember) { localStorage.setItem('ogapay_remember_email', email.trim()); localStorage.removeItem('ogapay_remember_off') }
+      else { localStorage.removeItem('ogapay_remember_email'); localStorage.setItem('ogapay_remember_off', '1') }
       finish(result)
     })
   }

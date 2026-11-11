@@ -10,6 +10,7 @@
     "test:signin-google": "node scripts/tests/signin-google.test.cjs",
     "test:wallet-labels": "node scripts/tests/wallet-labels.test.cjs",
     "test:share-gets": "node scripts/tests/share-gets.test.cjs",
+    "test:session-remember": "node scripts/tests/session-remember.test.cjs",
     "test:convert-usdc": "node scripts/tests/convert-usdc.test.cjs",
     "test:contest-prizes": "node scripts/tests/contest-prizes.test.cjs",
     "test:contest-raise": "node scripts/tests/contest-raise.test.cjs",

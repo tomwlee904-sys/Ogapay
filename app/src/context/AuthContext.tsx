@@ -57,7 +57,7 @@ interface AuthContextType {
   user: User | null
   isAuthed: boolean
   isLoading: boolean
-  login: (payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string } }) => void
+  login: (payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string; rememberMe?: boolean } }) => void
   refreshUser: () => Promise<void>
   updateUser: (partial: Partial<User>) => void
   logout: () => Promise<void>
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = useCallback((payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string } }) => {
+  const login = useCallback((payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string; rememberMe?: boolean } }) => {
     const { user: userData, tokens } = payload
     persistAuthSession({
       user: userData || undefined,
