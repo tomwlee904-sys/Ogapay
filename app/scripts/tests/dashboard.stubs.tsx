@@ -2,7 +2,7 @@
 // (window.__me), the display currency (window.__pref, with fixed rates), the
 // wallet balances (window.__balances), the theme and toasts. Dashboard, Navbar,
 // Drawer, lib/api and the rest of the page are real.
-import type { ReactNode } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 
 const w = window as any
 
@@ -10,8 +10,19 @@ export default function Layout({ children }: { children: ReactNode }) {
   return <main>{children}</main>
 }
 
+// refreshUser reads the account again (window.__fetchMe, set by a test case) and
+// the page re-renders with it, as the real AuthContext does
+const listeners = new Set<() => void>()
+const setMe = (m: any) => { w.__me = m; listeners.forEach((f) => f()) }
+const subscribe = (f: () => void) => { listeners.add(f); return () => { listeners.delete(f) } }
 export function useAuth() {
-  return { user: w.__me || null, isAuthed: !!w.__me, isAuthenticated: !!w.__me, isLoading: false, logout: () => {} }
+  const user = useSyncExternalStore(subscribe, () => w.__me || null)
+  const refreshUser = async () => {
+    w.__refreshes = (w.__refreshes || 0) + 1
+    const next = await w.__fetchMe?.()
+    if (next) setMe(next)
+  }
+  return { user, isAuthed: !!user, isAuthenticated: !!user, isLoading: false, logout: () => {}, refreshUser }
 }
 
 // Value of one unit in naira

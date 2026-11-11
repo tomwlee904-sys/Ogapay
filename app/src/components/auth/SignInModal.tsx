@@ -7,12 +7,17 @@ import type { SignInView } from '../../lib/signin'
 import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
 import { trackSignUpConversion } from '../../lib/ads'
 import { chromeIntentUrl, copyText, inAppBrowserName, isAndroid } from '../../lib/inAppBrowser'
+import { RESEND_SECONDS, retryAfterOf, useResendTimer } from '../../lib/emailCode'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
-   pair a device), then one short step for that method. */
+   pair a device), then one short step for that method.
+   Email (2026-11-11) is one field: we email a 6-digit code, and the code signs
+   you in or makes your account. A new account then gets one short step (name,
+   country, what brings you here); a new wallet account is asked for an email
+   first. Password sign-in stays behind "Use a password instead". */
 
-type View = SignInView | 'twofa' | 'emailcode'
+type View = SignInView | 'twofa' | 'password' | 'profile' | 'addemail'
 type Notice = { text: string; ok?: boolean } | null
 
 interface Props {
@@ -29,14 +34,16 @@ interface Props {
 const TITLES: Record<View, string> = {
   options: 'Sign in to OgaPay',
   wallets: 'Choose a Solana wallet',
-  email: 'Sign in with email',
+  email: 'Continue with email',
   signup: 'Create your account',
+  password: 'Sign in with a password',
   forgot: 'Reset your password',
   pair: 'Sign in on this device',
   twofa: 'Two-factor authentication',
-  emailcode: 'Sign in with an email code',
+  profile: 'One last step',
+  addemail: 'Add your email',
 }
-const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'email', forgot: 'email', pair: 'options', twofa: 'options', emailcode: 'email' }
+const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'options', password: 'email', forgot: 'password', pair: 'options', twofa: 'options' }
 
 // Every sign-in endpoint answers { user, tokens }
 const toSession = (r: any) => {
@@ -66,20 +73,20 @@ const INTENTS: { value: Intent; label: string; icon: string }[] = [
   { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
 ]
 
-// Sign-up: what's wrong with a password, in plain words (null when it's fine)
-const passwordProblem = (pw: string) =>
-  pw.length < 8 ? 'Use at least 8 characters for your password.'
-    : !/[A-Z]/.test(pw) ? 'Add at least one capital letter (A–Z) to your password.'
-    : !/[0-9]/.test(pw) ? 'Add at least one number (0–9) to your password.'
-    : null
-
-// A username the server accepts (3–30 letters, numbers or _) from an email:
-// "kemi.adeyemi+jobs@x.com" → "kemi_adeyemi_jobs". `extra` adds 4 digits.
-const usernameFrom = (email: string, extra = false) => {
-  let u = email.trim().split('@')[0].toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
-  if (u.length < 3) u = (u ? u + '_' : '') + 'user'
-  u = u.slice(0, extra ? 25 : 30)
-  return extra ? `${u}${Math.floor(1000 + Math.random() * 9000)}` : u
+// Names as people write them (login-19): "Tobi" stays "Tobi" (no last name made
+// up, it used to become "Tobi Tobi") and initials like "Ada N" are fine
+const splitName = (raw: string) => {
+  const parts = raw.trim().split(/\s+/).filter(Boolean)
+  return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') }
+}
+const nameProblem = (raw: string) => {
+  const t = raw.trim()
+  if (!t) return 'Enter your name.'
+  if (!/\p{L}/u.test(t)) return 'Your name needs at least one letter.'
+  if (t.replace(/\s/g, '').length < 2) return 'Enter at least 2 letters, e.g. Tobi.'
+  const { firstName, lastName } = splitName(t)
+  if (firstName.length > 50 || lastName.length > 50) return 'That name is too long.'
+  return null
 }
 
 // Official icons, from each wallet's @solana/wallet-adapter package (Trust cropped to its shield)
@@ -146,9 +153,14 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [copied, setCopied] = useState(false)
   // Opened from a referral link (the code is kept for Google and email sign-up alike)
   const [invited] = useState(() => { try { return !!localStorage.getItem('ogapay_referral') } catch { return false } })
-  // Email code sign-in: the 6-digit code, and whether one was sent
+  // Email code: the 6-digit code, whether one was sent, and the wait before a new one
   const [mailCode, setMailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
+  const timer = useResendTimer()
+  // A new account (email code or wallet) before its last step: signed in on the
+  // server, but saved here only when the step is done or skipped (or the sheet is
+  // closed), so the sheet stays open for it
+  const [pending, setPending] = useState<any>(null)
   // Checked again shortly after opening: some wallet apps add their wallet to
   // the page a moment after it loads
   const [inWalletApp, setInWalletApp] = useState(inWalletAppBrowser)
@@ -160,7 +172,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const closeRef = useRef(onClose)
-  closeRef.current = onClose
+  // Closing during a new account's last step keeps the account signed in
+  closeRef.current = pending ? () => completePending() : onClose
 
   // Lock page scroll, close on Escape, keep Tab inside the dialog, restore focus after
   useEffect(() => {
@@ -180,7 +193,12 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     return () => { document.body.style.overflow = prevOverflow; document.removeEventListener('keydown', onKey); prevFocus?.focus?.() }
   }, [])
 
-  useEffect(() => { titleRef.current?.focus() }, [view])
+  // Each step puts the cursor in its first field, so the keyboard is ready
+  // (login-26); steps with no field focus the title for screen readers
+  useEffect(() => {
+    const field = dialogRef.current?.querySelector<HTMLElement>('.si-body input:not([type="checkbox"]):not([type="radio"]):not([disabled]), .si-body select')
+    ;(field || titleRef.current)?.focus()
+  }, [view, codeSent])
 
   const go = (v: View) => { setError(''); setNotice(null); setView(v) }
 
@@ -226,44 +244,23 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     })
   }
 
-  const signup = (e: FormEvent) => {
-    e.preventDefault()
-    if (!intent) { setError('Choose what brings you to OgaPay: earn money, hire people, or both.'); return }
-    if (!name.trim() || !email.trim() || !password) { setError('Fill in your name, email and a password.'); return }
-    // The server's rules (validate.js registerSchema), checked here so the reason is clear
-    const pwProblem = passwordProblem(password)
-    if (pwProblem) { setError(pwProblem); return }
-    const parts = name.trim().split(/\s+/)
-    if (parts.some((p) => p.length < 2)) { setError('Enter your name with at least 2 letters in each part, e.g. Ada Okafor.'); return }
-    const body: Record<string, string> = {
-      firstName: parts[0],
-      lastName: parts.slice(1).join(' ') || parts[0],
-      email: email.trim(),
-      password,
-      username: usernameFrom(email),
-      intent,
-      country,
-    }
-    const ref = localStorage.getItem('ogapay_referral')
-    if (ref) body.referralCode = ref
-    run('signup', async () => {
-      // The username comes from the email (it can be changed later in Edit profile).
-      // If someone already has it, try it with a few digits added.
-      let result: any
-      for (let i = 0; ; i++) {
-        try {
-          result = await apiRequest<any>('/auth/signup', { method: 'POST', auth: false, body: JSON.stringify(body) })
-          break
-        } catch (err: any) {
-          if (i < 3 && /username already taken/i.test(err?.message || '')) { body.username = usernameFrom(email, true); continue }
-          throw err
-        }
-      }
-      localStorage.setItem('ogapay_is_new_user', 'true')
-      finish(result, true)
-      // Google Ads sign-up conversion: only when the server just made the account
-      if (result?.isNewUser) trackSignUpConversion(result?.user?.id)
-    })
+  // A brand-new account (email code or wallet): count the Google Ads sign-up
+  // (only when the server just made it) and show its last step
+  const referral = () => { try { return localStorage.getItem('ogapay_referral') || '' } catch { return '' } }
+  const startNew = (result: any, next: 'profile' | 'addemail') => {
+    if (!toSession(result).tokens) throw new Error('Sign-in did not return a session. Please try again.')
+    try { localStorage.setItem('ogapay_is_new_user', 'true') } catch { /* private mode */ }
+    trackSignUpConversion(result?.user?.id)
+    setPending(result)
+    setCodeSent(false); setMailCode('')
+    go(next)
+  }
+  // The new account's own token, before it's saved on this device
+  const asNew = () => ({ Authorization: `Bearer ${toSession(pending).tokens?.accessToken || ''}` })
+  const completePending = () => {
+    const r = pending
+    setPending(null)
+    if (r) finish(r, true)
   }
 
   const forgot = (e: FormEvent) => {
@@ -275,25 +272,66 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     })
   }
 
-  // "Email me a code": the server always gives the same answer, whether or not
-  // the email has an account (auth/email-code/request)
+  // Email: one field, then the code. The server gives the same answer whether or
+  // not the email has an account (auth/email-code/request); the code signs in or
+  // makes the account. addemail: a new wallet account adds its email the same way.
   const sendMailCode = (e?: FormEvent) => {
     e?.preventDefault()
-    if (!email.trim()) { setError('Enter the email on your account.'); return }
+    const to = email.trim()
+    if (!to) { setError('Enter your email address.'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { setError('Check your email address. It should look like name@example.com.'); return }
     run('mailcode', async () => {
-      await apiRequest('/auth/email-code/request', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim() }) })
+      try {
+        if (view === 'addemail') await apiRequest('/auth/email/add/request', { method: 'POST', auth: false, headers: asNew(), body: JSON.stringify({ email: to }) })
+        else await apiRequest('/auth/email-code/request', { method: 'POST', auth: false, body: JSON.stringify({ email: to }) })
+      } catch (err: any) {
+        // "We just sent a code": show the code box with the server's reason and
+        // how long to wait (login-28)
+        const wait = retryAfterOf(err)
+        if (wait) { timer.wait(wait); setCodeSent(true) }
+        throw err
+      }
       setCodeSent(true)
       setMailCode('')
-      setNotice({ text: 'If that email has an account, we sent a code. It works for 10 minutes.', ok: true })
+      timer.wait(RESEND_SECONDS)
+      setNotice({ text: `We sent a 6-digit code to ${to}. It works for 10 minutes. Not there? Check your spam folder.`, ok: true })
     })
   }
 
   const mailCodeLogin = (e: FormEvent) => {
     e.preventDefault()
     if (mailCode.length !== 6) { setError('Enter the 6-digit code from the email.'); return }
-    run('mailcodein', async () => finish(await apiRequest<any>('/auth/email-code/verify', {
-      method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), code: mailCode }),
-    })))
+    if (view === 'addemail') {
+      run('mailcodein', async () => {
+        const r = await apiRequest<any>('/auth/email/add/confirm', { method: 'POST', auth: false, headers: asNew(), body: JSON.stringify({ email: email.trim(), code: mailCode }) })
+        setPending((p: any) => ({ ...p, user: { ...(p?.user || {}), email: r?.email || email.trim(), hasEmail: true, isEmailVerified: true } }))
+        go('profile')
+        setNotice({ text: 'Email added. You can now sign in with it too.', ok: true })
+      })
+      return
+    }
+    run('mailcodein', async () => {
+      const ref = referral()
+      const result = await apiRequest<any>('/auth/email-code/verify', {
+        method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), code: mailCode, ...(ref && { referralCode: ref }) }),
+      })
+      try { localStorage.setItem('ogapay_remember_email', email.trim()) } catch { /* private mode */ }
+      if (result?.isNewUser) startNew(result, 'profile')
+      else finish(result)
+    })
+  }
+
+  // The new account's last step: name, country and what brings them here.
+  // Skip is fine; the dashboard asks again later.
+  const saveProfile = (e: FormEvent) => {
+    e.preventDefault()
+    const problem = nameProblem(name)
+    if (problem) { setError(problem); return }
+    const { firstName, lastName } = splitName(name)
+    run('profile', async () => {
+      await apiRequest('/users/me', { method: 'PATCH', auth: false, headers: asNew(), body: JSON.stringify({ firstName, lastName, country, ...(intent && { signupIntent: intent }) }) })
+      completePending()
+    })
   }
 
   const pairLogin = (e: FormEvent) => {
@@ -326,7 +364,11 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     const bytes = signed?.signature ?? signed
     const signature = bs58.encode(bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes))
     setNotice(null)
-    finish(await apiRequest<any>('/auth/wallet/login', { method: 'POST', auth: false, body: JSON.stringify({ wallet, signature }) }))
+    // A wallet no account uses yet makes a new account (login-17), then asks for an email
+    const ref = referral()
+    const result = await apiRequest<any>('/auth/wallet/login', { method: 'POST', auth: false, body: JSON.stringify({ wallet, signature, ...(ref && { referralCode: ref }) }) })
+    if (result?.isNewUser) startNew(result, result.needsEmail ? 'addemail' : 'profile')
+    else finish(result)
   })
 
   const pickWallet = (w: WalletDef) => {
@@ -386,7 +428,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   } else if (view === 'wallets') {
     body = (
       <>
-        <p className="si-desc">Sign a free message with a wallet that's linked to your OgaPay account. No transaction is sent.</p>
+        <p className="si-desc">Sign a free message with your Solana wallet. No transaction is sent. New here? Signing makes your OgaPay account.</p>
         {/* Phone browsers never see the wallet apps; their rows open OgaPay inside the app instead */}
         {isPhone() && !WALLETS.some(w => w.detect()) && <p className="si-notice ok" role="note">{PHONE_WALLET_LINE}</p>}
         {noticeLine}{errorLine}
@@ -403,10 +445,93 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
             )
           })}
         </div>
-        <p className="si-hint">New to OgaPay? Create an account with {inWalletApp ? 'email' : 'email or Google'}, then connect your wallet in Settings to use it here.</p>
+        <p className="si-hint">Already have an account with email or Google? Sign in that way first, then connect your wallet in Settings, so you don't get a second account.</p>
       </>
     )
-  } else if (view === 'email') {
+  } else if (view === 'email' || view === 'signup' || view === 'addemail') {
+    const adding = view === 'addemail'
+    body = !codeSent ? (
+      <form className="si-form" onSubmit={sendMailCode} noValidate>
+        <p className="si-desc">{adding
+          ? 'Your account is ready. Add your email to get payment receipts and to sign in without your wallet.'
+          : `${invited ? 'A friend invited you. ' : ''}${view === 'signup' ? 'Earn from tasks, hire people and sell in the store. ' : ''}We'll email you a 6-digit code. It signs you in, or creates your account if you're new. No password needed.`}</p>
+        {/* Referral links open sign-up: Google is one tap too, and keeps the invite (AuthCallback sends the code) */}
+        {view === 'signup' && !inWalletApp && (
+          <>
+            {inAppHelp && inAppNote}
+            <button type="button" className="si-secondary" disabled={busy === 'google'} onClick={() => google()}>
+              {busy === 'google' ? <Spinner /> : <span style={{ width: 18, height: 18, display: 'inline-flex' }}><GoogleIcon /></span>} Continue with Google
+            </button>
+            {inApp && !inAppHelp && <p className="si-hint" style={{ margin: 0 }}>Google doesn't work in this app's browser. Tap the button to see how to open OgaPay in your browser.</p>}
+            <p className="si-switch" style={{ margin: 0 }}>or use your email</p>
+          </>
+        )}
+        {noticeLine}
+        <div className="si-field">
+          <label htmlFor="si-email">Email address</label>
+          <input id="si-email" className="si-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+        {errorLine}
+        <button type="submit" className="si-primary" disabled={busy === 'mailcode'}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Send code'}</button>
+        {adding
+          ? <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} onClick={() => go('profile')}>Skip for now</button>
+          : <p className="si-switch"><button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => go('password')}>Use a password instead</button></p>}
+        {view === 'signup' && legal}
+      </form>
+    ) : (
+      <form className="si-form" onSubmit={mailCodeLogin} noValidate>
+        {noticeLine}
+        <p className="si-desc">Enter the code we sent to <b>{email.trim()}</b>.</p>
+        <div className="si-field">
+          <label htmlFor="si-mailcode">6-digit code</label>
+          <input id="si-mailcode" className="si-input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
+            value={mailCode} onChange={e => setMailCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+        </div>
+        {errorLine}
+        <button type="submit" className="si-primary" disabled={busy === 'mailcodein' || mailCode.length !== 6}>{busy === 'mailcodein' ? <><Spinner /> Checking…</> : adding ? 'Add email' : 'Continue'}</button>
+        <div className="si-row">
+          <button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => { setCodeSent(false); setNotice(null); setError('') }}>Use another email</button>
+          <button type="button" className="si-link" style={{ minHeight: 40 }} disabled={busy === 'mailcode' || timer.left > 0} onClick={() => sendMailCode()}>{timer.label}</button>
+        </div>
+        <p className="si-hint">After 5 wrong tries the code stops working and you need a new one.</p>
+        {adding && <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} onClick={() => go('profile')}>Skip for now</button>}
+      </form>
+    )
+  } else if (view === 'profile') {
+    body = (
+      <form className="si-form" onSubmit={saveProfile} noValidate>
+        <p className="si-desc">Your account is ready. Tell us a little about you. You can change this later.</p>
+        {noticeLine}
+        <div className="si-field">
+          <label htmlFor="si-name">Your name</label>
+          <input id="si-name" className="si-input" autoComplete="name" placeholder="e.g. Ada Okafor" value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div className="si-field">
+          <label htmlFor="si-country">Where do you live?</label>
+          <select id="si-country" className="si-input" value={country} onChange={e => setCountry(e.target.value as 'NG' | 'GH')}>
+            <option value="NG">Nigeria</option>
+            <option value="GH">Ghana</option>
+          </select>
+        </div>
+        <fieldset className="si-intent">
+          <legend className="si-label">What brings you to OgaPay?</legend>
+          <div className="si-intent-opts">
+            {INTENTS.map((o) => (
+              <label key={o.value} className={`si-intent-opt${intent === o.value ? ' on' : ''}`}>
+                <input type="radio" name="si-intent" value={o.value} checked={intent === o.value} onChange={() => { setIntent(o.value); setError('') }} />
+                <i className={`ti ${o.icon}`} aria-hidden="true" />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="si-hint">You can do both either way. This helps us show you the right things first.</p>
+        </fieldset>
+        {errorLine}
+        <button type="submit" className="si-primary" disabled={busy === 'profile'}>{busy === 'profile' ? <><Spinner /> Saving…</> : 'Continue'}</button>
+        <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} disabled={busy === 'profile'} onClick={completePending}>Skip for now</button>
+      </form>
+    )
+  } else if (view === 'password') {
     body = (
       <form className="si-form" onSubmit={emailLogin} noValidate>
         <p className="si-desc">Sign in with the email and password on your OgaPay account.</p>
@@ -428,67 +553,10 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         </div>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'email'}>{busy === 'email' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
-        <button type="button" className="si-secondary" onClick={() => { setCodeSent(false); go('emailcode') }}>
+        <button type="button" className="si-secondary" onClick={() => { setCodeSent(false); go('email') }}>
           <i className="ti ti-mail" aria-hidden="true" /> Email me a code instead
         </button>
-        <p className="si-switch">New to OgaPay? <button type="button" className="si-link" onClick={() => go('signup')}>Create an account</button></p>
-      </form>
-    )
-  } else if (view === 'signup') {
-    body = (
-      <form className="si-form" onSubmit={signup} noValidate>
-        <p className="si-desc">{invited ? 'A friend invited you. ' : ''}Earn from tasks, hire people and sell in the store. It takes a minute.</p>
-        {/* Referral links open here: Google is one tap too, and keeps the invite (AuthCallback sends the code) */}
-        {!inWalletApp && (
-          <>
-            {inAppHelp && inAppNote}
-            <button type="button" className="si-secondary" disabled={busy === 'google'} onClick={() => google()}>
-              {busy === 'google' ? <Spinner /> : <span style={{ width: 18, height: 18, display: 'inline-flex' }}><GoogleIcon /></span>} Continue with Google
-            </button>
-            {inApp && !inAppHelp && <p className="si-hint" style={{ margin: 0 }}>Google doesn't work in this app's browser. Tap the button to see how to open OgaPay in your browser.</p>}
-            <p className="si-switch" style={{ margin: 0 }}>or sign up with your email</p>
-          </>
-        )}
-        <fieldset className="si-intent">
-          <legend className="si-label">What brings you to OgaPay?</legend>
-          <div className="si-intent-opts">
-            {INTENTS.map((o) => (
-              <label key={o.value} className={`si-intent-opt${intent === o.value ? ' on' : ''}`}>
-                <input type="radio" name="si-intent" value={o.value} checked={intent === o.value} onChange={() => { setIntent(o.value); setError('') }} />
-                <i className={`ti ${o.icon}`} aria-hidden="true" />
-                <span>{o.label}</span>
-              </label>
-            ))}
-          </div>
-          <p className="si-hint">You can do both either way. This helps us show you the right things first.</p>
-        </fieldset>
-        <div className="si-field">
-          <label htmlFor="si-name">Full name</label>
-          <input id="si-name" className="si-input" autoComplete="name" value={name} onChange={e => setName(e.target.value)} />
-        </div>
-        <div className="si-field">
-          <label htmlFor="si-country">Where do you live?</label>
-          <select id="si-country" className="si-input" value={country} onChange={e => setCountry(e.target.value as 'NG' | 'GH')}>
-            <option value="NG">Nigeria</option>
-            <option value="GH">Ghana</option>
-          </select>
-        </div>
-        <div className="si-field">
-          <label htmlFor="si-email2">Email address</label>
-          <input id="si-email2" className="si-input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-        </div>
-        <div className="si-field">
-          <label htmlFor="si-pw2">Password</label>
-          <div className="si-pw">
-            <input id="si-pw2" className="si-input" type={showPw ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
-            <button type="button" className="si-eye" onClick={() => setShowPw(s => !s)} aria-label={showPw ? 'Hide password' : 'Show password'}><i className={`ti ti-eye${showPw ? '-off' : ''}`} /></button>
-          </div>
-          <p className="si-hint" style={{ marginTop: 0 }}>At least 8 characters, with a capital letter and a number.</p>
-        </div>
-        {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'signup'}>{busy === 'signup' ? <><Spinner /> Creating account…</> : 'Create account'}</button>
-        <p className="si-switch">Already have an account? <button type="button" className="si-link" onClick={() => go('email')}>Sign in</button></p>
-        {legal}
+        <p className="si-switch">New to OgaPay? <button type="button" className="si-link" onClick={() => { setCodeSent(false); go('email') }}>Get a code to join</button></p>
       </form>
     )
   } else if (view === 'forgot') {
@@ -502,37 +570,6 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         </div>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'forgot'}>{busy === 'forgot' ? <><Spinner /> Sending…</> : 'Send reset link'}</button>
-      </form>
-    )
-  } else if (view === 'emailcode') {
-    body = !codeSent ? (
-      <form className="si-form" onSubmit={sendMailCode} noValidate>
-        <p className="si-desc">No password needed. We'll email you a 6-digit code to sign in. It works once, for 10 minutes.</p>
-        {noticeLine}
-        <div className="si-field">
-          <label htmlFor="si-email4">Email address</label>
-          <input id="si-email4" className="si-input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-        </div>
-        {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'mailcode'}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Email me a code'}</button>
-        <p className="si-hint">Only for accounts whose email is verified.</p>
-      </form>
-    ) : (
-      <form className="si-form" onSubmit={mailCodeLogin} noValidate>
-        {noticeLine}
-        <p className="si-desc">Enter the code we sent to <b>{email.trim()}</b>.</p>
-        <div className="si-field">
-          <label htmlFor="si-mailcode">6-digit code</label>
-          <input id="si-mailcode" className="si-input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
-            value={mailCode} onChange={e => setMailCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-        </div>
-        {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'mailcodein' || mailCode.length !== 6}>{busy === 'mailcodein' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
-        <div className="si-row">
-          <button type="button" className="si-link" onClick={() => { setCodeSent(false); setNotice(null); setError('') }}>Use another email</button>
-          <button type="button" className="si-link" disabled={busy === 'mailcode'} onClick={() => sendMailCode()}>Send a new code</button>
-        </div>
-        <p className="si-hint">After 5 wrong tries the code stops working and you need a new one.</p>
       </form>
     )
   } else if (view === 'pair') {
@@ -583,14 +620,14 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   }
 
   return (
-    <div className="si-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="si-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) closeRef.current() }}>
       <div className="si-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="si-title">
         <div className="si-head">
           <div className="si-head-left">
             {back && <button type="button" className="si-back" onClick={() => go(back)} aria-label="Back"><i className="ti ti-arrow-left" /></button>}
             <h3 id="si-title" className="si-title" ref={titleRef} tabIndex={-1}>{TITLES[view]}</h3>
           </div>
-          <button type="button" className="si-close" onClick={onClose} aria-label="Close"><i className="ti ti-x" /></button>
+          <button type="button" className="si-close" onClick={() => closeRef.current()} aria-label="Close"><i className="ti ti-x" /></button>
         </div>
         <div className="si-body">{body}</div>
       </div>

@@ -240,7 +240,7 @@ const UA_CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 13; SM-A135F) AppleWebKit
   p = await open('ok');
   await p.goto(origin + '/ref/ABCD2345');
   v = await until(p, (s) => s.title === 'Create your account');
-  ok('5a a referral link opens sign-up with Continue with Google and the invite', /Continue with Google/.test(v.modal) && /A friend invited you/.test(v.modal) && /or sign up with your email/.test(v.modal), v.modal);
+  ok('5a a referral link opens sign-up with Continue with Google and the invite', /Continue with Google/.test(v.modal) && /A friend invited you/.test(v.modal) && /or use your email/.test(v.modal), v.modal);
   await clickText(p, /Continue with Google/);
   v = await until(p, (s) => s.oauth.length === 1);
   ok('5b ...Google starts from there', v.oauth.length === 1, v.oauth);

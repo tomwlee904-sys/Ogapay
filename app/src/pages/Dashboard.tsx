@@ -14,6 +14,7 @@ import { jobDeadline, deadlineLabel } from '../lib/deadline'
 import { withdrawLimit } from '../lib/wallet'
 import { useMoney } from '../lib/useMoney'
 import InfoTip from '../components/InfoTip'
+import EmailCodeBox from '../components/auth/EmailCodeBox'
 import '../styles/dashboard.css'
 
 // Dashboard, top to bottom: what needs you now (work to review, work to send),
@@ -72,7 +73,7 @@ const RETRY_MS = 4000
 type Part = 'me' | 'earned' | 'subs' | 'created' | 'jobs'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { balances } = useWalletBalance()
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
@@ -93,7 +94,15 @@ export default function Dashboard() {
   const [created, setCreated] = useState<Job[] | null>(null)
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [hasBank, setHasBank] = useState(false)
-  const [mail, setMail] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  // Email not verified yet: coming back to this tab (say, after opening the old
+  // link in the mail app) reads the account again, so the step ticks (dash-18)
+  const emailPending = !!user && !user.isEmailVerified
+  useEffect(() => {
+    if (!emailPending) return
+    const onBack = () => { if (document.visibilityState === 'visible') refreshUser() }
+    document.addEventListener('visibilitychange', onBack)
+    return () => document.removeEventListener('visibilitychange', onBack)
+  }, [emailPending, refreshUser])
   // "What brings you to OgaPay?" for members who didn't answer at sign-up
   // (Google sign-ups, older accounts). Asked once; Skip hides it on this device.
   const [intentSkipped, setIntentSkipped] = useState(false)
@@ -274,7 +283,8 @@ export default function Dashboard() {
 
   const steps = [
     { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
-    { done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' as const },
+    // A code by email, typed here (the old link keeps working). A wallet account adds its email first.
+    { done: !!user.isEmailVerified, label: user.hasEmail === false ? 'Add your email' : 'Verify your email', sub: user.hasEmail === false ? 'So you get job alerts and payment receipts, and can sign in without your wallet.' : "So you get job alerts and payment receipts. We'll email you a 6-digit code.", action: 'mail' as const },
     { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
     { done: kycOk, label: 'Verify your identity', sub: `Free. Your bank account check (Level 1) lets you withdraw. For your ${show(FIRST_JOB_BONUS, 'NGN')} first job bonus and to send money, verify with your NIN or a photo of your ID, then finish your first paid job. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.`, to: '/settings/verification', cta: 'Verify' },
   ]
@@ -333,14 +343,6 @@ export default function Dashboard() {
     </Link>
   )
 
-  const resend = async () => {
-    setMail('sending')
-    try {
-      await apiRequest('/auth/resend-verification', { method: 'POST' })
-      setMail('sent')
-    } catch { setMail('failed') }
-  }
-
   const setup = doneCount < steps.length && (
     <section className="ui-card ui-card-pad">
       <div className="db-sec-head"><h2>Finish setting up</h2><span className="db-count">{doneCount} of {steps.length}</span></div>
@@ -353,7 +355,7 @@ export default function Dashboard() {
               <strong>{s.label}</strong>
               {!s.done && <span>{s.sub}</span>}
               {!s.done && (s.action === 'mail'
-                ? <button className="db-step-btn" onClick={resend} disabled={mail === 'sending' || mail === 'sent'}>{mail === 'sending' ? 'Sending…' : mail === 'sent' ? 'Link sent. Check your inbox' : mail === 'failed' ? 'Couldn\'t send. Try again' : 'Send the link again'}</button>
+                ? <EmailCodeBox mode={user.hasEmail === false ? 'add' : 'verify'} email={user.email} look="dashboard" />
                 : <Link className="db-step-btn" to={s.to!}>{s.cta}</Link>)}
             </div>
           </li>

@@ -95,6 +95,12 @@ const CASES: Record<string, Case> = {
   busy: { me: KOFI, profile: KOFI_ME, subs: [], created: [], jobs: Array.from({ length: 100 }, (_, i) => job(`b${i}`, { title: `Busy job ${i}`, reward: 50 })), starters: KOFI_JOBS.filter((j) => j.featured), pref: 'GHS', balances: {} },
   // ?featured=1 fails: the starter jobs found in the main list still show
   starterfail: { me: KOFI, profile: KOFI_ME, subs: [], created: [], jobs: KOFI_JOBS, starters: [], pref: 'GHS', balances: {}, failingQuery: 'featured=1' },
+  // Email not verified yet (email-verify.test.cjs): the code is typed on the dashboard
+  mailcheck: { me: { ...VET, email: 'tunde@mail.ng', isEmailVerified: false }, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {} },
+  // ...and the server says wait (a code was just sent)
+  mailwait: { me: { ...VET, email: 'tunde@mail.ng', isEmailVerified: false }, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {} },
+  // A wallet account with no email yet
+  walletnew: { me: { ...VET, email: '', hasEmail: false, isEmailVerified: false }, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {} },
 }
 const name = new URLSearchParams(location.search).get('case') || 'vet'
 const c = CASES[name]
@@ -106,11 +112,27 @@ w.__heal = false
 const failedOnce = new Set<string>()
 try { localStorage.clear(); if (c.me) localStorage.setItem('ogapay_access_token', 'tok-' + c.me.username) } catch { /* file page */ }
 
+// Reading the account again: verified once the code (or the old link) went through
+w.__verified = false
+w.__fetchMe = async () => (w.__verified ? { ...w.__me, isEmailVerified: true, ...(w.__addedEmail && { email: w.__addedEmail, hasEmail: true }) } : null)
+
 w.fetch = async (url: string, init: RequestInit = {}) => {
   const u = new URL(String(url))
   const p = u.pathname.replace(/^\/api\/v1/, '')
   const auth = new Headers(init.headers).get('Authorization')
-  w.__calls.push({ path: p, query: u.search, auth })
+  const body = typeof init.body === 'string' ? JSON.parse(init.body) : null
+  w.__calls.push({ path: p, query: u.search, auth, body })
+  if (p === '/auth/verify-email/code/request') {
+    if (name === 'mailwait') return reply(429, { success: false, message: 'We just sent a code. Wait a minute before asking for another.', errors: [{ code: 'RETRY_AFTER', retryAfter: 42 }] })
+    return ok({ message: 'We sent a 6-digit code to tunde@mail.ng. It works for 10 minutes.' })
+  }
+  if (p === '/auth/verify-email/code/confirm' || p === '/auth/email/add/confirm') {
+    if (body?.code !== '123456') return reply(401, { success: false, message: 'That code is wrong or has expired. Check the latest email, or ask for a new code.' })
+    w.__verified = true
+    if (p === '/auth/email/add/confirm') w.__addedEmail = body.email
+    return ok(p === '/auth/email/add/confirm' ? { email: body.email, isEmailVerified: true } : { verified: true })
+  }
+  if (p === '/auth/email/add/request') return ok({ message: `We sent a 6-digit code to ${body?.email}.` })
   if (!w.__heal && (c.failing || []).includes(p)) return down()
   if (c.failingQuery && u.search.includes(c.failingQuery)) return down()
   if ((c.failing || []).includes(p + '#once') && !failedOnce.has(p)) { failedOnce.add(p); return down() }

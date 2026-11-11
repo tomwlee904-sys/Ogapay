@@ -9,6 +9,7 @@ import { levelsFor, UNLOCKS, SEND_RULE, BANK_ONLY_NEXT, ANY_ID, LIMIT_AND_PAYDAY
 import { naira, kycOf } from '../../lib/wallet'
 import { DOB_MONTHS, MIN_AGE, dobIso, dobProblem, dobYears } from '../../lib/dob'
 import AddBankForm from '../../components/wallet/AddBankForm'
+import EmailCodeBox from '../../components/auth/EmailCodeBox'
 import '../../styles/wallet.css'
 
 // Where VeryCallback keeps the claim key from a scan that came back signed out
@@ -123,7 +124,7 @@ function ToneMsg({ m }: { m: { tone: Tone; text: string } | null }) {
 
 export default function Verification({ me, reload, providers }: SectionProps & { providers: Record<string, boolean> | null }) {
   const { toast } = useToast()
-  const { refreshUser } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [params, setParams] = useSearchParams()
   const status = me.kyc?.status || 'NONE'
   const tier = status === 'APPROVED' ? me.kyc?.kycTier || 0 : 0
@@ -477,6 +478,14 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   return (
     <>
+      {/* Email by a code typed here (ver-11); a wallet account adds its email first */}
+      {user && !user.isEmailVerified && (
+        <Card title={user.hasEmail === false ? 'Add your email' : 'Verify your email'} sub={user.hasEmail === false
+          ? 'For job alerts and payment receipts, and to sign in without your wallet.'
+          : `We'll email a 6-digit code to ${user.email}. Type it here to verify your email.`}>
+          <EmailCodeBox mode={user.hasEmail === false ? 'add' : 'verify'} email={user.email} />
+        </Card>
+      )}
       <Card title="Verify your identity" sub="You need this before you can withdraw your earnings or send money. Your details are private and never shown to other users.">
         <div className="st2-levels">
           {levelsFor(didit, ninInstant, bankKyc).map((l) => {

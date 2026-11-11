@@ -38,6 +38,8 @@ export interface User {
   walletConnectedAt: string | null
   referralCode: string
   isEmailVerified: boolean
+  // False for a wallet account that hasn't added an email yet (email is then '')
+  hasEmail?: boolean
   isTwoFactorEnabled: boolean
   // False for an account made with Google that has no password yet
   hasPassword?: boolean
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         walletConnectedAt: userData.walletConnectedAt || null,
         referralCode: userData.referralCode || '',
         isEmailVerified: userData.isEmailVerified || false,
+        hasEmail: userData.hasEmail !== false,
         isTwoFactorEnabled: userData.isTwoFactorEnabled || false,
         // /users/me sends the KYC record as `kyc`; kycStatus was always empty
         kycStatus: userData.kycStatus || userData.kyc?.status || null,
