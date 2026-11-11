@@ -183,7 +183,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         <div className="dp-lock">
           <i className="ti ti-shield-check" />
           <h3>Verify your identity to withdraw</h3>
-          {ghana ? <p>In Ghana, withdrawals to mobile money need Level 2: send a photo of your Ghana Card and its number in Settings → Verification. Our team checks it, usually within a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), paid in cedis, usually within a week.</p> : <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>}
+          {ghana ? <p>In Ghana, withdrawals to mobile money need Level 2: send a photo of your Ghana Card and its number in Settings → Verification. Our team checks it, usually within a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), paid in cedis, usually within a week.</p> : <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you ask to withdraw up to {naira(withdrawLimit(1), 0)} a day, paid out every Thursday. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100).</p>}
           <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
         </div>
       </Sheet>
@@ -301,7 +301,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             {busy ? 'Sending…' : amt && !problem ? `Withdraw ${money(amt, cur)}` : 'Withdraw'}
           </button>
           <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-            {tab === 'momo' ? 'Our team pays mobile money withdrawals, usually within a week, in cedis at the rate on the day the money is sent, so the cedis above are only a rough estimate. Use your own number. A number used for the first time waits at least a day.' : tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
+            {tab === 'momo' ? 'Our team pays mobile money withdrawals, usually within a week, in cedis at the rate on the day the money is sent, so the cedis above are only a rough estimate. Use your own number. A number used for the first time waits at least a day.' : tab === 'bank' ? `You can ask for up to ${naira(dayLimit, 0)} a day; bank withdrawals are paid out every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
             {tier < 3 && <> <Link to="/settings/verification" onClick={onClose}>Raise your limit</Link></>}
           </p>
         </>

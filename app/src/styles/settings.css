@@ -68,6 +68,12 @@
 .st2-f span { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
 .st2-f input { width: 100%; box-sizing: border-box; height: 42px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; padding: 0 12px; outline: 0; }
 .st2-f input:focus { border-color: var(--text3); }
+/* Date of birth: day, month, year selects in one row, styled like the inputs */
+.st2-dob { border: 0; margin: 0; padding: 0; min-width: 0; }
+.st2-dob legend { padding: 0; }
+.st2-dob-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.2fr); gap: 8px; }
+.st2-dob select { width: 100%; box-sizing: border-box; height: 42px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; padding: 0 8px; outline: 0; }
+.st2-dob select:focus { border-color: var(--text3); }
 .st2-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--border); flex-wrap: wrap; }
 .st2-seg button { height: 34px; padding: 0 14px; border-radius: 9px; border: 0; background: none; color: var(--text2); font-weight:600;font-size:13px;font-family:inherit; font-family: inherit; cursor: pointer; }
 .st2-seg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }

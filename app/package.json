@@ -31,7 +31,9 @@
     "test:profile-page": "node scripts/tests/profile-page.test.cjs",
     "test:profile-meta": "node scripts/tests/profile-meta.test.mjs",
     "test:dashboard": "node scripts/tests/dashboard.test.cjs",
-    "test:verification-text": "node scripts/tests/verification-text.test.cjs"
+    "test:verification-text": "node scripts/tests/verification-text.test.cjs",
+    "test:register-redirect": "node scripts/tests/register-redirect.test.cjs",
+    "test:verify-polish": "node scripts/tests/verify-polish.test.cjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",

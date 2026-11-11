@@ -62,7 +62,7 @@ const POSTER_JOBS = [
   { id: 'p3', title: 'Quiet job', status: 'OPEN', maxWorkers: 5, currentWorkers: 1, reward: 100, currency: 'NGN', toReview: 0 },
 ]
 
-type Case = { me?: any; profile?: any; subs?: any[]; created?: any[]; jobs?: any[]; balances?: any; pref?: string; failing?: string[]; slow?: Record<string, number> }
+type Case = { me?: any; profile?: any; subs?: any[]; created?: any[]; jobs?: any[]; starters?: any[]; balances?: any; pref?: string; failing?: string[]; slow?: Record<string, number>; failingQuery?: string }
 const CASES: Record<string, Case> = {
   // Their work and jobs don't load (no connection): never the new-account screen
   fail: { me: VET, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: { NGN: { balance: 2000, lockedBalance: 0, available: 2000 } }, failing: ['/tasks/my/submissions', '/tasks/my/created'] },
@@ -91,6 +91,10 @@ const CASES: Record<string, Case> = {
   earnfail: { me: VET, profile: VET_ME, subs: VET_SUBS, created: [], jobs: VET_JOBS, balances: {}, failing: ['/users/me/earnings'] },
   // A new member who hasn't said their gender: the women-only starter can be unlocked in Settings
   nogender: { me: KOFI, profile: { ...KOFI_ME, gender: null }, subs: [], created: [], jobs: KOFI_JOBS, pref: 'GHS', balances: {} },
+  // dash-10: 100 newer ordinary jobs fill the main list; the starter jobs only come from ?featured=1
+  busy: { me: KOFI, profile: KOFI_ME, subs: [], created: [], jobs: Array.from({ length: 100 }, (_, i) => job(`b${i}`, { title: `Busy job ${i}`, reward: 50 })), starters: KOFI_JOBS.filter((j) => j.featured), pref: 'GHS', balances: {} },
+  // ?featured=1 fails: the starter jobs found in the main list still show
+  starterfail: { me: KOFI, profile: KOFI_ME, subs: [], created: [], jobs: KOFI_JOBS, starters: [], pref: 'GHS', balances: {}, failingQuery: 'featured=1' },
 }
 const name = new URLSearchParams(location.search).get('case') || 'vet'
 const c = CASES[name]
@@ -108,12 +112,15 @@ w.fetch = async (url: string, init: RequestInit = {}) => {
   const auth = new Headers(init.headers).get('Authorization')
   w.__calls.push({ path: p, query: u.search, auth })
   if (!w.__heal && (c.failing || []).includes(p)) return down()
+  if (c.failingQuery && u.search.includes(c.failingQuery)) return down()
   if ((c.failing || []).includes(p + '#once') && !failedOnce.has(p)) { failedOnce.add(p); return down() }
   const delay = c.slow?.[p] || 0
   if (p === '/users/me') return ok(c.profile, delay)
   if (p === '/users/me/earnings') return ok({ earned: { NGN: 5000 } }, delay)
   if (p === '/tasks/my/submissions') return ok({ submissions: c.subs || [] }, delay)
   if (p === '/tasks/my/created') return ok(c.created || [], delay)
+  // ?featured=1: the starter jobs only (dash-10)
+  if (p === '/tasks' && u.searchParams.get('featured') === '1') return ok(c.starters ?? (c.jobs || []).filter((j: any) => j.featured), delay)
   if (p === '/tasks') return ok(c.jobs || [], delay)
   if (p === '/wallet/banks') return ok([])
   if (p === '/scores/me') return ok({ rank: { canClaim: false } })

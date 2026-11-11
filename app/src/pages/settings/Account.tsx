@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 import { Card, Row, Toggle, type SectionProps } from './ui'
 import { DEV_MODE_KEY } from './Simple'
+import { resendOutcome } from '../../lib/resendLink'
 
 export default function Account({ me, setMe }: SectionProps) {
   const { logout, refreshUser } = useAuth()
@@ -15,12 +16,10 @@ export default function Account({ me, setMe }: SectionProps) {
 
   const resend = async () => {
     setSending(true)
-    try {
-      await apiRequest('/auth/resend-verification', { method: 'POST' })
-      toast(`Verification email sent to ${me.email}`, 'success')
-    } catch (e: any) {
-      toast(e?.message || "Couldn't send the email", 'error')
-    }
+    // The server's own reason: already verified, one a minute, or couldn't send (ver-14)
+    const r = await apiRequest('/auth/resend-verification', { method: 'POST' }).then((d) => resendOutcome(d), (e) => resendOutcome(null, e))
+    toast(r.tone === 'ok' ? `Link sent to ${me.email}. Check your inbox, and your spam or promotions folder too.` : r.text, r.tone === 'err' ? 'error' : 'success')
+    if (r.already) { setMe((m) => ({ ...m, isEmailVerified: true })); refreshUser() }
     setSending(false)
   }
 

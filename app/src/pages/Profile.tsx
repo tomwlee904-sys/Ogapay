@@ -26,6 +26,7 @@ import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
 import { categoryLabel } from '../lib/categories'
+import { resendOutcome } from '../lib/resendLink'
 import { xProfileOf } from '../lib/xprofile'
 import { jobsEarnedIn } from '../lib/earnings'
 import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
@@ -714,18 +715,14 @@ export default function Profile() {
             if (verifSending) return;
             setVerifSending(true);
             setVerifMsg('');
-            try {
-              await apiRequest('/auth/resend-verification', {
-                method: 'POST',
-                body: JSON.stringify({ email: authUser?.email }),
-              });
-              setVerifMsg(<> <i className="ti ti-circle-check" aria-hidden="true" style={{color:'var(--green)'}} /> Verification email sent! Check your inbox.</>);
-              setTimeout(() => setVerifMsg(''), 8000);
-            } catch (err: any) {
-              setVerifMsg(<> <i className="ti ti-circle-x" aria-hidden="true" style={{color:'var(--red)'}} /> {err?.message || 'Failed to send. Please try again.'}</>);
-            } finally {
-              setVerifSending(false);
-            }
+            // The server's own reason: already verified, one a minute, or couldn't send (ver-14)
+            const r = await apiRequest('/auth/resend-verification', {
+              method: 'POST',
+              body: JSON.stringify({ email: authUser?.email }),
+            }).then((d) => resendOutcome(d), (e) => resendOutcome(null, e));
+            setVerifMsg(<> <i className={`ti ${r.tone === 'err' ? 'ti-circle-x' : 'ti-circle-check'}`} aria-hidden="true" style={{color: r.tone === 'err' ? 'var(--red)' : 'var(--green)'}} /> {r.text}</>);
+            if (r.tone === 'ok') setTimeout(() => setVerifMsg(''), 8000);
+            setVerifSending(false);
           }} disabled={verifSending}>
             {verifSending ? 'Sending...' : 'Resend Email'}
           </button>

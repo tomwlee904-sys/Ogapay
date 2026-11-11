@@ -128,7 +128,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           )}
           {!isLoading && !isAuthed && (
             <button className="connect-btn" onClick={() => openSignIn()}>
-              <i className="ti ti-wallet" />
+              {/* Not a wallet icon: most people sign in with email or Google */}
+              <i className="ti ti-login" />
               Sign in
             </button>
           )}
