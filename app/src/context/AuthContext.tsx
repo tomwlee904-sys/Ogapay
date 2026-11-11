@@ -67,9 +67,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+// The account saved at the last sign-in or refresh, in the shape pages read
+// (it's saved with avatarUrl), so pages can draw at once (login-24)
+const savedUser = (): User | null => {
+  const c = getStoredUser() as any
+  if (!c?.id) return null
+  return { ...c, avatar: c.avatar ?? c.avatarUrl ?? null, kycTier: Number(c.kycTier ?? 0) } as User
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Drawn from the saved account straight away when there is one (login-24)
+  const [user, setUser] = useState<User | null>(() => (getAccessToken() ? savedUser() : null))
+  const [isLoading, setIsLoading] = useState(() => !(getAccessToken() && savedUser()))
   const isAuthed = !!user
 
   const refreshUser = useCallback(async () => {
@@ -78,17 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await apiRequest<any>('/auth/me', { fresh: true })
       const u: User = data.user || data
       setUser(u)
-      persistAuthSession({ user: { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, username: u.username, avatarUrl: u.avatar, role: u.role as any, referralCode: u.referralCode, isEmailVerified: u.isEmailVerified, createdAt: u.createdAt, kycStatus: u.kycStatus, kycTier: u.kycTier } as any })
+      // (also what the next visit draws with before /auth/me answers: no balances or bank details)
+      persistAuthSession({ user: { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, username: u.username, avatarUrl: u.avatar, role: u.role as any, referralCode: u.referralCode, isEmailVerified: u.isEmailVerified, createdAt: u.createdAt, kycStatus: u.kycStatus, kycTier: u.kycTier, hasEmail: u.hasEmail, country: u.country, isModerator: u.isModerator, walletAddress: u.walletAddress } as any })
       return u as any
     } catch {
       if (!getAccessToken()) {
         clearAuthSession()
         setUser(null)
       } else {
-        const cached = getStoredUser()
-        if (cached) {
-          setUser(cached as unknown as User)
-        }
+        const cached = savedUser()
+        if (cached) setUser((prev) => prev || cached)
       }
     }
   }, [])
@@ -161,7 +169,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true
     const token = getAccessToken()
-    if (token) {
+    // Signed in on this device before: pages draw at once with the saved account
+    // and /auth/me refreshes it behind them. Protected pages used to show a
+    // loader until it answered, seconds on slow data (login-24). A session the
+    // server turns down still signs out (SESSION_EXPIRED_EVENT below).
+    const cached = token ? savedUser() : null
+    if (cached) {
+      setUser(cached)
+      setIsLoading(false)
+      refreshUser()
+    } else if (token) {
       refreshUser().finally(() => {
         if (mounted) setIsLoading(false)
       })

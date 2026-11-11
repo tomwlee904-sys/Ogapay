@@ -7,7 +7,6 @@ import { useWalletBalance } from '../context/WalletBalanceContext'
 import { apiRequest } from '../lib/api'
 import type { Currency } from '../lib/currency'
 import { displayCode, formatIn } from '../lib/money'
-import { sharedGet } from '../lib/shared'
 import { categoryLabel } from '../lib/categories'
 import { rankName } from '../lib/requirements'
 import { jobDeadline, deadlineLabel } from '../lib/deadline'
@@ -25,6 +24,13 @@ import '../styles/dashboard.css'
 // working on anything" while their own jobs were one line at the top.
 // Starter jobs (the Highlighted ones) are listed in full for anyone with fewer
 // than STARTER_UNTIL finished jobs, the ones they can do right now first.
+// Everything comes from one small request, GET /dashboard/home (it used to be
+// about 9: the whole profile, every payment, every submission, 100 full jobs...),
+// kept for a few minutes so coming back to the dashboard shows at once and
+// refreshes quietly (login-24, dash-3, dash-4, dash-14).
+// Hirers (they said "Hire", or they post and don't work) get the hiring side
+// first and no worker cards (dash-8); admins get their queue instead of the
+// setup cards (dash-21).
 
 type Intent = 'EARN' | 'HIRE' | 'BOTH'
 const INTENT_OPTS: { value: Intent; label: string; icon: string }[] = [
@@ -32,7 +38,7 @@ const INTENT_OPTS: { value: Intent; label: string; icon: string }[] = [
   { value: 'HIRE', label: 'Hire people', icon: 'ti-briefcase' },
   { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
 ]
-type Me = { ogaScore?: number; gender?: string | null; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number; provider?: string | null; idType?: string | null } | null }
+type Me = { ogaScore?: number; gender?: string | null; signupIntent?: Intent | null; humanVerifiedAt?: string | null; country?: string; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number; provider?: string | null; idType?: string | null } | null }
 type Sub = {
   id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
   task?: { id: string; title: string; reward: number | string; currency?: string; category?: string; expiresAt?: string | null; deadline?: string | null }
@@ -42,20 +48,40 @@ type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; posterId?: string; status?: string
   maxWorkers?: number; currentWorkers?: number; expiresAt?: string | null; deadline?: string | null
   submissions?: { status: string }[]
-  // From /tasks/my/created?lite=1: entries waiting for review, without the entries
+  // From /dashboard/home: entries waiting for review, without the entries
   toReview?: number
   // From /tasks?eligible=1: can you take it now, and if not, why (server codes)
   eligible?: boolean; whyNot?: string[]
   featured?: boolean; workerRequirement?: string | null; minJobsDone?: number; excludesTaskIds?: string[]
   isContest?: boolean; isSelection?: boolean; requiredCommunityId?: string | null; communityId?: string | null
 }
+// GET /dashboard/home (backend services/dashboard.service.js)
+type AdminQueue = { withdrawals?: number; kyc?: number; level2?: number; storeReports?: number; flagged?: number; rankClaims?: number; needs2FA?: boolean }
+type Home = {
+  me: Me
+  setup?: { hasBank?: boolean; hasWallet?: boolean }
+  earned?: Record<string, number>
+  work?: { total?: number; active?: Sub[]; kinds?: string[] }
+  hiring?: { total?: number; liveTotal?: number; live?: Job[]; review?: Job[]; reviewTotal?: number }
+  rank?: { level?: string; name?: string; canClaim?: boolean; claimPending?: boolean; next?: { level: string; name: string; jobsLeft: number; missing?: string[] } | null }
+  jobs?: { pool?: Job[]; starters?: Job[] } | null
+  jobsFailed?: boolean
+  admin?: AdminQueue
+}
+
+// The last answer, kept while the site is open: coming back to the dashboard
+// shows it at once (even on slow data) and asks again quietly when it's older
+// than FRESH_MS. Only for the same account, and never older than KEEP_MS.
+const FRESH_MS = 20000
+const KEEP_MS = 10 * 60000
+let lastHome: { userId: string; at: number; data: Home } | null = null
+const keptHome = (userId?: string) => (userId && lastHome && lastHome.userId === userId && Date.now() - lastHome.at < KEEP_MS ? lastHome : null)
 
 // The ₦1,000 first job bonus (backend wallet.service rewardSignupBonus): paid once
 // someone is verified by NIN or ID AND has finished their first paid job
 const FIRST_JOB_BONUS = 1000
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
-const LIVE = ['OPEN', 'IN_PROGRESS', 'COOLING_DOWN', 'DRAFT']
 const STATUS: Record<string, string> = { OPEN: 'Open', IN_PROGRESS: 'In progress', COOLING_DOWN: 'Wrapping up', DRAFT: 'Draft' }
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' }
 const when = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
@@ -70,30 +96,18 @@ const placesLeft = (j: Job) => Math.max(0, (Number(j.maxWorkers) || 1) - (Number
 const FIXABLE = new Set(['JOBS', 'KYC', 'KYC2', 'HUMAN', 'X', 'WALLET'])
 // A failed load is tried once more after this long, then a Retry button shows
 const RETRY_MS = 4000
-type Part = 'me' | 'earned' | 'subs' | 'created' | 'jobs'
 
 export default function Dashboard() {
   const { user, refreshUser } = useAuth()
-  const { balances } = useWalletBalance()
+  const { balances, error: balanceError } = useWalletBalance()
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
   const { preferredCurrency, convert } = useCurrency()
-  const [me, setMe] = useState<Me | null>(null)
-  // Starter jobs fold away so they don't fill the page; the choice is remembered
-  const [starterOpen, setStarterOpen] = useState(() => { try { return localStorage.getItem('ogapay-starter-open') === '1' } catch { return false } })
+  // The kept answer for this account shows at once (dash-14)
+  const [home, setHome] = useState<Home | null>(() => keptHome(user?.id)?.data || null)
+  // Starter jobs are open unless the person folded them away (dash-11); the choice is remembered
+  const [starterOpen, setStarterOpen] = useState(() => { try { return localStorage.getItem('ogapay-starter-open') !== '0' } catch { return true } })
   const toggleStarter = () => setStarterOpen((o) => { try { localStorage.setItem('ogapay-starter-open', o ? '0' : '1') } catch { /* private mode */ } return !o })
-  // A rank you can claim (services/rank.service.js): shown first on the dashboard
-  const [rankUp, setRankUp] = useState<{ name: string } | null>(null)
-  useEffect(() => {
-    apiRequest<any>('/scores/me').then((d) => setRankUp(d?.rank?.canClaim && d.rank.next ? { name: d.rank.next.name } : null)).catch(() => {})
-  }, [])
-  // Earned per currency: USDC is never added to naira as if it were naira (it is
-  // converted first, see earnedText)
-  const [earned, setEarned] = useState<Record<string, number> | null>(null)
-  const [subs, setSubs] = useState<Sub[] | null>(null)
-  const [created, setCreated] = useState<Job[] | null>(null)
-  const [jobs, setJobs] = useState<Job[] | null>(null)
-  const [hasBank, setHasBank] = useState(false)
   // Email not verified yet: coming back to this tab (say, after opening the old
   // link in the mail app) reads the account again, so the step ticks (dash-18)
   const emailPending = !!user && !user.isEmailVerified
@@ -114,55 +128,50 @@ export default function Dashboard() {
   const intentDoneRef = useRef<HTMLParagraphElement>(null)
   useEffect(() => { if (intentDone) intentDoneRef.current?.focus() }, [intentDone])
 
-  // Each list remembers a failed load apart from an empty one: a slow or failed
-  // load used to look like an empty account (an active worker was shown "Find
-  // your first job" and "not working on anything"). A failed part is tried once
-  // more on its own, then says so with a Retry button.
-  const [failed, setFailed] = useState<Partial<Record<Part, boolean>>>({})
+  // A slow or failed load never looks like an empty account (an active worker
+  // used to be shown "Find your first job"): it keeps its loading shape, is tried
+  // once more on its own, then says so with a Try again button. With a kept
+  // answer on screen a failed refresh changes nothing.
+  const [failed, setFailed] = useState(false)
   const [retrying, setRetrying] = useState(false)
-  // The quiet second try is over: from then on a failed part says so (until then
-  // it keeps its loading shape)
-  const [settled, setSettled] = useState(false)
-  const load = useCallback((parts: Part[]) => {
-    const get: Record<Part, () => Promise<unknown>> = {
-      me: () => apiRequest<Me>('/users/me').then((d) => setMe(d || {})),
-      earned: () => apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })),
-      subs: () => apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])),
-      // lite: each job's number to review, not every entry with its proof
-      created: () => apiRequest<Job[]>('/tasks/my/created?lite=1&limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])),
-      // eligible=1: which jobs you can take, so we only suggest those
-      jobs: () => apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100&eligible=1').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])),
-    }
-    return Promise.all(parts.map((k) => get[k]().then(() => { setFailed((f) => ({ ...f, [k]: false })); return null }, () => { setFailed((f) => ({ ...f, [k]: true })); return k })))
-      .then((r) => r.filter((k): k is Part => !!k))
-  }, [])
+  const userId = user?.id
+  const load = useCallback(() => {
+    if (!userId) return Promise.resolve(false)
+    return apiRequest<Home>('/dashboard/home').then((d) => {
+      if (!d?.me) throw new Error('empty')
+      lastHome = { userId, at: Date.now(), data: d }
+      setHome(d); setFailed(false)
+      return true
+    }, () => false)
+  }, [userId])
   useEffect(() => {
+    if (!userId) return
+    const kept = keptHome(userId)
+    if (kept) setHome(kept.data)
+    if (kept && Date.now() - kept.at < FRESH_MS) return
     let timer: ReturnType<typeof setTimeout> | undefined
-    load(['me', 'earned', 'subs', 'created', 'jobs']).then((bad) => {
-      if (bad.length) timer = setTimeout(() => { load(bad).finally(() => setSettled(true)) }, RETRY_MS)
-      else setSettled(true)
+    load().then((good) => {
+      if (good || keptHome(userId)) return
+      timer = setTimeout(() => { load().then((again) => { if (!again && !keptHome(userId)) setFailed(true) }) }, RETRY_MS)
     })
-    // Saved banks (the old check read a profile field the bank form never sets)
-    sharedGet<any[]>('/wallet/banks', 5000).then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
     return () => clearTimeout(timer)
-  }, [load])
-  // Starter jobs asked for apart (?featured=1), only for someone who still sees
-  // them: inside the newest 100 jobs they vanished once more were open (dash-10).
-  // If this fails, the starter jobs found in the main list still show.
-  const [starterJobs, setStarterJobs] = useState<Job[] | null>(null)
-  const wantsStarter = !!me && (me.workerProfile?.tasksCompleted ?? 0) < STARTER_UNTIL
-  useEffect(() => {
-    if (!wantsStarter) return
-    apiRequest<Job[] | { tasks: Job[] }>('/tasks?featured=1&eligible=1&limit=100')
-      .then((d: any) => setStarterJobs((Array.isArray(d) ? d : d?.tasks || []).filter((j: Job) => j.featured)))
-      .catch(() => {})
-  }, [wantsStarter])
-  const retry = (parts: Part[]) => {
+  }, [userId, load])
+  const retry = () => {
     setRetrying(true)
-    load(parts.filter((k) => failed[k])).finally(() => setRetrying(false))
+    load().then((good) => { if (!good && !home) setFailed(true) }).finally(() => setRetrying(false))
   }
 
+
   if (!user) return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 200 }} /></div></Layout>
+
+  const me = home?.me || null
+  const earned = home?.earned ?? null
+  const subs = home ? home.work?.active || [] : null
+  const jobs = home && home.jobs ? home.jobs.pool || [] : null
+  const starterJobs = home?.jobs?.starters || null
+  const ghana = (me?.country || user.country) === 'GH'
+  // Admins (with two-factor on) get their queue; the worker setup cards aren't for them
+  const adminQ = home?.admin && !home.admin.needs2FA ? home.admin : null
 
   // Every wallet you hold money in (naira, cedis, USDC...), not naira alone: a
   // Ghanaian with GH₵40 saw GH₵0 here while the top bar said GH₵40. One currency
@@ -174,14 +183,15 @@ export default function Dashboard() {
   const heldIn = held.map(([c, b]) => (c === dCode ? Number(b.available) : convert(Number(b.available), c as Currency, dCode)))
   // Cedis as the top bar writes them (GH₵40.00)
   const own = (c: string, v: number) => (c === 'GHS' ? formatIn('GHS', v) : show(v, c, { exact: true }))
-  const balanceText = !balances ? '…' : held.length === 0 ? show(0)
+  // Until the wallet answers: a placeholder, never a flash of ₦0 (dash-13)
+  const balanceText = !balances ? (balanceError ? '–' : '') : held.length === 0 ? show(0)
     : held.length === 1 ? (held[0][0] === dCode ? formatIn(dCode, Number(held[0][1].available)) : show(Number(held[0][1].available), held[0][0]))
       : heldIn.every((v) => Number.isFinite(v) && v > 0) ? formatIn(dCode, heldIn.reduce((a, b) => a + b, 0))
         : held.map(([c, b]) => own(c, Number(b.available))).join(' + ')
   const balanceParts = held.length > 1 ? held.map(([c, b]) => own(c, Number(b.available))).join(' + ') : ''
-  const mine = created || []
-  const live = mine.filter((j) => LIVE.includes(String(j.status || 'OPEN')))
-  const reviewJobs = mine.filter((j) => toReviewOn(j) > 0)
+  const live = home?.hiring?.live || []
+  // Every job with work waiting, however old (dash-15: only the newest 100 were checked)
+  const reviewJobs = home?.hiring?.review || []
   // "₦3,200 earned": each currency's total added up in the display currency
   // (naira, dollars or cedis) at today's rates, like My tasks. Until a rate is
   // known, each currency its own total, naira first: "₦3,200 + 1.50 USDC earned"
@@ -201,9 +211,10 @@ export default function Dashboard() {
   const working = (subs || []).filter((s) => s.status === 'PENDING' && s.contestResult !== 'NOT_PLACED' && !closedUnsent(s))
   const waiting = (subs || []).filter((s) => s.status === 'SUBMITTED' && s.contestResult !== 'NOT_PLACED')
   const active = [...working, ...waiting]
-  // Not your own jobs, and not ones you've already taken part in
+  // Not your own jobs, and not ones you've already taken part in (the server
+  // already leaves out jobs you took; this also covers a kept answer)
   const taken = new Set((subs || []).map((s) => s.taskId))
-  // The job list plus the starter jobs asked for apart, each once
+  // The job list plus the starter jobs, each once
   const starterSeen = new Set((starterJobs || []).map((j) => j.id))
   const pool = [...(starterJobs || []), ...(jobs || []).filter((j) => !starterSeen.has(j.id))]
   // A similar job you've done (linked either way) can't be taken too
@@ -213,20 +224,32 @@ export default function Dashboard() {
   const open = (j: Job) => j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended'
   // GENDER can be fixed only by someone who hasn't said theirs yet
   const fixableOnly = (j: Job) => j.eligible !== false || (!!j.whyNot?.length && j.whyNot.every((c) => FIXABLE.has(c) || (c === 'GENDER' && !me?.gender)))
-  // Not while your work failed to load: without it we can't tell which jobs you took
-  const starter = me && subs !== null && jobsDone < STARTER_UNTIL
+  const hires = (home?.hiring?.total ?? 0) > 0
+  const works = (home?.work?.total ?? 0) > 0
+  // A hirer: said "Hire", or posts jobs and doesn't work. Their side comes first,
+  // and the worker cards (first job, starter jobs) aren't pushed at them (dash-8)
+  const hirer = me?.signupIntent === 'HIRE' || (hires && !works)
+  const workerCards = !!me && !adminQ && !hirer
+  const starter = workerCards && jobsDone < STARTER_UNTIL
     ? pool.filter((j) => j.featured && open(j) && fixableOnly(j))
     : []
   const starterIds = new Set(starter.map((j) => j.id))
   // "Jobs for you": only jobs you can take now, the kinds of work you've done
   // before first, then the best paid (it used to be the 4 newest, any of them)
-  const doneKinds = new Set((subs || []).map((s) => s.task?.category).filter(Boolean))
+  const doneKinds = new Set([...(home?.work?.kinds || []), ...(subs || []).map((s) => s.task?.category)].filter(Boolean))
   const payNgn = (j: Job) => { const v = (j.currency || 'NGN') === 'NGN' ? Number(j.reward || 0) : convert(Number(j.reward || 0), (j.currency || 'NGN') as Currency, 'NGN'); return Number.isFinite(v) ? v : 0 }
   const forYou = (jobs || []).filter((j) => open(j) && j.eligible !== false && !starterIds.has(j.id))
     .map((j, i) => ({ j, i, kind: doneKinds.has(j.category) ? 1 : 0, pay: payNgn(j) }))
     .sort((a, b) => b.kind - a.kind || b.pay - a.pay || a.i - b.i).slice(0, 4).map((x) => x.j)
-  const rank = me?.workerProfile?.level
-  const rankLabel = rank ? rankName(LEVELS.indexOf(rank) + 1) : 'Beginner'
+  const rankLabel = home?.rank?.name || (me?.workerProfile?.level ? rankName(LEVELS.indexOf(me.workerProfile.level) + 1) : 'Beginner')
+  // "3 more jobs to Intermediate" (dash-17); past the jobs, the first thing still missing
+  const next = home?.rank?.next
+  const rankNext = !next ? '' : home?.rank?.canClaim ? `${next.name} is ready to claim`
+    : home?.rank?.claimPending ? `${next.name}: claim being checked`
+      : next.jobsLeft > 0 ? `${plural(next.jobsLeft, 'more job', 'more jobs')} to ${next.name}`
+        : next.missing?.[0] ? `${next.name}: ${next.missing[0]}` : ''
+  // A rank you can claim (services/rank.service.js): shown first on the dashboard
+  const rankUp = home?.rank?.canClaim && next ? { name: next.name } : null
   const kycTier = (me?.kyc?.status || user.kycStatus) === 'APPROVED' ? Number(me?.kyc?.kycTier ?? user.kycTier ?? 0) : 0
   const kycOk = kycTier >= 1
   // Verified by NIN or ID (backend wallet.service verifiedById). The bank account
@@ -234,6 +257,11 @@ export default function Dashboard() {
   // sending money need NIN or ID: bank Level 1 used to show "Your ID is verified".
   // Level 2 always counts (a bank member who later sent an ID keeps idType 'BANK')
   const byId = kycOk && (kycTier >= 2 || (me?.kyc?.provider !== 'bank-name' && me?.kyc?.idType !== 'BANK'))
+  // The ₦1,000 first job bonus, in cedis for Ghana (dash-19)
+  const bonusGhs = convert(FIRST_JOB_BONUS, 'NGN', 'GHS')
+  const bonus = ghana && Number.isFinite(bonusGhs) ? formatIn('GHS', bonusGhs) : show(FIRST_JOB_BONUS, 'NGN')
+  // In Ghana there's no NIN or bank check: the Ghana Card (Level 2) is the ID
+  const idWord = ghana ? 'your Ghana Card' : 'your NIN or ID photo'
   // What stands between you and a starter job (null: you can do it now)
   const stepFor = (j: Job): { text: string; tag: string; order: number } | null => {
     const need = Number(j.minJobsDone) || 0
@@ -247,8 +275,8 @@ export default function Dashboard() {
     if (why.includes('WALLET')) return { text: 'Connect a Solana wallet in Settings first', tag: 'Set up', order: 1 }
     if (why.includes('GENDER') && !me?.gender) return { text: 'Say your gender in Settings, Account first', tag: 'Set up', order: 1 }
     if (need > jobsDone) return { text: need === 1 ? 'Opens after your first approved job' : `Opens after ${need} approved jobs`, tag: 'Later', order: 2 }
-    if (j.workerRequirement === 'KYC2' && kycTier < 2) return { text: 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
-    if (j.workerRequirement === 'KYC' && !kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
+    if (j.workerRequirement === 'KYC2' && kycTier < 2) return { text: ghana ? 'Send your Ghana Card first (Level 2)' : 'Send a photo of your ID first (Level 2)', tag: 'Verify ID', order: 1 }
+    if (j.workerRequirement === 'KYC' && !kycOk) return { text: ghana ? 'Send your Ghana Card first' : 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
     if (j.workerRequirement === 'HUMAN' && !me?.humanVerifiedAt) return { text: 'Get Human Verified first, it takes a minute', tag: 'Verify', order: 1 }
     return null
   }
@@ -264,40 +292,38 @@ export default function Dashboard() {
   const firstPick = pool.filter((j) => simple(j) && j.featured).sort(byPay)[0]
     || (jobs || []).filter((j) => simple(j) && Number(j.reward || 0) <= 2000).sort(byPay)[0]
   const firstActive = [...working, ...waiting][0]
-  const showFirstJob = !!me && subs !== null && jobsDone === 0 && (!!firstActive || !!firstPick)
+  const showFirstJob = workerCards && jobsDone === 0 && (!!firstActive || !!firstPick)
+  // One taken job shows once (dash-12): in "Your first job" when it's there,
+  // otherwise in "Your work" (it used to be in both and in "Needs your attention")
+  const workList = showFirstJob && firstActive ? active.filter((s) => s.id !== firstActive.id) : active
 
-  const loaded = subs !== null && created !== null
-  // Your work or your jobs didn't load: never guess "new account" from that
-  const workFailed = settled && ((!!failed.subs && subs === null) || (!!failed.created && created === null))
-  const hires = mine.length > 0
-  const works = (subs || []).length > 0
-  const isNew = loaded && !hires && !works
-  // Your profile (OgaScore, first job tips) or earnings didn't load: say so too.
-  // When the work card above failed, its Try again already asks for the profile.
-  const meFailed = settled && !!failed.me && me === null
-  const earnFailed = settled && !!failed.earned && earned === null
-  const infoParts: Part[] = [...(meFailed && !workFailed ? ['me' as const] : []), ...(earnFailed ? ['earned' as const] : [])]
-  const retryBtn = (parts: Part[]) => (
-    <button type="button" className="db-step-btn" onClick={() => retry(parts)} disabled={retrying}>{retrying ? 'Trying again…' : 'Try again'}</button>
+  const isNew = !!home && !hires && !works
+  const retryBtn = (
+    <button type="button" className="db-step-btn" onClick={retry} disabled={retrying}>{retrying ? 'Trying again…' : 'Try again'}</button>
   )
 
+  // Short, and in the member's country's words (dash-19)
+  const hasPayout = !!(home?.setup?.hasBank || home?.setup?.hasWallet || user.walletAddress || user.bankAccount)
   const steps = [
-    { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
+    { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust faces they recognise.', to: '/edit-profile', cta: 'Edit profile' },
     // A code by email, typed here (the old link keeps working). A wallet account adds its email first.
-    { done: !!user.isEmailVerified, label: user.hasEmail === false ? 'Add your email' : 'Verify your email', sub: user.hasEmail === false ? 'So you get job alerts and payment receipts, and can sign in without your wallet.' : "So you get job alerts and payment receipts. We'll email you a 6-digit code.", action: 'mail' as const },
-    { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: `Free. Your bank account check (Level 1) lets you withdraw. For your ${show(FIRST_JOB_BONUS, 'NGN')} first job bonus and to send money, verify with your NIN or a photo of your ID, then finish your first paid job. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.`, to: '/settings/verification', cta: 'Verify' },
+    { done: !!user.isEmailVerified, label: user.hasEmail === false ? 'Add your email' : 'Verify your email', sub: user.hasEmail === false ? 'For job alerts and receipts, and to sign in without your wallet.' : "For job alerts and receipts. We'll email you a 6-digit code.", action: 'mail' as const },
+    // Hirers fund their jobs; workers need somewhere to withdraw to
+    hirer
+      ? { done: hires || held.length > 0, label: 'Add money to post a job', sub: "It's held safely until you approve the work.", to: '/deposit', cta: 'Add money' }
+      : { done: hasPayout, label: 'Add a way to get paid', sub: ghana ? 'A mobile money number or a Solana wallet.' : 'A bank account or a Solana wallet.', to: '/wallet', cta: 'Open wallet' },
+    { done: kycOk, label: 'Verify your identity', sub: hirer ? `Free with ${idWord}. Unlocks withdrawals and sending money.` : `Free with ${idWord}. Unlocks withdrawals and your ${bonus} first job bonus.`, to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length
 
-  // Things waiting on you, most useful first
+  // Things waiting on you, most useful first. Your own places to finish are in
+  // "Your work" (or "Your first job") below, not here too (dash-12).
   const attention: { key: string; icon: string; text: string; to: string; cta: string }[] = [
     ...reviewJobs.slice(0, 3).map((j) => ({ key: `r-${j.id}`, icon: 'ti-inbox', text: `${plural(toReviewOn(j), 'submission', 'submissions')} to review on “${j.title}”`, to: `/manage-jobs?job=${j.id}`, cta: 'Review' })),
-    ...working.slice(0, 3).map((s) => ({ key: `w-${s.id}`, icon: 'ti-pencil', text: `Send your work for “${s.task?.title || 'your job'}”`, to: `/tasks/${s.taskId}/submit`, cta: 'Open' })),
     // (a new account sees this in the setup steps right below instead)
     ...(!kycOk && held.length > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${balanceText}`, to: '/settings/verification', cta: 'Verify' }] : []),
   ]
-  const moreReview = reviewJobs.length - 3
+  const moreReview = (home?.hiring?.reviewTotal ?? reviewJobs.length) - 3
 
   // "What brings you to OgaPay?" (only when the server says it isn't answered)
   const skipKey = `ogapay-intent-skip-${user.id}`
@@ -306,7 +332,11 @@ export default function Dashboard() {
     setIntentBusy(true); setIntentError('')
     try {
       await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ signupIntent: value }) })
-      setMe((m) => ({ ...(m || {}), signupIntent: value }))
+      setHome((h) => {
+        const n = h ? { ...h, me: { ...h.me, signupIntent: value } } : h
+        if (n && lastHome?.userId === user.id) lastHome = { ...lastHome, data: n }
+        return n
+      })
       setIntentDone('saved')
     } catch (e: any) { setIntentError(e?.message || "Couldn't save that. Please try again.") }
     setIntentBusy(false)
@@ -370,18 +400,19 @@ export default function Dashboard() {
       {firstActive ? (
         <>
           <h2 id="db-first">Finish "{firstActive.task?.title || 'your job'}"</h2>
-          <p className="db-first-pay"><b>{show(Number(firstActive.task?.reward || 0), firstActive.task?.currency || 'NGN')}</b> + <b>{show(FIRST_JOB_BONUS, 'NGN')}</b> first job bonus</p>
+          <p className="db-first-pay"><b>{show(Number(firstActive.task?.reward || 0), firstActive.task?.currency || 'NGN')}</b> + <b>{bonus}</b> first job bonus</p>
         </>
       ) : firstPick && (
         <>
           <h2 id="db-first">{firstPick.title}</h2>
-          <p className="db-first-pay">Earn <b>{show(Number(firstPick.reward || 0), firstPick.currency || 'NGN')}</b> + <b>{show(FIRST_JOB_BONUS, 'NGN')}</b> first job bonus</p>
+          <p className="db-first-pay">Earn <b>{show(Number(firstPick.reward || 0), firstPick.currency || 'NGN')}</b> + <b>{bonus}</b> first job bonus</p>
         </>
       )}
       <ol className="db-first-steps">
         <li className={byId ? 'done' : ''}>
           <i className={`ti ${byId ? 'ti-circle-check' : 'ti-circle-number-1'}`} aria-hidden="true" />
-          <span>{byId ? 'Verified with your NIN or ID' : kycOk ? 'Bank check done, so you can withdraw. For the bonus, also send a photo of your ID (Level 2)' : 'Verify with your NIN or a photo of your ID (free)'}</span>
+          <span>{ghana ? (byId ? 'Verified with your ID' : 'Send your Ghana Card (free)')
+            : byId ? 'Verified with your NIN or ID' : kycOk ? 'Bank check done, so you can withdraw. For the bonus, also send a photo of your ID (Level 2)' : 'Verify with your NIN or a photo of your ID (free)'}</span>
           {!byId && <Link className="db-step-btn" to="/settings/verification">Verify</Link>}
         </li>
         <li>
@@ -392,7 +423,9 @@ export default function Dashboard() {
             : firstPick && <Link className="db-step-btn dark" to={`/tasks/${firstPick.id}`}>Take this job</Link>}
         </li>
       </ol>
-      <p className="db-first-note">The {show(FIRST_JOB_BONUS, 'NGN')} is added to your wallet with your first approved job, once you're verified with your NIN or ID. The bank account check alone doesn't count.</p>
+      <p className="db-first-note">{ghana
+        ? `The ${bonus} is added to your wallet with your first approved job, once your Ghana Card is checked.`
+        : `The ${bonus} is added to your wallet with your first approved job, once you're verified with your NIN or ID. The bank account check alone doesn't count.`}</p>
     </section>
   )
 
@@ -400,13 +433,14 @@ export default function Dashboard() {
     <section className="ui-card ui-card-pad db-starter" aria-labelledby="db-starter">
       <div className="db-sec-head">
         <h2 id="db-starter">Starter jobs <InfoTip label="What are starter jobs?" title="Starter jobs">
-          <p>Quick jobs from the OgaPay team to help you learn OgaPay and earn your first naira. Do them in any order. Each one pays once, and it leaves this list when you've taken it.</p>
+          <p>Quick jobs from the OgaPay team to help you learn OgaPay and earn your first {ghana ? 'cedis' : 'naira'}. Do them in any order. Each one pays once, and it leaves this list when you've taken it.</p>
           <p>Send real proof: work that just copies the brief is rejected.</p>
         </InfoTip></h2>
         <button type="button" className="db-fold" onClick={toggleStarter} aria-expanded={starterOpen} aria-controls="db-starter-list">
-          {starterSorted.length} for you <i className={`ti ti-chevron-${starterOpen ? 'up' : 'down'}`} aria-hidden="true" />
+          {starterOpen ? 'Hide' : `Show ${starterSorted.length}`} <i className={`ti ti-chevron-${starterOpen ? 'up' : 'down'}`} aria-hidden="true" />
         </button>
       </div>
+      <p className="db-starter-sub">{plural(starterSorted.length, 'quick job', 'quick jobs')} to earn your first {ghana ? 'cedis' : 'naira'}. Each pays once.</p>
       {starterOpen && <ul className="db-list" id="db-starter-list">
         {starterSorted.map(({ j, step }) => (
           <li key={j.id}>
@@ -429,7 +463,7 @@ export default function Dashboard() {
       <div className="db-role-label">Hiring</div>
       <div className="db-sec-head"><h2>Your jobs</h2><Link to="/manage-jobs" className="tap">Manage jobs</Link></div>
       {live.length === 0 ? (
-        <div className="db-empty">None of your jobs are open right now. <Link to="/create">Post a job</Link></div>
+        <div className="db-empty">{hires ? 'None of your jobs are open right now.' : "You haven't posted a job yet."} <Link to="/create">Post a job</Link></div>
       ) : (
         <ul className="db-list">
           {[...live].sort((a, b) => toReviewOn(b) - toReviewOn(a)).slice(0, 5).map((j) => {
@@ -463,9 +497,9 @@ export default function Dashboard() {
       </div>
       {active.length === 0 ? (
         <div className="db-empty">You're not working on anything right now.</div>
-      ) : (
+      ) : workList.length > 0 && (
         <ul className="db-list">
-          {active.slice(0, 4).map((s) => (
+          {workList.slice(0, 4).map((s) => (
             <li key={s.id}>
               <Link to={`/tasks/${s.taskId}/submit`}>
                 <div>
@@ -480,8 +514,8 @@ export default function Dashboard() {
         </ul>
       )}
       <div className="db-sub-head"><span>Jobs for you</span><Link to="/tasks">See all jobs</Link></div>
-      {jobs === null && failed.jobs && settled ? (
-        <div className="db-empty db-load-err" role="alert"><span>Couldn't load jobs. Check your connection.</span>{retryBtn(['jobs'])}</div>
+      {home?.jobsFailed ? (
+        <div className="db-empty db-load-err" role="alert"><span>Couldn't load jobs. Check your connection.</span>{retryBtn}</div>
       ) : jobs === null ? <div className="ui-sk" style={{ height: 90 }} /> : forYou.length === 0 ? (
         <div className="db-empty">No jobs you can take right now. Check back soon.</div>
       ) : (
@@ -497,6 +531,44 @@ export default function Dashboard() {
       )}
     </section>
   )
+
+  // Hiring first for hirers (they said "Hire", or post and don't work); someone
+  // who said "Hire" sees their jobs card even before posting (dash-8)
+  const showHiring = hires || me?.signupIntent === 'HIRE'
+  const showEarning = works || !showHiring
+
+  // The admin queue (dash-21): what's waiting, with a link to each admin page.
+  // Read-only counts; an admin without two-factor on is told to turn it on.
+  const adminRows = adminQ ? [
+    { key: 'wd', n: adminQ.withdrawals || 0, text: 'withdrawals to pay', to: '/admin/withdrawals' },
+    { key: 'kyc', n: (adminQ.kyc || 0) + (adminQ.level2 || 0), text: 'ID checks to review', to: '/admin/kyc' },
+    { key: 'sub', n: adminQ.flagged || 0, text: 'flagged entries to review', to: '/admin/moderation' },
+    { key: 'store', n: adminQ.storeReports || 0, text: 'reported store products', to: '/admin/store' },
+    { key: 'rank', n: adminQ.rankClaims || 0, text: 'rank claims to check', to: '/admin/ranks' },
+  ] : []
+  const adminCard = adminQ ? (
+    <section className="ui-card ui-card-pad db-admin" aria-labelledby="db-admin">
+      <div className="db-sec-head"><h2 id="db-admin">Admin queue</h2><Link to="/admin">Admin panel</Link></div>
+      <ul className="db-list">
+        {adminRows.map((r) => (
+          <li key={r.key}>
+            <Link to={r.to}>
+              <div><strong>{r.n === 0 ? `No ${r.text}` : `${r.n} ${r.text}`}</strong></div>
+              <em className={r.n > 0 ? 'wait' : 'later'}>{r.n > 0 ? 'Open' : 'All clear'}</em>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : home?.admin?.needs2FA ? (
+    <section className="ui-card ui-card-pad db-attn" aria-label="Admin tools">
+      <ul><li>
+        <span className="db-attn-ic"><i className="ti ti-shield-lock" /></span>
+        <span className="db-attn-text">Turn on two-factor sign-in to use the admin tools and see the admin queue.</span>
+        <Link className="db-step-btn" to="/settings/security">Turn on</Link>
+      </li></ul>
+    </section>
+  ) : null
 
   return (
     <Layout sidebar={false}>
@@ -514,6 +586,7 @@ export default function Dashboard() {
         </div>
 
         <div className="db-stack">
+          {adminCard}
           {rankUp && (
             <section className="ui-card ui-card-pad db-rankup" aria-label="New rank available">
               <span className="db-attn-ic"><i className="ti ti-trophy" /></span>
@@ -537,59 +610,64 @@ export default function Dashboard() {
             </section>
           )}
 
+          {/* Three numbers, compact on phones so your jobs show on the first screen (dash-22) */}
+          <div className="db-snap">
+            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{balanceText || <i className="db-sk-num" aria-label="Loading" />}</b><small>{balanceParts || 'Open wallet →'}</small></Link>
+            {/* Verification is its own thing, not the worker rank beside it (dash-16) */}
+            <Link to="/settings/verification" className="db-stat">
+              <span>Verification</span>
+              <b>{!me && !user.kycStatus ? <i className="db-sk-num" aria-label="Loading" /> : kycOk ? 'Verified' : 'Not verified'}</b>
+              <small>{!kycOk ? 'Verify to withdraw and send money'
+                : ghana ? `ID Level ${kycTier} · withdraw to mobile money`
+                  : `ID Level ${kycTier} · withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, send a photo of your ID (Level 2)'}`}</small>
+            </Link>
+            <Link to="/rank" className="db-stat">
+              <span>OgaScore</span>
+              <b>{me ? me.ogaScore ?? 0 : failed ? '–' : <i className="db-sk-num" aria-label="Loading" />}</b>
+              <small>{me ? `${rankLabel} rank · ${rankNext || plural(jobsDone, 'job', 'jobs') + ' done'}` : 'Your rank and jobs done'}</small>
+            </Link>
+          </div>
+
           {intentCard}
           {firstJobCard}
           {starterCard}
-          {isNew && setup}
+          {isNew && !adminQ && setup}
 
-          <div className="db-snap">
-            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{balanceText}</b><small>{balanceParts || 'Open wallet →'}</small></Link>
-            <Link to="/wallet" className="db-stat">
-              <span>Your level</span>
-              <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day, paid Thursdays${byId ? '' : '. To send money, send a photo of your ID (Level 2)'}` : 'Verify to withdraw and send money'}</small>
-            </Link>
-            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? (meFailed ? '–' : '…')}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
-          </div>
-          {infoParts.length > 0 && (
-            <div className="db-empty db-load-err" role="alert">
-              <span>{infoParts.length === 2 ? "Couldn't load your OgaScore and earnings." : infoParts[0] === 'me' ? "Couldn't load your OgaScore and first job tips." : "Couldn't load your earnings."} Check your connection.</span>
-              {retryBtn(infoParts)}
-            </div>
-          )}
-
-          {/* a new member's two cards wait for /users/me too: their order depends on the answer */}
-          {workFailed ? (
+          {failed && !home ? (
             <section className="ui-card ui-card-pad db-load-err" role="alert">
-              <div><strong>We couldn't load your work and jobs</strong>
+              <div><strong>We couldn't load your dashboard</strong>
               <span>Nothing is lost. Check your connection and try again.</span></div>
-              {retryBtn(['subs', 'created', 'me'])}
+              {retryBtn}
             </section>
-          ) : !loaded || (isNew && me === null && !failed.me) ? (
-            <div className="ui-sk" style={{ height: 200, borderRadius: 20 }} />
+          ) : !home ? (
+            // The same shape as the cards that come (no jump when they arrive, dash-13)
+            <div className="db-pair db-loading" aria-busy="true">
+              <div className="ui-sk" style={{ height: 220, borderRadius: 20 }} />
+              <div className="ui-sk" style={{ height: 220, borderRadius: 20 }} />
+            </div>
           ) : isNew ? (
             <div className="db-pair">
               {/* Someone who came to hire sees "Post your first job" first */}
-              {me?.signupIntent === 'HIRE' && postFirst}
+              {hirer && postFirst}
               <Link to="/tasks" className="ui-card ui-card-pad db-start">
                 <span className="db-start-ic"><i className="ti ti-search" /></span>
                 <strong>Find your first job</strong>
-                <span>Paid tasks you can do from your phone: testing, writing, design and more. Get paid in naira or USDC.</span>
+                <span>Paid tasks you can do from your phone: testing, writing, design and more. Get paid in {ghana ? 'cedis' : 'naira'} or USDC.</span>
                 <em>Browse jobs <i className="ti ti-arrow-right" /></em>
               </Link>
-              {me?.signupIntent !== 'HIRE' && postFirst}
+              {!hirer && postFirst}
             </div>
           ) : (
-            <div className={`db-pair${hires && works ? '' : ' single'}`}>
-              {hires && hiring}
-              {(works || !hires) && earning}
-              {hires && !works && (
+            <div className={`db-pair${showHiring && showEarning ? '' : ' single'}`}>
+              {showHiring && hiring}
+              {showEarning && earning}
+              {showHiring && !showEarning && (
                 <p className="db-aside-link">Want to earn too? <Link to="/tasks">See jobs you can do</Link></p>
               )}
             </div>
           )}
 
-          {!isNew && setup}
+          {!isNew && !adminQ && setup}
         </div>
       </div>
     </Layout>

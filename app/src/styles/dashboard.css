@@ -143,7 +143,7 @@
 .db-rankup span:not(.db-attn-ic) { font-size: 13.5px; color: var(--text2); }
 
 /* Starter jobs fold away: the count is the button that opens them */
-.db-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text2); font: 400 11px var(--font-mono); cursor: pointer; }
+.db-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text2); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
 .db-fold:hover { color: var(--text); }
 .db-fold i { font-size: 16px; }
 .db-starter .db-sec-head { margin-bottom: 0; }
@@ -177,4 +177,25 @@
 @media (max-width: 767px) {
   .db-step-btn, .db-first-steps .db-step-btn, .db-load-err .db-step-btn { height: auto; min-height: 44px; padding: 0 14px; font-size: 13px; }
   .db-intent-skip { min-height: 44px; }
+}
+
+/* Starter jobs say what they are in readable text (dash-11) */
+.db-starter-sub { margin: 2px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--text2); }
+
+/* A number still loading: a quiet bar, never a flash of ₦0 (dash-13) */
+.db-sk-num { display: inline-block; width: 4.5em; max-width: 100%; height: .8em; border-radius: 6px; background: var(--card2); vertical-align: middle; animation: ui-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .db-sk-num { animation: none; } }
+
+/* Admin queue (admins only, dash-21) */
+.db-admin .db-list strong { white-space: normal; }
+
+/* Phones: the three numbers side by side and small, so your jobs and reviews
+   show on the first screen (dash-22: they were three stacked cards) */
+@media (max-width: 767px) {
+  .db-snap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .db-snap .db-stat { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 2px; padding: 10px; border-radius: 12px; }
+  .db-snap .db-stat span { flex-basis: auto; font-size: 11px; letter-spacing: .04em; }
+  .db-snap .db-stat b { margin-top: 2px; font-size: 15px; }
+  .db-snap .db-stat small { font-size: 11px; line-height: 1.35; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .db-stack { gap: 12px; margin-top: 16px; }
 }
