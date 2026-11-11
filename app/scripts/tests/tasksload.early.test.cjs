@@ -36,7 +36,8 @@ function earlyScript(origin) {
   const plugin = m.exports.default();
   plugin.configResolved({ base: '/', env: { VITE_API_BASE_URL: origin + '/api/v1' } });
   const bundle = { 'assets/index.js': { type: 'chunk', fileName: 'assets/index.js', isEntry: true, imports: [] } };
-  [...src.matchAll(/page: '([^']+)'/g)].forEach(([, page], i) => {
+  // every page it lists, and the extra code some pages open at once (also: [...])
+  [...new Set([...src.matchAll(/'(src\/[^']+\.tsx)'/g)].map((x) => x[1]))].forEach((page, i) => {
     const fileName = `assets/p${i}.js`;
     bundle[fileName] = { type: 'chunk', fileName, isDynamicEntry: true, facadeModuleId: '/app/' + page, imports: [], viteMetadata: { importedCss: new Set() } };
   });

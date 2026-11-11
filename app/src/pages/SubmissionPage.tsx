@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 import { categoryLabel } from '../lib/categories'
 import { jobRequirements } from '../lib/requirements'
 import { renderJobText } from '../lib/jobText'
@@ -230,7 +231,7 @@ export default function SubmissionPage() {
     if (askHandle && !handle.trim()) { setError(`Type your ${handleName} username, e.g. @ogapayhq`); return }
     if (askHandle && !cleanName) { setError(`That isn't a ${handleName} username. Type just your ${handleName} username, e.g. @ogapayhq (letters, numbers, dots and _ only).`); return }
     const token = getAccessToken()
-    if (!token) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
+    if (!token) { openSignIn({ redirect: location.pathname }); return }
     // One check before sending: phones make a mistaken tap easy
     if (!window.confirm(`Send your work now? Check it's complete. You can take it back to edit within ${TAKE_BACK_MINUTES} minutes, until it's reviewed.`)) return
     setError('')
@@ -297,7 +298,7 @@ export default function SubmissionPage() {
   const sendApplication = async () => {
     const note = pitch.trim()
     if (note.length < PITCH_MIN) { setError(`Write a short note on why you are a good fit (at least ${PITCH_MIN} characters).`); return }
-    if (!getAccessToken()) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
+    if (!getAccessToken()) { openSignIn({ redirect: location.pathname }); return }
     setError('')
     setBusy('Sending your application…')
     try {

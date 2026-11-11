@@ -29,9 +29,14 @@ export default function SignInHost() {
   if (!req) return null
   const onAuthPage = AUTH_PAGES.includes(location.pathname)
 
+  // On /login: back to the page before it in this tab (the job you were on),
+  // else req.closeTo (login-10). React Router counts this tab's pages in history.state.idx.
   const close = () => {
     setReq(null)
-    if (onAuthPage && req.closeTo) navigate(req.closeTo, { replace: true })
+    if (!onAuthPage) return
+    const idx = Number((window.history.state as { idx?: number } | null)?.idx)
+    if (req.closeBack && idx > 0) navigate(-1)
+    else if (req.closeTo) navigate(req.closeTo, { replace: true })
   }
 
   const signedIn = (isNewAccount: boolean) => {
@@ -44,7 +49,7 @@ export default function SignInHost() {
 
   return (
     <Suspense fallback={null}>
-      <SignInModal key={req.key} initialView={req.view} initialCode={req.code} initialNotice={req.notice} initialChallenge={req.challenge} redirect={safeRedirect(req.redirect)} onClose={close} onSignedIn={signedIn} />
+      <SignInModal key={req.key} initialView={req.view} initialCode={req.code} initialNotice={req.notice} initialChallenge={req.challenge} initialPending={req.pending} redirect={safeRedirect(req.redirect)} onClose={close} onSignedIn={signedIn} />
     </Suspense>
   )
 }

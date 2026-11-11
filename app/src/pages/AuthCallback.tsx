@@ -1,4 +1,7 @@
-// Fix: client-side PKCE flow — get Supabase session, exchange with backend for app tokens, redirect to dashboard
+// Client-side PKCE flow: get the Supabase session, exchange it with the backend
+// for app tokens, then go back to the page the sign-in started on (login-14).
+// A brand-new account first gets the sign-in sheet's last step (name, country,
+// what brings you here) over this page (login-23).
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { API_BASE, persistAuthSession } from "../lib/api";
@@ -38,8 +41,10 @@ export default function AuthCallback() {
 
     async function handleCallback(attempt = 0) {
       try {
-        // Wait for Supabase to process URL hash params (PKCE flow auto-detection)
-        await new Promise(r => setTimeout(r, attempt === 0 ? 1500 : 800));
+        // Supabase reads the code in the address itself (getSession waits for
+        // that); look again shortly only if it isn't there yet. It used to wait
+        // a fixed 1.5 s first on every sign-in (login-14).
+        if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 500));
 
         const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -90,7 +95,7 @@ export default function AuthCallback() {
           // account (the server sends isNewUser on that one exchange only)
           if (result.isNewUser) trackSignUpConversion(appUser?.id);
 
-          persistAuthSession({
+          if (!result.isNewUser) persistAuthSession({
             user: appUser,
             tokens: { accessToken: appTokens.accessToken, refreshToken: appTokens.refreshToken },
           });
@@ -162,11 +167,20 @@ export default function AuthCallback() {
             localStorage.setItem("ogapay_is_new_user", "true");
           }
 
+          // A new account: its last step in the sign-in sheet, which then signs
+          // in on this device and opens the page it started from (no reload).
+          // Closing or skipping it signs in all the same.
+          if (result.isNewUser) {
+            setStatus("profile");
+            openSignIn({ view: "profile", pending: { user: appUser, tokens: appTokens, isNewUser: true }, redirect: afterLogin(), closeTo: "/dashboard" });
+            return;
+          }
+
           setStatus("redirecting");
           window.location.href = afterLogin();
         } else {
-          // Retry once if hash is present
-          if (attempt < 2 && window.location.hash) {
+          // Look again while the address still has Google's answer in it
+          if (attempt < 3 && (window.location.hash || /[?&]code=/.test(window.location.search))) {
             return handleCallback(attempt + 1);
           }
           if (error) console.error("Auth error:", error);
@@ -194,7 +208,8 @@ export default function AuthCallback() {
 
   const statusMessages = {
     processing: { text: "Verifying your account...", sub: "Please wait while we sign you in." },
-    redirecting: { text: "Redirecting...", sub: "Taking you to your dashboard." },
+    redirecting: { text: "Signed in", sub: "Taking you back to OgaPay..." },
+    profile: { text: "One last step", sub: "Tell us a little about you to finish." },
     error: { text: "Something went wrong", sub: "Redirecting to login..." },
     twofa: { text: "One more step", sub: "Enter your two-factor code to finish signing in." },
   };
@@ -218,7 +233,7 @@ export default function AuthCallback() {
         maxWidth: 460,
         boxShadow: "0 18px 50px rgba(16,21,37,.1)",
       }}>
-        {status === "twofa" ? null : status === "processing" || status === "redirecting" ? (
+        {status === "twofa" || status === "profile" ? null : status === "processing" || status === "redirecting" ? (
           <div style={{
             width: 48, height: 48,
             border: "3px solid #4D5DFF",

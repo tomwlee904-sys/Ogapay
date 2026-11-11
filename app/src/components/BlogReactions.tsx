@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 import { useAuth } from '../context/AuthContext'
 import { sized } from '../lib/img'
 import { kycOf } from '../lib/wallet'
@@ -29,7 +30,7 @@ export default function BlogReactions({ slug, post }: { slug: string; post: any 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [tipOpen, setTipOpen] = useState(false)
-  const signIn = () => navigate(`/login?redirect=${encodeURIComponent(`/blog/${slug}`)}`)
+  const signIn = () => openSignIn({ redirect: `/blog/${slug}` })
   const isAuthor = !!user && user.id === post.authorId
 
   useEffect(() => {

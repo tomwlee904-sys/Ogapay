@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 import { useLivePrice } from '../hooks/useLivePrice'
 import { useCurrency } from '../context/CurrencyContext'
 import { CURRENCY_SYMBOLS, Currency } from '../lib/currency'
@@ -409,7 +410,7 @@ export default function StoreProduct() {
 
   const onRequest = !!p.priceOnRequest
   const contactSeller = () => {
-    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    if (!user) return openSignIn({ redirect: '/store/' + p.id })
     navigate('/messages?user=' + encodeURIComponent(p.seller) + '&product=' + p.id)
   }
   const unavailable = !!isSoldOut || isHidden
@@ -417,7 +418,7 @@ export default function StoreProduct() {
   const onBuy = () => {
     if (isOwner) return navigate('/my-store')
     if (onRequest) return contactSeller()
-    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    if (!user) return openSignIn({ redirect: '/store/' + p.id })
     navigate('/store/pay/' + p.id)
   }
 
@@ -467,7 +468,7 @@ export default function StoreProduct() {
       )}
       {/* Report product (2026-11-10): buyers can flag a fake or a scam */}
       {!isOwner && !p.official && (
-        <button type="button" className="sp-report" onClick={() => (user ? setReporting(true) : navigate('/login?redirect=/store/' + p.id))}>
+        <button type="button" className="sp-report" onClick={() => (user ? setReporting(true) : openSignIn({ redirect: '/store/' + p.id }))}>
           <i className="ti ti-flag" aria-hidden="true" /> Report this product
         </button>
       )}
@@ -628,7 +629,7 @@ export default function StoreProduct() {
               )}
               {!user && (
                 <p style={{ fontSize: 12, color: 'var(--text2)', margin: '12px 0 0' }}>
-                  <button className="tap" onClick={() => navigate('/login?redirect=/store/' + id)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>Log in</button> to leave a review.
+                  <button className="tap" onClick={() => openSignIn({ redirect: '/store/' + id })} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>Log in</button> to leave a review.
                 </p>
               )}
             </section>

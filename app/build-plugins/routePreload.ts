@@ -24,6 +24,7 @@ import type { OutputBundle, OutputChunk } from 'rollup'
 type Route = {
   path: string // matched against location.pathname
   page: string // the page's source file
+  also?: string[] // code the page opens at once (loaded lazily by it), fetched alongside
   data?: string[] // public data it asks for first; $1 is the path's first group
   guestData?: string[] // only when signed out (signed in, the page sends a token)
   bareOnly?: boolean // data only without a ?query (the query changes what it asks for)
@@ -41,7 +42,8 @@ const ROUTES: Route[] = [
   { path: '^/blog/(?!write/?$)([^/]+)/?$', page: 'src/pages/ArticleDetail.tsx', guestData: ['/blog/$1'] },
   { path: '^/store/?$', page: 'src/pages/Store.tsx' },
   { path: '^/store/(?!orders/?$)([^/]+)/?$', page: 'src/pages/StoreProduct.tsx', data: ['/store/$1'] },
-  { path: '^/(login|join|pair|ref/[^/]+)/?$', page: 'src/pages/LoginPage.tsx' },
+  // The sign-in sheet opens straight away on these (login-9)
+  { path: '^/(login|join|pair|ref/[^/]+)/?$', page: 'src/pages/LoginPage.tsx', also: ['src/components/auth/SignInModal.tsx'] },
   { path: '^/communities/?$', page: 'src/pages/Communities.tsx' },
   { path: '^/communities/(?!create/?$|mine/?$)[^/]+/?$', page: 'src/pages/CommunityDetail.tsx' },
   { path: '^/creators/?$', page: 'src/pages/Creators.tsx' },
@@ -103,11 +105,18 @@ export default function routePreload(): Plugin {
         }
         for (const c of chunks) if (c.isEntry) { loaded.add(c.fileName); walk(c, loaded) }
 
+        const chunkOf = (page: string) => {
+          const chunk = chunks.find((c) => c.isDynamicEntry && c.facadeModuleId?.replace(/\\/g, '/').endsWith('/' + page))
+          if (!chunk) throw new Error(`routePreload: no chunk for ${page}; was the page renamed?`)
+          return chunk
+        }
         const routes = ROUTES.map((r) => {
-          const chunk = chunks.find((c) => c.isDynamicEntry && c.facadeModuleId?.replace(/\\/g, '/').endsWith('/' + r.page))
-          if (!chunk) throw new Error(`routePreload: no chunk for ${r.page}; was the page renamed?`)
-          const files = new Set<string>([chunk.fileName])
-          walk(chunk, files)
+          const files = new Set<string>()
+          for (const page of [r.page, ...(r.also || [])]) {
+            const chunk = chunkOf(page)
+            files.add(chunk.fileName)
+            walk(chunk, files)
+          }
           const css = new Set<string>()
           for (const f of files) for (const c of (byName.get(f) as any)?.viteMetadata?.importedCss ?? []) css.add(c)
           return [r.path, [...files, ...css].map((f) => base + f), r.data || [], r.guestData || [], r.bareOnly ? 1 : 0]

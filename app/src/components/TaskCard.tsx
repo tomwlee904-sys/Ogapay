@@ -3,6 +3,7 @@ import { IconBookmarkFilled } from '@tabler/icons-react'
 import { rankName, requirementLine } from '../lib/requirements'
 import { useState, useEffect, useRef } from 'react'
 import { apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useCurrency } from '../context/CurrencyContext'
 import { displayMoney } from '../lib/money'
@@ -178,7 +179,7 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
   const toggleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (bookmarkLoading) return
-    if (!getAccessToken()) { navigate('/login?redirect=' + encodeURIComponent('/tasks/' + id)); return }
+    if (!getAccessToken()) { openSignIn({ redirect: '/tasks/' + id }); return }
     const newState = !bookmarked
     setBookmarked(newState)
     setBookmarkLoading(true)

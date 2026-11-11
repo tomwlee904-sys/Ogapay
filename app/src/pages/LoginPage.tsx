@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Logo } from '../components/Logo'
 import { openSignIn, safeRedirect, SIGN_IN_ERROR_KEY } from '../lib/signin'
-import HomePage from './HomePage'
 
 const ERRORS: Record<string, string> = {
   no_session: "Google sign-in didn't finish. Please try again.",
@@ -27,9 +27,15 @@ const takeSessionNotice = () => {
   } catch { return '' }
 }
 
-/* /login and /pair open the sign-in dialog over the homepage, like wurk.fun.
-   Referral links (/ref/CODE, /join?ref=CODE) open sign-up with the code saved.
-   Closing it leaves you on the homepage. */
+// Pages anyone can open: closing the dialog on /login?redirect=/tasks/abc goes
+// back there (login-10). A members-only page would only bring /login back.
+const PUBLIC_PAGE = /^\/(tasks\/(?!new\b)[^/?#]+|store\/(?!orders\b|pay\b)[^/?#]+|blog\/(?!write\b)[^/?#]+|user\/[^/?#]+|communities\/(?!create\b|mine\b)[^/?#]+)\/?([?#].*)?$/
+
+/* /login, /pair and referral links (/ref/CODE, /join?ref=CODE) open the sign-in
+   dialog over a light page (login-9, 2026-11-11). It used to be the whole
+   homepage: on 3G its code, pictures and six lists came first and the dialog
+   showed after about 6 s. Closing the dialog goes back to the page you came
+   from (or the page you were sent here from), else the homepage (login-10). */
 export default function LoginPage() {
   const { isAuthed, isLoading } = useAuth()
   const [params] = useSearchParams()
@@ -40,6 +46,15 @@ export default function LoginPage() {
   // Kept in state: StrictMode runs the initialiser and the effect below twice,
   // and reading-and-deleting there lost the reason (generic text instead)
   const [googleError] = useState(() => (params.get('error') === 'google_failed' ? peekSignInError() : ''))
+  const view = pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options'
+  const open = (notice = '') => openSignIn({
+    view,
+    code: params.get('code') || '',
+    notice,
+    redirect,
+    closeTo: redirect && PUBLIC_PAGE.test(redirect) ? redirect : '/',
+    closeBack: true,
+  })
 
   useEffect(() => {
     const ref = (refCode || params.get('ref') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
@@ -48,16 +63,23 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoading || isAuthed) return
-    openSignIn({
-      view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options',
-      code: params.get('code') || '',
-      notice: googleError || ERRORS[params.get('error') || ''] || takeSessionNotice(),
-      redirect,
-      closeTo: '/',
-    })
+    open(googleError || ERRORS[params.get('error') || ''] || takeSessionNotice())
     clearSignInError()
   }, [isLoading, isAuthed, pathname])
 
   if (!isLoading && isAuthed) return <Navigate to={redirect || '/dashboard'} replace />
-  return <HomePage />
+  // Behind the dialog; also what's left if the dialog's code couldn't load
+  return (
+    <main id="login-page" style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: 'var(--bg)', color: 'var(--text)', padding: 16, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ textAlign: 'center', maxWidth: 360 }}>
+        <span style={{ display: 'inline-flex', marginBottom: 12 }}><Logo size={40} /></span>
+        <h1 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 700, letterSpacing: '-.01em' }}>{isReferral ? 'Join OgaPay' : 'Sign in to OgaPay'}</h1>
+        <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.5, color: 'var(--text2)' }}>Earn from tasks, hire people and sell in the store.</p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button type="button" className="ui-btn ui-btn-dark" style={{ minHeight: 44 }} onClick={() => open()}>{isReferral ? 'Create my account' : 'Sign in'}</button>
+          <Link to="/" className="ui-btn ui-btn-ghost" style={{ minHeight: 44 }}>Go to homepage</Link>
+        </div>
+      </div>
+    </main>
+  )
 }
