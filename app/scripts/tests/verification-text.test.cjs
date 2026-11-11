@@ -6,6 +6,10 @@
 //  - ver-3: sending money needs a NIN or ID; a bank-only Level 1 is told before the form
 //  - ver-6: a NIN sent to our team is a calm waiting message, red only for real errors
 //  - ver-13: VeryAI waiting text is calm, red only for real failures
+//  - ver-7: on slow data, a loading line until the level and checks are known; typed fields survive a refresh
+//  - ver-10: "Back to the job" once verified, only to a path on this site
+//  - ver-12: the VeryAI card says you need the app, with store links
+//  - ver-18: a skippable "Connect X" card while X isn't connected
 //   npm run test:verification-text
 const path = require('path');
 const fs = require('fs');
@@ -30,6 +34,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       'verification-under-test': path.join(SRC, 'pages/settings/Verification.tsx'),
       'transfer-under-test': path.join(SRC, 'components/TransferModal.tsx'),
       'toast-under-test': path.join(SRC, 'components/Toast.tsx'),
+      'next-under-test': path.join(SRC, 'lib/nextPath.ts'),
     },
     define: { 'import.meta.env': '{"VITE_API_BASE_URL":"https://api.example.test/api/v1"}', 'process.env.NODE_ENV': '"development"' },
     logLevel: 'error',
@@ -273,6 +278,153 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const terms = fs.readFileSync(path.join(SRC, 'pages/Terms.tsx'), 'utf8');
   ok('5a Terms: sending money and the bonus need a NIN or ID; bank Level 1 alone only withdraws',
     /Sending money to other members, and the ₦1,000 first job bonus, need your NIN or ID \(Level 1 by NIN, or Level 2\)\. Level 1 by bank account alone lets you withdraw, but not send money or get the bonus\./.test(terms), terms.match(/<section id="kyc">[\s\S]*?<\/section>/)?.[0]);
+
+  // ver-8: the admin KYC tools call the Level 3 route (backend kyc-level3-admin.it.js proves who may)
+  const adminKyc = fs.readFileSync(path.join(SRC, 'pages/AdminKyc.tsx'), 'utf8');
+  ok('8g Admin KYC: "Give Level 3" only on an approved Level 2, sent with the reason to /kyc/admin/:id/level3',
+    /r\.kycTier === 2 && <button[^\n]*setMode\('level3'\)/.test(adminKyc) && /\/kyc\/admin\/\$\{r\.userId\}\/level3`, \{ method: 'PATCH', body: JSON\.stringify\(\{ reason: reason\.trim\(\) \}\) \}/.test(adminKyc), null);
+
+  // ── ver-7: slow data shows a loading line, never the wrong form ──
+  p = await open('slow1');
+  await sleep(400);
+  v = await view(p);
+  ok('9a slow data, Level 1: "Loading your verification…" while waiting', /Loading your verification…/.test(v.text), v.text);
+  ok('9b ...never "Ask our team for Level 3" (the wrong form for a Level 1)', !/Ask our team for Level 3|Contact support/.test(v.text), v.text);
+  ok('9c ...and no form to type into yet', v.forms === 0 && v.selects === 0, { forms: v.forms, selects: v.selects });
+  await p.evaluate(() => window.__release());
+  v = await until(p, (s) => /Get Level 2: send your ID to our team/.test(s.text));
+  ok('9d once it arrives: the Level 2 ID form, no loading line, no Level 3 row', /Get Level 2: send your ID to our team/.test(v.text) && !/Loading your verification/.test(v.text) && !/Ask our team for Level 3/.test(v.text), v.text);
+  // ver-7: typed fields survive a refresh of the member's details
+  await p.type('input[placeholder="The number on your ID"]', '12345678901');
+  await p.evaluate(() => window.__refresh());
+  await sleep(200);
+  let typed = await p.$eval('input[placeholder="The number on your ID"]', (e) => e.value);
+  ok('9e a half-typed ID number stays after the page refreshes your details', typed === '12345678901', typed);
+  await p.evaluate(() => window.__reload());
+  await sleep(200);
+  typed = await p.$eval('input[placeholder="The number on your ID"]', (e) => e.value);
+  ok('9f ...and after a reload too', typed === '12345678901', typed);
+  await p.close();
+
+  p = await open('slow0');
+  await sleep(400);
+  v = await view(p);
+  ok('9g slow data, new member: no NIN form first (it used to turn into the bank form while typing)', /Loading your verification…/.test(v.text) && !/Get Level 1 with your NIN/.test(v.text) && v.forms === 0, v.text);
+  await p.evaluate(() => window.__release());
+  v = await until(p, (s) => /Verify with your bank account/.test(s.text));
+  ok('9h ...then the bank panel, as the server has it on', /Verify with your bank account/.test(v.text) && !/Loading your verification/.test(v.text), v.text);
+  await p.close();
+
+  p = await open('slow2');
+  await sleep(400);
+  v = await view(p);
+  ok('9i slow data, Level 2: loading until the checks arrive', /Loading your verification…/.test(v.text) && !/Ask our team for Level 3/.test(v.text), v.text);
+  await p.evaluate(() => window.__release());
+  v = await until(p, (s) => /Ask our team for Level 3/.test(s.text));
+  ok('9j ...then, for a real Level 2, "Ask our team for Level 3" (right person)', /Ask our team for Level 3/.test(v.text) && !/Loading/.test(v.text), v.text);
+  await p.close();
+
+  // ── ver-10: back to the job ──
+  p = await open('nin0');
+  const lib = await p.evaluate(() => {
+    const { safeNext, withNext } = window.__nextLib;
+    return {
+      ok: safeNext('/tasks/abc-123'), q: safeNext('/tasks/abc?tab=1'),
+      evil: [safeNext('https://evil.example'), safeNext('//evil.example'), safeNext('/\\evil.example'), safeNext('javascript:alert(1)'), safeNext('/tasks/a//b'), safeNext('/%2F%2Fevil'), safeNext(''), safeNext(null), safeNext('/' + 'a'.repeat(300)), safeNext('/tasks/<x>')],
+      link: withNext('/settings/verification#human', '/tasks/abc'), plain: withNext('/settings/verification', '/tasks/abc'), bad: withNext('/settings/verification', 'https://evil.example'),
+    };
+  });
+  await p.close();
+  ok('10a only plain paths on this site are accepted as a way back', lib.ok === '/tasks/abc-123' && lib.q === '/tasks/abc?tab=1', lib);
+  ok('10b other sites, //host, backslashes, scripts, empty and long ones are refused', lib.evil.every((x) => x === null), lib.evil);
+  ok('10c the job\'s Verify link carries ?next and keeps #human last', lib.link === '/settings/verification?next=%2Ftasks%2Fabc#human' && lib.plain === '/settings/verification?next=%2Ftasks%2Fabc', lib);
+  ok('10d ...a bad way back is simply left off', lib.bad === '/settings/verification', lib.bad);
+  const jd = fs.readFileSync(path.join(SRC, 'pages/JobDetail.tsx'), 'utf8');
+  ok('10e the job page uses it on its Verification links', /withNext\(to, pathname\)/.test(jd) && /<Link to=\{link\(fix\.to\)\}>/.test(jd), null);
+
+  p = await open('veryNext');
+  await sleep(300);
+  v = await view(p);
+  ok('10f came from a job, not verified yet: no "Back to the job"', !/Back to the job/.test(v.text), v.text);
+  await clickText(p, 'Check again');
+  v = await until(p, (s) => /Back to the job/.test(s.text));
+  let back = v.links.find((l) => /Back to the job/.test(l.text));
+  ok('10g verified with VeryAI: "Back to the job" goes to /tasks/job123', !!back && back.href === '/tasks/job123' && /You're verified\. Go back and take the job\./.test(v.text), v.links);
+  await p.close();
+
+  for (const c of ['veryEvil', 'veryEvil2']) {
+    p = await open(c);
+    await sleep(300);
+    await clickText(p, 'Check again');
+    await sleep(500);
+    v = await view(p);
+    ok(`10h ${c}: a link to another site is never offered as the way back`, v.calls.filter((x) => x.path === '/social/very/check').length >= 2 && !/Back to the job|Go back/.test(v.text) && !v.links.some((l) => /evil/.test(l.href || '')), v.links);
+    await p.close();
+  }
+
+  p = await open('veryBack');
+  v = await until(p, (s) => /Back to the job/.test(s.text));
+  back = v.links.find((l) => /Back to the job/.test(l.text));
+  ok('10i back from VeryAI in a new page load (no ?next): the saved way back still shows', !!back && back.href === '/tasks/job123', v.links);
+  await p.evaluate(() => [...document.querySelectorAll('a')].find((a) => /Back to the job/.test(a.textContent)).click());
+  const left = await p.evaluate(() => localStorage.getItem('ogapay_verify_next'));
+  ok('10j tapping it forgets the saved way back', left === null, left);
+  await p.close();
+
+  p = await open('nextNotYet');
+  v = await until(p, (s) => /Get Level 2/.test(s.text));
+  ok('10k came from a job but nothing changed: no button', !/Back to the job/.test(v.text), v.text);
+  await p.close();
+
+  p = await open('staleBack');
+  await sleep(400);
+  v = await view(p);
+  ok('10l a saved way back older than 2 hours is ignored', !/Back to the job/.test(v.text), v.text);
+  await p.close();
+
+  p = await open('level3Next');
+  v = await until(p, (s) => /Ask our team for Level 3/.test(s.text));
+  ok('10m Level 2 from a job: no button yet', !/Back to the job/.test(v.text), v.text);
+  await p.evaluate(() => window.__reload());
+  v = await until(p, (s) => /Back to the job/.test(s.text));
+  back = v.links.find((l) => /Back to the job/.test(l.text));
+  ok('10n moved to Level 3 by our team: "Back to the job" to /tasks/big1', !!back && back.href === '/tasks/big1', v.links);
+  await p.close();
+
+  // ── ver-12: the VeryAI app, up front, with store links ──
+  p = await open('veryWait');
+  v = await until(p, (s) => /You need the free VeryAI app/.test(s.text));
+  const stores = v.links.filter((l) => /Play Store|App Store/.test(l.text));
+  ok('12a the VeryAI card says "You need the free VeryAI app" before the steps', /You need the free VeryAI app/.test(v.text) && v.text.indexOf('You need the free VeryAI app') < v.text.indexOf('How it works'), v.text);
+  ok('12b ...with Play Store and App Store links that open VeryAI in the stores', stores.length === 2
+    && stores.some((l) => /^https:\/\/play\.google\.com\/store\/.*VeryAI/.test(l.href)) && stores.some((l) => /^https:\/\/apps\.apple\.com\/.*VeryAI/.test(l.href)), stores);
+  const storeAttrs = await p.$$eval('a[href^="https://play.google.com"], a[href^="https://apps.apple.com"]', (as) => as.map((a) => [a.target, a.rel]));
+  ok('12c ...in a new tab, safely (noopener)', storeAttrs.length === 2 && storeAttrs.every(([t, r]) => t === '_blank' && /noopener/.test(r)), storeAttrs);
+  await p.close();
+  p = await open('bank1');
+  v = await until(p, (s) => /Get Level 2/.test(s.text));
+  ok('12d VeryAI not on (bad case): no app card', !/You need the free VeryAI app/.test(v.text), v.text);
+  await p.close();
+
+  // ── ver-18: Connect X ──
+  p = await open('nin0');
+  v = await until(p, (s) => /Connect X for X jobs/.test(s.text));
+  const xl = v.links.find((l) => /Connect X/.test(l.text));
+  ok('18a X not connected: a "Connect X for X jobs" card that says X jobs need it', /Many jobs are on X: follow, like, repost or comment\. To take them, connect your X account first\./.test(v.text) && !!xl && xl.href === '/settings/connections', v.links);
+  await clickText(p, 'Not now');
+  v = await until(p, (s) => !/Connect X for X jobs/.test(s.text));
+  ok('18b "Not now" hides it', !/Connect X for X jobs/.test(v.text), v.text);
+  await p.close();
+  p = await open('xHidden');
+  await sleep(300);
+  v = await view(p);
+  ok('18c ...and it stays hidden next time', !/Connect X for X jobs/.test(v.text), v.text);
+  await p.close();
+  p = await open('xConnected');
+  await sleep(300);
+  v = await view(p);
+  ok('18d X already connected (bad case): no card', !/Connect X for X jobs/.test(v.text), v.text);
+  await p.close();
 
   ok('nothing left the page', outside.length === 0, outside);
   await browser.close();

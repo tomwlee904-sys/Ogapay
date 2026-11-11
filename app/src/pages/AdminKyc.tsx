@@ -124,7 +124,7 @@ function Level2Requests() {
 }
 
 function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void }) {
-  const [mode, setMode] = useState<null | 'approve' | 'reject' | 'revoke'>(null)
+  const [mode, setMode] = useState<null | 'approve' | 'reject' | 'revoke' | 'level3'>(null)
   const [reason, setReason] = useState('')
   const [level, setLevel] = useState(r.idType === 'BVN' || r.provider === 'didit' ? 2 : Math.max(1, r.kycTier || 1))
   const [busy, setBusy] = useState(false)
@@ -133,14 +133,16 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
   const clash = r.sameNumber.filter((x) => x.status === 'APPROVED')
 
   const act = async () => {
-    if (mode !== 'approve' && reason.trim().length < 5) { setError('Give a reason. The user will see it.'); return }
+    if (mode !== 'approve' && reason.trim().length < 5) { setError(mode === 'level3' ? 'Give a reason for the audit log.' : 'Give a reason. The user will see it.'); return }
     setBusy(true); setError('')
     try {
-      await apiRequest(`/kyc/admin/${r.userId}/review`, {
+      // Level 3 for an approved Level 2 (ver-8): its own route, the reason goes to the audit log
+      if (mode === 'level3') await apiRequest(`/kyc/admin/${r.userId}/level3`, { method: 'PATCH', body: JSON.stringify({ reason: reason.trim() }) })
+      else await apiRequest(`/kyc/admin/${r.userId}/review`, {
         method: 'PATCH',
         body: JSON.stringify(mode === 'approve' ? { action: 'approve', tierUpgrade: level } : { action: mode, rejectionReason: reason.trim() }),
       })
-      onDone(r.id, mode === 'approve' ? `${name} approved at level ${level}.` : mode === 'revoke' ? `${name}'s verification removed. They've been told why.` : `${name}'s submission rejected. They've been told why.`)
+      onDone(r.id, mode === 'level3' ? `${name} is now at Level 3. They've been notified.` : mode === 'approve' ? `${name} approved at level ${level}.` : mode === 'revoke' ? `${name}'s verification removed. They've been told why.` : `${name}'s submission rejected. They've been told why.`)
     } catch (e: any) {
       setError(e?.message || 'Could not save this')
       setBusy(false)
@@ -194,7 +196,11 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
               <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
             </>
           ) : (
-            <button className="ui-btn ui-btn-ghost" onClick={() => setMode('revoke')}><i className="ti ti-shield-x" /> Revoke verification</button>
+            <>
+              {/* Members ask support for Level 3 (Verification page); only from Level 2 */}
+              {r.kycTier === 2 && <button className="ui-btn ui-btn-dark" onClick={() => setMode('level3')}><i className="ti ti-arrow-up" /> Give Level 3</button>}
+              <button className="ui-btn ui-btn-ghost" onClick={() => setMode('revoke')}><i className="ti ti-shield-x" /> Revoke verification</button>
+            </>
           )}
         </div>
       ) : (
@@ -211,16 +217,16 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
             </>
           ) : (
             <>
-              <p>{mode === 'revoke' ? `${name} goes back to level 0: no withdrawals or transfers until they verify again.` : `${name} can submit again.`}</p>
-              <label htmlFor={`reason-${r.id}`}>Reason (the user sees this)</label>
+              <p>{mode === 'level3' ? `${name} goes to Level 3 (₦50,000 a day). They get a notification.` : mode === 'revoke' ? `${name} goes back to level 0: no withdrawals or transfers until they verify again.` : `${name} can submit again.`}</p>
+              <label htmlFor={`reason-${r.id}`}>{mode === 'level3' ? 'Reason (kept in the audit log, not shown to the member)' : 'Reason (the user sees this)'}</label>
               <textarea id={`reason-${r.id}`} className="ui-input" rows={2} value={reason} onChange={(e) => setReason(e.target.value)}
-                placeholder={mode === 'revoke' ? 'e.g. We couldn’t confirm this NIN belongs to you.' : 'e.g. The date of birth doesn’t match the NIN record.'} />
+                placeholder={mode === 'level3' ? 'e.g. Asked in support ticket, regular worker since August.' : mode === 'revoke' ? 'e.g. We couldn’t confirm this NIN belongs to you.' : 'e.g. The date of birth doesn’t match the NIN record.'} />
             </>
           )}
           {error && <p className="aw-error" role="alert">{error}</p>}
           <div className="aw-actions">
-            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'aw-danger'}`} onClick={act} disabled={busy}>
-              {busy ? 'Saving…' : mode === 'approve' ? 'Confirm approve' : mode === 'revoke' ? 'Confirm revoke' : 'Confirm reject'}
+            <button className={`ui-btn ${mode === 'approve' || mode === 'level3' ? 'ui-btn-dark' : 'aw-danger'}`} onClick={act} disabled={busy}>
+              {busy ? 'Saving…' : mode === 'level3' ? 'Confirm Level 3' : mode === 'approve' ? 'Confirm approve' : mode === 'revoke' ? 'Confirm revoke' : 'Confirm reject'}
             </button>
             <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
           </div>
