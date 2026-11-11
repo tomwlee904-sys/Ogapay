@@ -222,6 +222,62 @@ export async function metaFor(kind, id) {
   return null
 }
 
+
+// ── Text for search engines (2026-11-11) ──
+// Googlebot used to get the app shell with an empty <div id="root">: the article
+// only appeared after the app ran, so Google left most blog posts "Discovered -
+// not indexed". Crawlers now get the post itself as plain HTML inside #root
+// (the app replaces it when it starts, so people never see this version).
+const inline = (s) => esc(s)
+  .replace(/!\[([^\]]*)\]\((https:\/\/[^)\s]+)\)/g, (m, alt, src) => `<img src="${src}" alt="${alt}" loading="lazy" />`)
+  .replace(/\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)\s]+)\)/g, (m, t, href) => `<a href="${href}">${t}</a>`)
+  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+// Markdown (headings, lists, quotes, paragraphs, bold, links, pictures) to HTML; everything escaped first
+export const mdToHtml = (md) => {
+  const out = []
+  let list = null
+  const close = () => { if (list) { out.push(`</${list}>`); list = null } }
+  for (const block of String(md || '').replace(/\r/g, '').split(/\n\s*\n/)) {
+    const lines = block.split('\n').filter((l) => l.trim())
+    if (!lines.length) continue
+    for (const raw of lines) {
+      const l = raw.trim()
+      const h = l.match(/^(#{1,6})\s+(.*)$/)
+      const ul = l.match(/^[-*+]\s+(.*)$/)
+      const ol = l.match(/^\d+[.)]\s+(.*)$/)
+      if (h) { close(); const n = Math.min(Math.max(h[1].length, 2), 4); out.push(`<h${n}>${inline(h[2])}</h${n}>`) }
+      else if (ul || ol) {
+        const tag = ul ? 'ul' : 'ol'
+        if (list !== tag) { close(); out.push(`<${tag}>`); list = tag }
+        out.push(`<li>${inline((ul || ol)[1])}</li>`)
+      } else if (/^>\s?/.test(l)) { close(); out.push(`<blockquote>${inline(l.replace(/^>\s?/, ''))}</blockquote>`) }
+      else { close(); out.push(`<p>${inline(l)}</p>`) }
+    }
+    close()
+  }
+  return out.join('\n')
+}
+
+const NAV = '<nav><a href="/">OgaPay</a> · <a href="/tasks">Jobs</a> · <a href="/blog">Blog</a> · <a href="/store">Store</a> · <a href="/faq">FAQ</a></nav>'
+export async function bodyFor(kind, id) {
+  if (kind === 'blog') {
+    const b = await getJson(`/blog/${String(id).slice(0, 200)}`)
+    if (!b) return null
+    const author = [b.author?.firstName, b.author?.lastName].filter(Boolean).join(' ') || b.author?.username || 'OgaPay'
+    const date = b.publishedAt ? new Date(b.publishedAt).toISOString().slice(0, 10) : ''
+    return `${NAV}<main><article><h1>${esc(b.title)}</h1><p>By ${esc(author)}${date ? ` · <time datetime="${date}">${date}</time>` : ''}</p>${picture(b.coverImage) ? `<img src="${esc(b.coverImage)}" alt="${esc(b.title)}" />` : ''}\n${mdToHtml(b.content)}</article><p><a href="/blog">More from the OgaPay blog</a></p></main>`
+  }
+  if (kind === 'page' && id === '/blog') {
+    const d = await getJson('/blog?limit=100')
+    const posts = (d?.posts || d || []).filter((p) => p && p.slug)
+    if (!posts.length) return null
+    return `${NAV}<main><h1>OgaPay Blog</h1><p>Guides, ideas and earning stories from the OgaPay community.</p><ul>${posts.map((p) => `<li><a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>${p.excerpt ? ` <p>${esc(clip(plain(p.excerpt), 200))}</p>` : ''}</li>`).join('')}</ul></main>`
+  }
+  return null
+}
+export const injectBody = (shell, body) => (body ? shell.replace('<div id="root">', `<div id="root">${body}`) : shell)
+
 export default async function handler(req, res) {
   const kind = String(req.query?.t || '')
   const id = kind === 'page' ? String(req.query?.p || '') : String(req.query?.id || '')
@@ -240,6 +296,9 @@ export default async function handler(req, res) {
     const head = await metaFor(kind, id)
     if (head) html = injectHead(shell, head)
   } catch { /* generic preview */ }
+  try {
+    html = injectBody(html, await bodyFor(kind, id))
+  } catch { /* head only */ }
   res.statusCode = 200
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400')
