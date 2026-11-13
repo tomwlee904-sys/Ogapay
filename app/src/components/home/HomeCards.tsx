@@ -60,7 +60,7 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
     <Link to={`/tasks/${task.id}`} className="hc-card hc-job" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${said}` : `${said} per worker`}. View job`}>
       <div className="hc-top">
         <span className="hc-type">{contest ? <><i className="ti ti-award" />Contest</> : <><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</>}</span>
-        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star" style={{ color: "#bd8517" }} />Highlighted</span>}
+        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><svg className="hc-hl-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Highlighted</span>}
       </div>
 
       <div className="hc-by">
