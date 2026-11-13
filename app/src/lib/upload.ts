@@ -116,11 +116,31 @@ export async function uploadProof(file: File, taskId?: string, watermark = false
   const token = getAccessToken()
   if (!token) throw new Error('Not authenticated')
   const isImage = /^image\/(png|jpeg|webp|gif)$/.test(file.type)
-  const send = watermark && isImage ? await imageToPng(file) : file
+  // Phone screenshots are often 3-8 MB and used to go up uncompressed, so on a
+  // weak connection the upload dropped and Chrome showed "Failed to fetch"
+  // (2026-11-13). Big images are made smaller first (still sharp enough to read).
+  let send: File = watermark && isImage ? await imageToPng(file) : file
+  if (!watermark && isImage && file.type !== 'image/gif' && file.size > 900 * 1024) {
+    try {
+      const imageCompression = (await import('browser-image-compression')).default
+      const small = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 2000, useWebWorker: true })
+      if (small.size < file.size) send = new File([small], file.name, { type: small.type || file.type })
+    } catch { /* keep the original */ }
+  }
   const fd = new FormData()
   if (taskId) fd.append('taskId', taskId)
   fd.append('file', send)
-  const r = await fetch(`${API_BASE}/uploads/proof`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+  // One retry when the connection drops (the first try often fails on a weak signal)
+  let r: Response | null = null
+  for (let attempt = 0; attempt < 2 && !r; attempt++) {
+    try {
+      r = await fetch(`${API_BASE}/uploads/proof`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+    } catch {
+      if (attempt === 1) throw new Error(`"${file.name}" couldn't be uploaded: the connection dropped. Check your connection and try again.`)
+      await new Promise((res) => setTimeout(res, 1500))
+    }
+  }
+  if (!r) throw new Error(`"${file.name}" couldn't be uploaded. Try again.`)
   const j = await r.json().catch(() => ({}))
   if (!r.ok || !j?.data?.url) throw new Error(`"${file.name}" couldn't be uploaded${j?.message ? `: ${j.message}` : ''}. Try again or remove it.`)
   return { url: j.data.url, ...(j.data.originalUrl && { originalUrl: j.data.originalUrl }) }

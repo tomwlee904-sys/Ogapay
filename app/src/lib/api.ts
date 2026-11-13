@@ -367,6 +367,10 @@ async function sendRequest<T>(path: string, options: ApiOptions): Promise<T> {
     if (err.name === 'AbortError') {
       throw new Error('Request timed out')
     }
+    // Chrome's raw "Failed to fetch" (no connection, or the connection dropped): say it plainly (2026-11-13)
+    if (err instanceof TypeError && /fetch|network|load failed/i.test(err.message || '')) {
+      throw new Error("Couldn't reach OgaPay. Check your connection and try again.")
+    }
     throw err
   }
 
