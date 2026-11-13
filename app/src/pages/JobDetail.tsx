@@ -1099,6 +1099,82 @@ function WurkJobDetailView(props: any) {
           .wjd-agent{flex-direction:row;flex-wrap:wrap}
           .wjd-rows{grid-template-columns:1fr 1fr}
         }
+
+        /* ── wurk.fun job page (2026-11-13): one 832px column, 14px gaps, hairline cards.
+           Dark matches wurk's measured values; light uses the theme tokens. ── */
+        .wjd{--jd-card:var(--card);--jd-line:var(--border);--jd-text:var(--text);--jd-label:var(--text2);--jd-muted:var(--text2);--jd-mint:#13774f;
+          --jd-glass:linear-gradient(125deg,rgba(246,250,248,.95),rgba(255,255,255,.9) 70%,rgba(239,246,243,.9));--jd-glass-line:rgba(19,119,79,.16);
+          --jd-glass-sh:inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(16,18,24,.04);
+          --jd-pri-bg:#18181b;--jd-pri-fg:#fff;background:var(--bg);padding-bottom:calc(var(--dock-clear,0px) + 48px)!important}
+        [data-theme="dark"] .wjd{--jd-card:#000;--jd-line:rgb(41,41,45);--jd-text:#f4f4f5;--jd-label:#a3a3a3;--jd-muted:#a0a0a8;--jd-mint:#8de0ba;
+          --jd-glass:linear-gradient(125deg,rgba(29,36,41,.8),rgba(16,20,22,.75) 70%,rgba(23,32,37,.66));--jd-glass-line:rgba(155,175,185,.17);
+          --jd-glass-sh:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.4);--jd-pri-bg:#f4f4f5;--jd-pri-fg:#000;background:#000}
+        .wjd .wjd-wrap{width:min(100% - 32px,1030px);display:flex;flex-direction:column;gap:14px}
+        .wjd .wjd-wrap>*{margin-top:0!important;margin-bottom:0!important}
+        .wjd .wjd-back{align-self:flex-start}
+        .wjd .wjd-panel{background:var(--jd-card)!important;border:1px solid var(--jd-line)!important;border-radius:18px;box-shadow:none}
+        [data-theme="dark"] .wjd .wjd-panel{background:#000!important;border-color:rgb(41,41,45)!important}
+        .wjd .wjd-kicker,.wjd .wjd-title,.wjd .wjd-desc-title,.wjd .wjd-reward-title{font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.55px;color:var(--jd-muted)!important;margin:0}
+        .wjd .wjd-kicker{color:var(--jd-label)!important;margin-bottom:4px}
+        /* Listed by */
+        .wjd .wjd-agent{padding:18px 20px!important;align-items:center;flex-direction:row;flex-wrap:wrap;gap:12px 16px}
+        .wjd .wjd-agent-left{align-items:center;gap:14px;flex:1 1 220px}
+        .wjd .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--jd-line)!important;background:var(--card2)}
+        .wjd .wjd-name{font-size:19px;font-weight:600;letter-spacing:-.665px;color:var(--jd-text)!important;margin-bottom:2px;line-height:1.2}
+        .wjd .wjd-handle{font-size:12.5px;color:var(--jd-muted)!important}
+        .wjd .wjd-actions-top{gap:6px;flex-wrap:wrap;align-items:center}
+        .wjd .wjd-actions-top .wjd-link+.wjd-link{position:relative}
+        .wjd .wjd-actions-top .wjd-link+.wjd-link::before{content:'';position:absolute;left:-4px;top:11px;bottom:11px;width:1px;background:var(--jd-line)}
+        .wjd .wjd-link{height:36px;min-height:36px;padding:0 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--jd-muted)!important;background:transparent}
+        .wjd .wjd-link i{font-size:14px}
+        .wjd .wjd-link:hover{background:color-mix(in srgb,var(--jd-text) 7%,transparent)!important}
+        .wjd .wjd-icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--jd-line)!important;background:transparent!important;color:var(--jd-muted)!important}
+        /* Configuration + Participation */
+        .wjd .wjd-grid{gap:14px;margin:0}
+        .wjd .wjd-meta{padding:18px!important;border:1px solid var(--jd-line)!important}
+        .wjd .wjd-title{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--jd-line)}
+        .wjd .wjd-title svg{width:14px;height:14px}
+        .wjd .wjd-rows{grid-template-columns:1fr 1fr;gap:14px 16px}
+        .wjd .wjd-label{font-family:var(--font-mono);font-size:11px!important;font-weight:400!important;text-transform:uppercase!important;letter-spacing:.55px;color:var(--jd-label)!important;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+        .wjd .wjd-value{font-size:13px!important;font-weight:550!important;color:var(--jd-text)!important;line-height:1.45;overflow-wrap:anywhere}
+        .wjd .wjd-status{display:inline-flex;align-items:center;gap:7px}
+        .wjd .wjd-status .wjd-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:none}
+        .wjd .wjd-status.is-open{color:var(--jd-mint)!important}
+        .wjd .wjd-status.is-open .wjd-dot{background:var(--jd-mint);box-shadow:0 0 0 3px color-mix(in srgb,var(--jd-mint) 22%,transparent)}
+        /* Reward: the glass panel */
+        .wjd .wjd-reward{background:var(--jd-glass)!important;border:1px solid var(--jd-glass-line)!important;border-radius:18px;box-shadow:var(--jd-glass-sh)!important;padding:20px 76px 20px 22px!important;margin:0}
+        .wjd .wjd-reward-title{margin-bottom:8px}
+        .wjd .wjd-reward .o-money-main{color:var(--jd-mint)!important;font-size:clamp(30px,5vw,40px)!important;font-weight:550;letter-spacing:-.04em}
+        .wjd .wjd-reward .o-money-main small{color:var(--jd-muted);font-size:.36em;font-weight:500;letter-spacing:0}
+        .wjd .wjd-reward .o-money-alt{font-family:var(--font-mono);font-size:11px;color:var(--jd-muted);margin-top:6px;white-space:normal}
+        .wjd .wjd-reward-mark{right:18px;top:18px;width:36px;height:36px;border-radius:10px;border:1px solid var(--jd-glass-line);background:color-mix(in srgb,var(--jd-card) 60%,transparent);color:var(--jd-mint);font-size:15px;font-weight:600}
+        /* Description */
+        .wjd .wjd-desc{padding:20px!important}
+        .wjd .wjd-desc-title{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:0 0 14px;border-bottom:1px solid var(--jd-line)}
+        .wjd .wjd-h2{margin:0 0 10px;font-size:18.5px;font-weight:700;letter-spacing:-.02em;line-height:1.3;color:var(--jd-text);overflow-wrap:anywhere}
+        .wjd .wjd-body{color:var(--jd-text)}
+        [data-theme="dark"] .wjd .wjd-body{color:#d4d4d8}
+        /* Action bar */
+        .wjd .wjd-actions{padding:18px!important}
+        .wjd .wjd-action-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0;padding:0;border:0}
+        .wjd .wjd-signin-text{flex:1 1 200px;order:2;margin:0;font-size:13px;font-weight:500;color:var(--jd-muted)}
+        .wjd .wjd-primary,.wjd .wjd-secondary{min-height:44px;height:auto;min-width:0;padding:10px 16px;border-radius:12px;font-size:12px!important;font-weight:550!important;text-transform:none!important;letter-spacing:0!important;gap:8px}
+        .wjd .wjd-primary{background:var(--jd-pri-bg)!important;color:var(--jd-pri-fg)!important;border:0}
+        .wjd .wjd-primary:disabled{background:var(--card2)!important;color:var(--text3)!important}
+        .wjd .wjd-secondary{background:var(--jd-card)!important;color:var(--jd-text)!important;border:1px solid var(--jd-line)!important}
+        [data-theme="dark"] .wjd .wjd-secondary{background:#000!important}
+        @media(max-width:767px){
+          .wjd .wjd-grid{grid-template-columns:1fr}
+        }
+        @media(max-width:640px){
+          .wjd .wjd-wrap{width:min(100% - 24px,1030px)}
+          .wjd .wjd-agent{padding:16px 18px!important}
+          .wjd .wjd-actions-top{flex:1 1 100%;justify-content:flex-end;border-top:1px solid var(--jd-line);padding-top:8px}
+          .wjd .wjd-reward{padding:18px 64px 18px 18px!important;text-align:left}
+          .wjd .wjd-action-bar{flex-direction:column;align-items:stretch}
+          .wjd .wjd-primary,.wjd .wjd-secondary{width:100%}
+          .wjd .wjd-signin-text{flex:none;text-align:center}
+        }
       `}
 </style>
 
@@ -1114,93 +1190,50 @@ function WurkJobDetailView(props: any) {
             <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
           )}
 
-          {/* ── Title: what the job is, where it stands, what it pays ── */}
-          <header className="wjd-headline">
-            <div className="wjd-headline-main">
-              <span className="ui-eyebrow"><i className={`ti ${contest ? 'ti-award' : 'ti-briefcase'}`} />{contest ? `Contest · ${categoryLabel(job.category)}` : categoryLabel(job.category)}</span>
-              <h1 className="wjd-h1">{job.title}</h1>
-              <ul className="wjd-facts" aria-label="Job status">
-                <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
-                <li><i className="ti ti-clock" aria-hidden="true" />{clockText}</li>
-                {job.requiredCommunity && (
-                  <li><i className="ti ti-users-group" aria-hidden="true" />{job.requiredCommunity.isMember ? 'For members of ' : 'Join '}<Link to={job.requiredCommunity.isMember ? `/communities/${job.requiredCommunity.slug}` : joinPath} style={{ color: 'inherit', fontWeight: 600 }}>{job.requiredCommunity.name}</Link>{job.requiredCommunity.isMember ? ' (you are one)' : ' to take this job'}</li>
-                )}
-                {community && (
-                  <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
-                )}
-                {contest
-                  ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
-                  : job.isSelection
-                  ? <li><i className="ti ti-user-check" aria-hidden="true" />{job.applicationsCount || 0} applied · the poster picks one person</li>
-                  : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
-              </ul>
-            </div>
-            <div className="wjd-headline-side">
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
-              {authUser && myLabel
-                ? <button className="ui-btn ui-btn-dark" type="button" onClick={openMine}>{myLabel}</button>
-                : authUser && needJoin && isOpen
-                ? <Link className="ui-btn ui-btn-dark" to={joinPath}>Join {job.requiredCommunity!.name} to take this job</Link>
-                : authUser
-                ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
-                    {canManage ? 'Manage submissions' : isOpen ? (job.isSelection ? 'Apply' : 'Take a place') : 'Job closed'}
-                  </button>
-                : <button className="ui-btn ui-btn-dark" type="button" onClick={() => openSignIn({ redirect: '/tasks/' + job.id })}>Sign in to apply</button>}
-            </div>
-          </header>
-          {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
-          {job.social && <SocialJobPanel jobId={job.id} social={job.social} holdEndsAt={mySub?.holdEndsAt} signedIn={!!authUser} onTimeUp={onReload} />}
 
-          {/* ── Creator Panel ── */}
+          {/* ── Listed by (wurk.fun layout, 2026-11-13) ── */}
           <section className="wjd-panel wjd-agent">
             <div className="wjd-agent-left">
               <div className="wjd-avatar">
                 {job.brandAvatar ? <img src={sized(job.brandAvatar, 56, true)} alt="" /> : agentInitial}
               </div>
               <div style={{ minWidth: 0 }}>
-                <div className="wjd-kicker">Listed by</div>
+                <div className="wjd-kicker">Listed by:</div>
                 <div className="wjd-name">
                   {agentName}
                   {job.brandPremium && <PremiumMark />}
-                  {job.boosted && <span style={{ marginLeft: 8 }}><BoostedTag /></span>}
+                  {job.boosted && <BoostedTag />}
                 </div>
                 {job.brandVerified && <VerifiedBusinessLine name={job.brandVerifiedName} />}
                 <div className="wjd-handle">{handleText}</div>
               </div>
             </div>
             <div className="wjd-actions-top">
-              <span className={`wjd-badge ${isOpen ? 'wjd-badge-open' : 'wjd-badge-closed'}`}>
-                <span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8' }} />
-                {isOpen ? 'Open' : 'Closed'}
-              </span>
               <button className="wjd-link" type="button" onClick={() => authUser ? setShowReportModal(true) : openSignIn({ redirect: '/tasks/' + job.id })}>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                <i className="ti ti-flag" aria-hidden="true" />
                 Report
               </button>
-              <span className="wjd-sep">|</span>
               <button className="wjd-link" type="button" onClick={() => setShowInfo(true)}>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                <i className="ti ti-info-circle" aria-hidden="true" />
                 Info
               </button>
               {authUser?.role === 'ADMIN' && (
-                <>
-                  <span className="wjd-sep">|</span>
-                  {/* Admins: highlighted jobs get a badge and are shown first on the homepage and the jobs page */}
-                  <button className="wjd-link" type="button" onClick={toggleHighlight} disabled={highlighting}
-                    title="Highlighted jobs get a badge and are shown first on the homepage and the jobs page">
-                    <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" />
-                    {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
-                  </button>
-                </>
+                // Admins: highlighted jobs get a badge and are shown first on the homepage and the jobs page
+                <button className="wjd-link" type="button" onClick={toggleHighlight} disabled={highlighting}
+                  title="Highlighted jobs get a badge and are shown first on the homepage and the jobs page">
+                  <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" />
+                  {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
+                </button>
               )}
-              <span className="wjd-sep">|</span>
-              <button className="wjd-icon-btn" type="button" onClick={handleBookmark} aria-label="Bookmark">
+              <button className="wjd-icon-btn" type="button" onClick={handleBookmark} aria-label="Bookmark" aria-pressed={bookmarked}>
                 {bookmarked
-                  ? <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                  : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>}
+                  ? <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                  : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>}
               </button>
             </div>
           </section>
+          {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
+          {job.social && <SocialJobPanel jobId={job.id} social={job.social} holdEndsAt={mySub?.holdEndsAt} signedIn={!!authUser} onTimeUp={onReload} />}
 
           {/* ── Config + Participation Grid ── */}
           <section className="wjd-grid">
@@ -1212,7 +1245,7 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-rows">
                 <div className="wjd-row">
                   <div className="wjd-label">Status</div>
-                  <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
+                  <div className={`wjd-value wjd-status${isOpen ? ' is-open' : ''}`}><span className="wjd-dot" aria-hidden="true" />{statusText}</div>
                 </div>
                 {contest ? (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={contest.randomDraw
@@ -1223,6 +1256,7 @@ function WurkJobDetailView(props: any) {
                 ) : (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
                 )}
+                <div className="wjd-row"><div className="wjd-label">Selection type</div><div className="wjd-value">{contest ? (contest.randomDraw ? 'Random draw' : 'Poster ranks entries') : job.isSelection ? 'Poster picks one person' : 'Each approved person is paid'}</div></div>
                 {job.payoutCheck && (
                   <div className="wjd-row wide"><div className="wjd-label">Payout check <InfoBtn text="A longer check means your payout result comes later, not that your work failed. Verified means eligible, not guaranteed paid: places are still limited." /></div><div className="wjd-value">{job.payoutCheck.note}</div></div>
                 )}
@@ -1245,14 +1279,19 @@ function WurkJobDetailView(props: any) {
                 Participation
               </div>
               <div className="wjd-rows">
-                <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">{community ? `Members of ${community.name} who meet the requirements` : 'Anyone who meets the requirements'}</div></div>
+                <div className="wjd-row wide"><div className="wjd-label">Who can join</div><div className="wjd-value">{community
+                  ? <>Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> who meet the requirements</>
+                  : job.requiredCommunity
+                  ? <>{job.requiredCommunity.isMember ? 'Members of ' : 'Join '}<Link to={job.requiredCommunity.isMember ? `/communities/${job.requiredCommunity.slug}` : joinPath} style={{ color: 'inherit', fontWeight: 600 }}>{job.requiredCommunity.name}</Link>{job.requiredCommunity.isMember ? ' (you are one)' : ' to take this job'}</>
+                  : 'Anyone who meets the requirements'}</div></div>
                 {contest ? (<>
                   <div className="wjd-row"><div className="wjd-label">Prize places</div><div className="wjd-value">{contest.prizes.length}</div></div>
                   <div className="wjd-row"><div className="wjd-label">Entries</div><div className="wjd-value">{contest.entryTarget ? `${contest.entries} / ${contest.entryTarget} target` : `${contest.entries} (unlimited)`}</div></div>
                 </>) : (<>
-                <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Max places</div><div className="wjd-value">Up to {job.slots}</div></div>
+                {job.isSelection && <div className="wjd-row"><div className="wjd-label">Applied</div><div className="wjd-value">{job.applicationsCount || 0}</div></div>}
                 {job.isSelection && <div className="wjd-row"><div className="wjd-label">Time to deliver</div><div className="wjd-value">The person picked has {deliveryText(job)} to deliver</div></div>}
-                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text={job.isSelection ? `The person the poster picks keeps the place for ${deliveryText(job)}. If they send nothing in time, their place opens again.` : "Taking a place reserves it for you. Send your work within 72 hours, or within 24 hours once every place is taken, or your place goes to someone else."} /></div><div className="wjd-value">{job.capacity}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text={job.isSelection ? `The person the poster picks keeps the place for ${deliveryText(job)}. If they send nothing in time, their place opens again.` : "Taking a place reserves it for you. Send your work within 72 hours, or within 24 hours once every place is taken, or your place goes to someone else."} /></div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{job.completions} / {job.slots}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
                 </>)}
                 <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
@@ -1269,8 +1308,8 @@ function WurkJobDetailView(props: any) {
               raiseForPoster={!canManage} />
           ) : (
           <section className="wjd-panel wjd-reward">
-              <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
-              <div className="wjd-reward-title">Reward per person</div>
+              <span className="wjd-reward-mark" aria-hidden="true">{rewardCurrency === 'NGN' ? '₦' : '$'}</span>
+              <div className="wjd-reward-title">Pay per person</div>
               <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
           </section>
           )}
@@ -1281,6 +1320,8 @@ function WurkJobDetailView(props: any) {
               <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
               Description
             </div>
+            {/* The job title heads the description, as on wurk.fun (no separate page title) */}
+            <h1 className="wjd-h2">{job.title}</h1>
 
             <div className="wjd-body" dangerouslySetInnerHTML={{ __html: descHtml }} />
 
@@ -1353,11 +1394,15 @@ function WurkJobDetailView(props: any) {
               </div>
             )}
 
+          </section>
+
+          {/* ── Action bar (its own card, as on wurk.fun) ── */}
+          <section className="wjd-panel wjd-actions" aria-label="Actions">
             {!authUser ? (
-              <div className="wjd-signin-card">
-                <div className="wjd-signin-text">Sign in to apply for this task</div>
-                <button className="wjd-primary" type="button" onClick={() => openSignIn({ redirect: '/tasks/' + job.id })} style={{ width: '100%', maxWidth: 300 }}>
-                  Sign In
+              <div className="wjd-action-bar">
+                <span className="wjd-signin-text">Sign in to apply for this task</span>
+                <button className="wjd-primary" type="button" onClick={() => openSignIn({ redirect: '/tasks/' + job.id })}>
+                  Sign in to apply
                 </button>
               </div>
             ) : needJoin && isOpen ? (
