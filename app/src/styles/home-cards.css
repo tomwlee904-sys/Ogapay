@@ -260,3 +260,44 @@ html[data-theme="dark"] .hc-job:hover .hc-arrow { background: var(--job-ink); co
 .hc-hl-star { color: #d9a43a; flex-shrink: 0; }
 [data-theme="dark"] .hc-hl-star, .dark .hc-hl-star { color: #edc567; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hc-hl-star { color: #edc567; } }
+
+/* ─── wurk.fun card details, round 2 (2026-11-13) ─────────────────────────── */
+/* Highlighted: a square-ish hairline tag, not a pill */
+.hc-job .hc-pill.hc-hl, html[data-theme="dark"] .hc-job .hc-pill.hc-hl {
+  height: auto; padding: 4px 6px; border-radius: 5px; border: 1px solid #e4e4e7; background: transparent;
+  font-size: 11px; font-weight: 500; line-height: 1.2; color: var(--job-muted);
+}
+html[data-theme="dark"] .hc-job .hc-pill.hc-hl { border-color: #29292d; color: #a0a0a8; }
+/* Reward: 31px on phones and desktop, mint in dark, a soft shine in the corner */
+.hc-job .hc-reward { position: relative; overflow: hidden; }
+.hc-job .hc-reward::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(at 108% 145%, rgba(0,0,0,0) 44%, rgba(120,140,155,.035) 48%, rgba(255,255,255,.25) 52%, rgba(0,0,0,0) 58%);
+}
+html[data-theme="dark"] .hc-job .hc-reward::after {
+  background: radial-gradient(at 108% 145%, rgba(0,0,0,0) 44%, rgba(155,174,187,.027) 48%, rgba(255,255,255,.03) 52%, rgba(0,0,0,0) 58%);
+}
+.hc-job .hc-reward .o-money-main { font-size: 31px !important; font-weight: 550; letter-spacing: -.055em; }
+html[data-theme="dark"] .hc-job .o-money.money-pos .o-money-main { color: #8de0ba; }
+.hc-job .hc-approx { font: 400 11px/1.4 var(--font-mono); color: var(--job-muted); }
+/* Brief: 14px, 1.75 line height, title at the same weight, 3 lines */
+.hc-job .hc-brief p, .hc-job .hc-brief p b {
+  font-size: 14px; font-weight: 400; line-height: 1.75; letter-spacing: -.01em;
+  -webkit-line-clamp: 3; min-height: calc(14px * 1.75 * 3);
+}
+.hc-job .hc-brief-title { font-weight: 400; }
+/* Progress + stats dots */
+.hc-job .hc-bar, html[data-theme="dark"] .hc-job .hc-bar { height: 4px; border-radius: 4px; }
+html[data-theme="dark"] .hc-job .hc-bar { background: #29292d; }
+.hc-job .hc-bar span { background: #5f9c84; border-radius: 4px; }
+html[data-theme="dark"] .hc-job .hc-bar span { background: #85baa4; }
+.hc-job .hc-dots li::before, html[data-theme="dark"] .hc-job .hc-dots li::before { width: 4px; height: 4px; border-radius: 50%; background: #5f9c84; }
+html[data-theme="dark"] .hc-job .hc-dots li::before { background: #85baa4; }
+@media (max-width: 767px) {
+  .hc-job .hc-brief p { font-size: 14px; min-height: calc(14px * 1.75 * 3); }
+  .hc-job .hc-reward .o-money-main { font-size: 31px !important; }
+}
+@container (max-width: 260px) {
+  .hc-job .hc-reward .o-money-main { font-size: 24px !important; }
+  .hc-job .hc-brief p { font-size: 12.5px; min-height: calc(12.5px * 1.75 * 3); }
+}

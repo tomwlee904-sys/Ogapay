@@ -4,6 +4,7 @@ import { jobRequirements } from "../../lib/requirements";
 import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
 import { BoostedTag, PremiumMark, VerifiedBusinessLine } from "../Perks";
 import Money from "../Money";
+import MoneyApprox from "../MoneyApprox";
 import ItemCover, { itemCategoryLabel } from "../ItemCover";
 import { inDisplay, spokenMoney } from "../../lib/money";
 import { useMoney } from "../../lib/useMoney";
@@ -60,7 +61,7 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
     <Link to={`/tasks/${task.id}`} className="hc-card hc-job" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${said}` : `${said} per worker`}. View job`}>
       <div className="hc-top">
         <span className="hc-type">{contest ? <><i className="ti ti-award" />Contest</> : <><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</>}</span>
-        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><svg className="hc-hl-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Highlighted</span>}
+        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill hc-hl"><svg className="hc-hl-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Highlighted</span>}
       </div>
 
       <div className="hc-by">
@@ -70,11 +71,12 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
 
       <div className="hc-reward">
         <span className="hc-lbl">{contest ? "1st place prize" : "Reward per worker"}</span>
-        <Money amount={amount} currency={cur} convert={convert} size={25} positive />
+        <Money amount={amount} currency={cur} convert={convert} size={31} positive />
+        <MoneyApprox amount={amount} currency={cur} className="hc-approx" />
       </div>
 
       <div className="hc-reqs">
-        {reqs.length === 0 ? <span>No extra requirements</span> : reqs.slice(0, 2).map((r) => (
+        {reqs.length === 0 ? <span><i className="ti ti-shield-check" />No extra requirements</span> : reqs.slice(0, 2).map((r) => (
           <span key={r.text}><i className={`ti ti-${r.icon}`} />{r.text}</span>
         ))}
       </div>
@@ -82,7 +84,7 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
       <div className="hc-brief">
         <span className="hc-type"><i className="ti ti-file-text" />The brief</span>
         <span className="hc-cat">{category}{tag}</span>
-        <p><b>{task.title}</b> {plainJobText(task.description) !== plain(task.title) ? plainJobText(task.description) : ""}</p>
+        <p><span className="hc-brief-title">{task.title}</span> {plainJobText(task.description) !== plain(task.title) ? plainJobText(task.description) : ""}</p>
       </div>
 
       <div className="hc-subs">

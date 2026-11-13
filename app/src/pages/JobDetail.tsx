@@ -11,6 +11,7 @@ import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName, askHandleLine, UNFOLLOW_RULE } from '../lib/requirements'
 import { BoostedTag, PremiumMark, VerifiedBusinessLine } from '../components/Perks'
 import Money from '../components/Money'
+import MoneyApprox from '../components/MoneyApprox'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
@@ -661,6 +662,15 @@ function WurkJobDetailView(props: any) {
   const clock = useNow(anyWaiting(submissions))
   // The reward as one line of text in the member's display currency
   const show = useMoney()
+  const { toast: viewToast } = useToast()
+  // Share: the phone's share sheet when there is one, else copy the link
+  const shareJob = async () => {
+    const url = `${window.location.origin}/tasks/${job.id}`
+    if (typeof navigator.share === 'function') {
+      try { await navigator.share({ title: job.title, url }); return } catch (e: any) { if (e?.name === 'AbortError') return }
+    }
+    try { await navigator.clipboard.writeText(url); viewToast('Link copied') } catch { viewToast("Couldn't copy the link", 'error') }
+  }
 
   const agentName = job.brand || 'OgaPay'
   const agentInitial = agentName.slice(0, 2).toUpperCase()
@@ -1175,16 +1185,31 @@ function WurkJobDetailView(props: any) {
           .wjd .wjd-primary,.wjd .wjd-secondary{width:100%}
           .wjd .wjd-signin-text{flex:none;text-align:center}
         }
+        /* ── wurk.fun details round 2 (2026-11-13) ── */
+        .wjd .wjd-agent{position:relative}
+        .wjd .wjd-agent-left{padding-right:76px}
+        .wjd .wjd-corner{position:absolute;top:10px;right:10px;display:flex;gap:2px}
+        .wjd .wjd-ghost-btn{width:36px;height:36px;display:grid;place-items:center;border:0;background:transparent;border-radius:8px;color:var(--jd-muted);cursor:pointer;padding:0}
+        .wjd .wjd-ghost-btn i{font-size:17px}
+        .wjd .wjd-ghost-btn:hover{background:color-mix(in srgb,var(--jd-text) 7%,transparent);color:var(--jd-text)}
+        .wjd .wjd-ghost-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+        .wjd .wjd-ghost-btn[aria-pressed="true"]{color:var(--jd-text)}
+        .wjd .wjd-actions-top{flex:1 1 100%;justify-content:flex-end}
+        .wjd .wjd-reward{position:relative;overflow:hidden}
+        .wjd .wjd-reward::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(at 108% 145%,rgba(0,0,0,0) 44%,rgba(120,140,155,.035) 48%,rgba(255,255,255,.25) 52%,rgba(0,0,0,0) 58%)}
+        [data-theme="dark"] .wjd .wjd-reward::after{background:radial-gradient(at 108% 145%,rgba(0,0,0,0) 44%,rgba(155,174,187,.027) 48%,rgba(255,255,255,.03) 52%,rgba(0,0,0,0) 58%)}
+        .wjd .wjd-pay-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px}
+        .wjd .wjd-pay-line .o-money-main small:not(.o-money-approx){display:none}
+        .wjd .wjd-pay-cur{font-size:12px;font-weight:500;color:var(--jd-muted)}
+        .wjd .wjd-approx{display:block;font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--jd-muted);margin-top:6px}
+        .wjd .wjd-h2{font-size:18.5px;font-weight:700;letter-spacing:-.01em;line-height:1.35}
+        .wjd .wjd-status .wjd-dot,.wjd .wjd-status.is-open .wjd-dot{width:6px;height:6px;box-shadow:none;animation:none}
+        .wjd .wjd-status.is-open .wjd-dot{background:var(--jd-mint)}
       `}
 </style>
 
       <div className="wjd">
         <div className="wjd-wrap">
-          <button className="wjd-back" type="button" onClick={() => backToJobs(navigate)}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Back
-          </button>
-
           <EligibilityBanner eligibility={eligibility} joinPath={joinPath} onReload={onReload} />
           {workspaceLink && (
             <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
@@ -1193,6 +1218,17 @@ function WurkJobDetailView(props: any) {
 
           {/* ── Listed by (wurk.fun layout, 2026-11-13) ── */}
           <section className="wjd-panel wjd-agent">
+            {/* Share + bookmark: icon-only in the top-right corner, like wurk.fun */}
+            <div className="wjd-corner">
+              <button className="wjd-ghost-btn" type="button" onClick={shareJob} aria-label="Share this job">
+                <i className="ti ti-share" aria-hidden="true" />
+              </button>
+              <button className="wjd-ghost-btn" type="button" onClick={handleBookmark} aria-label="Bookmark" aria-pressed={bookmarked}>
+                {bookmarked
+                  ? <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                  : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>}
+              </button>
+            </div>
             <div className="wjd-agent-left">
               <div className="wjd-avatar">
                 {job.brandAvatar ? <img src={sized(job.brandAvatar, 56, true)} alt="" /> : agentInitial}
@@ -1210,7 +1246,7 @@ function WurkJobDetailView(props: any) {
             </div>
             <div className="wjd-actions-top">
               <button className="wjd-link" type="button" onClick={() => authUser ? setShowReportModal(true) : openSignIn({ redirect: '/tasks/' + job.id })}>
-                <i className="ti ti-flag" aria-hidden="true" />
+                <i className="ti ti-alert-circle" aria-hidden="true" />
                 Report
               </button>
               <button className="wjd-link" type="button" onClick={() => setShowInfo(true)}>
@@ -1225,11 +1261,6 @@ function WurkJobDetailView(props: any) {
                   {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
                 </button>
               )}
-              <button className="wjd-icon-btn" type="button" onClick={handleBookmark} aria-label="Bookmark" aria-pressed={bookmarked}>
-                {bookmarked
-                  ? <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                  : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>}
-              </button>
             </div>
           </section>
           {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
@@ -1310,7 +1341,12 @@ function WurkJobDetailView(props: any) {
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true">{rewardCurrency === 'NGN' ? '₦' : '$'}</span>
               <div className="wjd-reward-title">Pay per person</div>
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
+              <div className="wjd-pay-line">
+                <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
+                {/* The real currency, unless the amount is shown converted (display setting) */}
+                {!show(Number(job.reward || 0), rewardCurrency).startsWith('≈ ') && <span className="wjd-pay-cur">{rewardCurrency}</span>}
+              </div>
+              <MoneyApprox amount={Number(job.reward || 0)} currency={rewardCurrency} className="wjd-approx" />
           </section>
           )}
 
@@ -1338,7 +1374,7 @@ function WurkJobDetailView(props: any) {
               </div>
             )}
             <p className="wjd-jobid">Job ID: <code>{job.id.slice(0, 8)}</code></p>
-            {proofText && (
+            {proofText && !/proof to send/i.test(description) && (
               <>
                 <div className="wjd-sub-title">Proof to send</div>
                 <div className="wjd-body"><p>{proofText}</p></div>
