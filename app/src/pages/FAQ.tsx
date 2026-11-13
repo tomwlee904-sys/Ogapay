@@ -85,7 +85,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'vault', title: 'Vault and $PAY', items: [
-      { q: 'What is the Vault?', a: 'The Vault shares platform fees with $PAY holders. Every 12 hours, at 00:00 and 12:00 UTC, the Vault pool is split between holders according to how much $PAY they hold.' },
+      { q: 'What is the Vault?', a: 'The Vault shares platform fees with $PAY holders. It launches on 15 December 2026 at 12:00 Lagos time; from then, every 12 hours (12:00 and 00:00 Lagos time), the Vault pool is split between holders according to how much $PAY they hold.' },
       { q: 'How do I claim Vault payouts?', a: 'Open Vault and choose Claim. You need a connected Solana wallet. Your pending payouts are added to your OgaPay USDC balance, and you can see every distribution in Vault history.' },
       { q: 'Are Vault payouts guaranteed?', a: 'No. They depend on the fees the platform actually earns, so they go up and down with activity. Nothing on OgaPay is financial advice.' },
     ],

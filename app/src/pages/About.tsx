@@ -111,7 +111,7 @@ export default function About() {
         <section className="ab2-sec">
           <h2>The vault and $PAY</h2>
           <p>
-            Every 12 hours, at 00:00 and 12:00 UTC, the platform fees in the vault are shared with $PAY holders according to
+            From launch on 15 December 2026, every 12 hours (12:00 and 00:00 Lagos time) the platform fees in the vault are shared with $PAY holders according to
             how much $PAY they hold. Payouts depend on the fees OgaPay actually earns, so they go up and down with activity.
             Nothing on OgaPay is financial advice.
           </p>

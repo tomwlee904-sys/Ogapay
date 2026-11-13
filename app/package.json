@@ -15,6 +15,7 @@
     "test:share-gets": "node scripts/tests/share-gets.test.cjs",
     "test:session-remember": "node scripts/tests/session-remember.test.cjs",
     "test:convert-usdc": "node scripts/tests/convert-usdc.test.cjs",
+    "test:vault-launch": "node scripts/tests/vault-launch.test.cjs",
     "test:contest-prizes": "node scripts/tests/contest-prizes.test.cjs",
     "test:contest-raise": "node scripts/tests/contest-raise.test.cjs",
     "test:contest-paid": "node scripts/tests/contest-paid.test.cjs",

@@ -16,6 +16,21 @@ type Summary = {
   eligibleCount: number
   paySupply: number
   nextRunAt: string
+  // The vault launches on 15 Dec 2026 12:00 Lagos; before that nothing is shared
+  // and nextRunAt is the launch. Older servers don't send these: treat as launched.
+  launchAt?: string
+  launched?: boolean
+}
+
+// Times in Lagos, e.g. "15 December, 12:00" and "12:00"
+const lagosDay = (d: string | number) => new Date(d).toLocaleString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'long' })
+const lagosTime = (d: string | number) => new Date(d).toLocaleString('en-GB', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit', hour12: false })
+const utcTime = (d: string | number) => new Date(d).toLocaleString('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false })
+// Distributions run every 12 hours from the launch time
+const scheduleText = (launchAt?: string) => {
+  if (!launchAt) return 'Runs at 00:00 and 12:00 UTC (1am and 1pm in Lagos).'
+  const t = new Date(launchAt).getTime(), t2 = t + 12 * 3600000
+  return `Runs at ${lagosTime(t)} and ${lagosTime(t2)} in Lagos (${utcTime(t)} and ${utcTime(t2)} UTC).`
 }
 type Contribution = { id: string; at: string; amountNgp: number; reason: string; ref: string | null }
 type Day = { day: string; distributedNgp: number; revenueNgp: number }
@@ -69,14 +84,20 @@ function WalletCheck() {
   )
 }
 
-function useCountdown(to?: string) {
+function useCountdown(to?: string, withDays = false) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
   if (!to) return null
   const ms = new Date(to).getTime() - now
-  if (ms <= 0) return 'Processing distribution…'
-  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000)
-  return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`
+  if (ms <= 0) return withDays ? 'Launching…' : 'Processing distribution…'
+  const p2 = (n: number) => String(n).padStart(2, '0')
+  const m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000)
+  if (withDays) {
+    const d = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000)
+    return `${d}d ${p2(h)}h ${p2(m)}m ${p2(s)}s`
+  }
+  const h = Math.floor(ms / 3600000)
+  return `${h}h ${p2(m)}m ${p2(s)}s`
 }
 
 function TrendChart({ days }: { days: Day[] }) {
@@ -132,7 +153,16 @@ export default function Vault() {
     loadMine()
   }, [])
 
-  const countdown = useCountdown(sum?.nextRunAt)
+  const prelaunch = sum?.launched === false && !!sum.launchAt
+  const countdown = useCountdown(prelaunch ? sum?.launchAt : sum?.nextRunAt, prelaunch)
+  // Page left open across the launch: fetch the vault again once it opens
+  useEffect(() => {
+    if (!prelaunch || !sum?.launchAt) return
+    const ms = new Date(sum.launchAt).getTime() - Date.now()
+    if (ms > 2147483647) return // over ~24 days: setTimeout can't wait that long
+    const t = setTimeout(() => { apiRequest<Summary>('/vault', { auth: false }).then(setSum).catch(() => {}) }, Math.max(0, ms) + 5000)
+    return () => clearTimeout(t)
+  }, [prelaunch, sum?.launchAt])
   const k = useMemo(() => {
     const d = trend || []
     const fees = d.reduce((s, x) => s + x.revenueNgp, 0)
@@ -160,7 +190,7 @@ export default function Vault() {
         <div className="vt2-head">
           <div>
             <h1>Vault</h1>
-            <p>Every 12 hours, platform revenue is shared with $PAY holders.</p>
+            <p>{prelaunch ? `From ${lagosDay(sum!.launchAt!)}, platform revenue is shared with $PAY holders every 12 hours.` : 'Every 12 hours, platform revenue is shared with $PAY holders.'}</p>
           </div>
           <Link className="up-btn" to="/vault/history"><i className="ti ti-history" /> Distribution history</Link>
         </div>
@@ -171,13 +201,21 @@ export default function Vault() {
           <section className="up-card vt2-bal">
             <div className="up-eyebrow">Vault balance</div>
             <div className="vt2-big">{sum ? naira(sum.pool.totalNgp) : '…'}</div>
-            <div className="vt2-sub">Fees collected since the last distribution. Shared at the next run.</div>
+            <div className="vt2-sub">{prelaunch ? 'Fees collected so far. All of it is shared at launch.' : 'Fees collected since the last distribution. Shared at the next run.'}</div>
           </section>
-          <section className="up-card vt2-next">
-            <div className="up-eyebrow">Next distribution</div>
-            <div className="vt2-count">{countdown || '…'}</div>
-            <div className="vt2-sub">Runs at 00:00 and 12:00 UTC (1am and 1pm in Lagos).</div>
-          </section>
+          {prelaunch ? (
+            <section className="up-card vt2-next vt2-launch">
+              <div className="up-eyebrow">Launching {lagosDay(sum!.launchAt!)}, {lagosTime(sum!.launchAt!)}</div>
+              <div className="vt2-count" role="timer" aria-live="off">{countdown || '…'}</div>
+              <div className="vt2-sub">Lagos time. The first distribution shares everything collected until then.</div>
+            </section>
+          ) : (
+            <section className="up-card vt2-next">
+              <div className="up-eyebrow">Next distribution</div>
+              <div className="vt2-count">{countdown || '…'}</div>
+              <div className="vt2-sub">{scheduleText(sum?.launchAt)}</div>
+            </section>
+          )}
         </div>
 
         <div className="vt2-stats">
@@ -190,18 +228,18 @@ export default function Vault() {
           <h2>Your share</h2>
           {!signedIn ? (
             <>
-              <p>Sign in to see your $PAY, your share of the next distribution and anything to claim.</p>
+              <p>Sign in to see your $PAY, your share of the {prelaunch ? 'first' : 'next'} distribution and anything to claim.</p>
               <button className="up-btn primary" onClick={() => openSignIn({ redirect: '/vault' })}>Sign in</button>
             </>
           ) : !mine ? (
             <div className="up-skel" style={{ height: 70 }} />
           ) : (
             <>
-              <p>{mine.payBalance > 0 ? "You're in the next distribution." : "You don't hold $PAY yet, so you're not in the next distribution."}</p>
+              <p>{mine.payBalance > 0 ? `You're in the ${prelaunch ? 'first distribution at launch' : 'next distribution'}.` : `You don't hold $PAY yet, so you're not in the ${prelaunch ? 'first' : 'next'} distribution.`}</p>
               <div className="vt2-mine">
                 <div><span>Your $PAY</span><b>{num(mine.payBalance)}</b></div>
                 <div><span>Vault share</span><b>{(share * 100).toFixed(share > 0 && share < 0.0001 ? 6 : 2)}%</b></div>
-                <div><span>Next payout (est.)</span><b>{naira(estNext)}</b></div>
+                <div><span>{prelaunch ? 'First payout (est.)' : 'Next payout (est.)'}</span><b>{naira(estNext)}</b></div>
                 <div><span>Earned so far</span><b>{naira(mine.totalEarnedNgp)}</b></div>
               </div>
               {pending > 0 && (
@@ -222,7 +260,7 @@ export default function Vault() {
             <summary><div><h2>How it works</h2><p className="lead" style={{ margin: '4px 0 0' }}>Where the money comes from and who gets it.</p></div><i className="ti ti-chevron-down" /></summary>
             <ol className="vt2-steps">
               <li><span className="n">1</span><div><b>Fees fill the vault.</b> The platform fee on every job goes into the vault. When a job is cancelled and its fee refunded, that amount comes back out.</div></li>
-              <li><span className="n">2</span><div><b>Every 12 hours it's shared.</b> At 00:00 and 12:00 UTC the whole vault balance is split between everyone holding $PAY, in proportion to how much they hold.</div></li>
+              <li><span className="n">2</span><div><b>Every 12 hours it's shared.</b> {sum?.launchAt ? `From ${lagosDay(sum.launchAt)}, at ${lagosTime(sum.launchAt)} and ${lagosTime(new Date(sum.launchAt).getTime() + 12 * 3600000)} Lagos time,` : 'At 00:00 and 12:00 UTC'} the whole vault balance is split between everyone holding $PAY, in proportion to how much they hold.</div></li>
               <li><span className="n">3</span><div><b>Your share is yours to claim.</b> Payouts appear here and go to your naira wallet when you claim. Shares under ₦1 are skipped.</div></li>
             </ol>
           </details>

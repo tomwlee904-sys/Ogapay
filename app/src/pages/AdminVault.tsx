@@ -79,7 +79,7 @@ export default function AdminVault() {
         showToast(`Skipped: ${d?.reason || 'nothing to do'}`)
       }
       fetchPool()
-    } catch { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> Distribution failed</>) }
+    } catch (e: any) { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> {e?.message || 'Distribution failed'}</>) }
     setDistributing(false)
   }
 
