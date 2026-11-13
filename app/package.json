@@ -38,7 +38,8 @@
     "test:auth-instant": "node scripts/tests/auth-instant.test.cjs",
     "test:verification-text": "node scripts/tests/verification-text.test.cjs",
     "test:register-redirect": "node scripts/tests/register-redirect.test.cjs",
-    "test:verify-polish": "node scripts/tests/verify-polish.test.cjs"
+    "test:verify-polish": "node scripts/tests/verify-polish.test.cjs",
+    "test:admin-kyc-level2": "node scripts/tests/admin-kyc-level2.test.cjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",

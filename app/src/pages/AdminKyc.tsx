@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
@@ -39,8 +39,9 @@ function Copy({ text }: { text: string }) {
 
 /* Level 2 requests: members send a photo of their ID (usually a NIN slip or
    card) and its number, no selfie. Check the name matches, then approve
-   (Level 2) or reject with a reason they see. Photo links expire after 10 minutes: Refresh
-   to get new ones. */
+   (Level 2) or reject with a reason they see. Waiting requests come oldest
+   first, 50 a page, so none get buried under new ones. Photo links expire
+   after 30 minutes: Refresh to get new ones. */
 interface L2 {
   id: string; status: string; idType: string; idTypeName: string; idNumber: string | null; createdAt: string
   user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null; country?: string | null }
@@ -105,20 +106,56 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => 
   )
 }
 
+type L2Order = 'oldest' | 'newest'
+interface L2Page { requests: L2[]; total: number; page: number; limit: number; hasMore: boolean }
+const L2_LIMIT = 50
+
 function Level2Requests() {
   const [rows, setRows] = useState<L2[] | null>(null)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [order, setOrder] = useState<L2Order>('oldest')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const load = () => apiRequest<{ requests: L2[] }>('/kyc/admin/level2').then((d) => { setRows(d?.requests || []); setError('') }).catch((e: any) => setError(e?.message || 'Could not load Level 2 requests'))
-  useEffect(() => { load() }, [])
+  const seq = useRef(0)
+  const load = async (p = page, o = order) => {
+    const mine = ++seq.current
+    try {
+      const params = new URLSearchParams({ status: 'PENDING', order: o, page: String(p), limit: String(L2_LIMIT) })
+      const d = await apiRequest<L2Page>(`/kyc/admin/level2?${params}`)
+      if (mine !== seq.current) return
+      // The last page emptied (everything on it decided): step back one
+      if (p > 1 && !d?.requests?.length && (d?.total || 0) > 0) { setPage(p - 1); return }
+      setRows(d?.requests || []); setTotal(d?.total || 0); setHasMore(!!d?.hasMore); setError('')
+    } catch (e: any) { if (mine === seq.current) setError(e?.message || 'Could not load Level 2 requests') }
+  }
+  useEffect(() => { load(page, order) }, [page, order])
   if (error) return <div className="aw-empty" role="alert">{error}</div>
-  if (!rows || (rows.length === 0 && !notice)) return null
+  if (!rows || (total === 0 && rows.length === 0 && !notice)) return null
+  const pages = Math.max(1, Math.ceil(total / L2_LIMIT))
+  const pick = (o: L2Order) => { if (o !== order) { setOrder(o); setPage(1) } }
   return (
     <section className="ak-l2" aria-labelledby="ak-l2-h">
-      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Members' ID photos for Level 2, checked by hand.</p></div>
-        <button className="ui-btn ui-btn-ghost" onClick={() => load()}><i className="ti ti-refresh" /> Refresh</button></div>
+      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({total.toLocaleString()} waiting)</h2><p>Members' ID photos for Level 2, checked by hand. {order === 'oldest' ? 'Oldest first, so nobody waits too long.' : 'Newest first.'}</p></div>
+        <div className="aw-actions">
+          <div className="ak-order" role="group" aria-label="Order">
+            <button type="button" className="ui-btn ui-btn-ghost" aria-pressed={order === 'oldest'} onClick={() => pick('oldest')}>Oldest</button>
+            <button type="button" className="ui-btn ui-btn-ghost" aria-pressed={order === 'newest'} onClick={() => pick('newest')}>Newest</button>
+          </div>
+          <button className="ui-btn ui-btn-ghost" onClick={() => load()}><i className="ti ti-refresh" /> Refresh</button>
+        </div></div>
       {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
-      <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setNotice(msg) }} />)}</div>
+      {rows.length === 0 ? <div className="aw-empty">Nothing waiting for review. All caught up.</div> : (
+        <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setTotal((t) => Math.max(0, t - 1)); setNotice(msg); load(page, order) }} />)}</div>
+      )}
+      {(page > 1 || hasMore) && (
+        <div className="aw-pager">
+          <button className="ui-btn ui-btn-ghost" disabled={page <= 1} onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo?.({ top: 0 }) }}><i className="ti ti-arrow-left" /> Previous</button>
+          <span>Page {page} of {pages}</span>
+          <button className="ui-btn ui-btn-ghost" disabled={!hasMore} onClick={() => { setPage((p) => p + 1); window.scrollTo?.({ top: 0 }) }}>Next <i className="ti ti-arrow-right" /></button>
+        </div>
+      )}
     </section>
   )
 }
@@ -323,6 +360,8 @@ export default function AdminKyc() {
         .ak-photos img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--r-md,12px);border:1px solid var(--border);background:var(--soft,#f4f4f5)}
         .ak-l2{margin:0 0 28px}
         .ak-l2 h2{font-size:18px;margin:0}
+        .ak-order{display:inline-flex;gap:4px}
+        .ak-order .ui-btn[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
       `}</style>
 
       <div className="aw">
