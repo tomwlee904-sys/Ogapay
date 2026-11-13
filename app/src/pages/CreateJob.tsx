@@ -248,6 +248,7 @@ function splitEvenly(prizes: string[], currency: string): string[] {
 
 // What a job can pay in (the server refuses anything else)
 const JOB_CURRENCIES: string[] = ["NGN", "USDC"];
+const isJobCurrency = (c: unknown): c is string => typeof c === "string" && JOB_CURRENCIES.includes(c);
 
 function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor, randomDraw, setRandomDraw }: {
   currency: string; setCurrency: (v: string) => void; prizes: string[]; setPrizes: (f: (p: string[]) => string[]) => void
@@ -544,7 +545,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [title, setTitle] = useState<string>(init.title || "");
   const [description, setDescription] = useState<string>(init.description || "");
   // Jobs pay in NGN or USDC; an older template or draft in SOL starts in naira (2026-11-13)
-  const [currency, setCurrency] = useState<string>(JOB_CURRENCIES.includes(init.currency) ? init.currency : "NGN");
+  const [currency, setCurrency] = useState<string>(isJobCurrency(init.currency) ? init.currency : "NGN");
   const [bounty, setBounty] = useState<string>(init.bounty?.toString() || "");
   const [winnersInput, setWinnersInput] = useState<string>(String(init.winners || 10));
   // Contest: a prize per place, 1st first
@@ -1208,7 +1209,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         setTitle(d.title || ""); setDescription(d.description || ""); setBeforeRefine(null);
         setTemplateFiles(Array.isArray(tplFiles) ? tplFiles.slice(0, 10) : []);
         if (!example) { setHideAfter(!!d.hideAfterComplete); setWatermark(!!d.watermark); if (d.selectionHours && SELECTION_TIMES.some(([h]) => h === d.selectionHours)) setSelectionHours(d.selectionHours); setDeliveryDays(d.deliveryDays && DELIVERY_TIMES.some(([x]) => x === d.deliveryDays) ? d.deliveryDays : "1"); }
-        if (!example) { setBounty(d.bounty || ""); if (JOB_CURRENCIES.includes(d.currency)) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
+        if (!example) { setBounty(d.bounty || ""); if (isJobCurrency(d.currency)) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
         // Your template's proof text and a contest's prizes, entry target and draw (2026-11-08)
         if (!example) {
           setProofText(d.proofText || "");
@@ -1217,7 +1218,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         }
         // Ready-made examples (app testing) suggest a budget and duration
         // and start from the same proof settings as on a fresh form
-        else if (d.bounty) { setBounty(d.bounty); if (JOB_CURRENCIES.includes(d.currency)) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setScreenshot(!!d.screenshot); setTrackingCode(d.trackingCode || ""); }
+        else if (d.bounty) { setBounty(d.bounty); if (isJobCurrency(d.currency)) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setScreenshot(!!d.screenshot); setTrackingCode(d.trackingCode || ""); }
         if (d.mode) setMode(d.mode);
         setWinnersInput(String(d.winners || 10));
         if (d.category && CATEGORIES[d.category]) { setCategory(d.category); setSubcategory(d.subcategory && CATEGORIES[d.category].includes(d.subcategory) ? d.subcategory : ""); }
