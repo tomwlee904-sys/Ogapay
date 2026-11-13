@@ -42,7 +42,9 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   const [bankId, setBankId] = useState('')
   const [adding, setAdding] = useState(false)
   const [amount, setAmount] = useState('')
-  const [coin, setCoin] = useState<'USDC' | 'SOL'>('USDC')
+  // Crypto withdrawals are USDC on Solana only (SOL was dropped 2026-11-13: nothing
+  // can put SOL in an OgaPay wallet any more)
+  const coin = 'USDC' as const
   const [address, setAddress] = useState('')
   const [otp, setOtp] = useState('')
   const [otpAsked, setOtpAsked] = useState(false)
@@ -251,11 +253,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
               <div className="wl-field">
                 <span className="ui-label">Currency</span>
                 <div className="wl-quick" style={{ marginTop: 0 }}>
-                  {(['USDC', 'SOL'] as const).map((c) => (
-                    <button key={c} type="button" className={`ui-chip${coin === c ? ' on' : ''}`} aria-pressed={coin === c} onClick={() => { setCoin(c); setAmount('') }}>
-                      {c}<em>{money(Number(balances?.[c]?.available ?? 0), c).replace(' ' + c, '')}</em>
-                    </button>
-                  ))}
+                  <span className="ui-chip on">USDC on Solana<em>{money(Number(balances?.USDC?.available ?? 0), 'USDC').replace(' USDC', '')}</em></span>
                 </div>
               </div>
               <div className="wl-field">
@@ -268,7 +266,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
           <div className="wl-field">
             <label className="ui-label" htmlFor="wd-amt">Amount</label>
             <div className="wl-amount">
-              <span>{inNaira ? '₦' : coin === 'SOL' ? '◎' : '$'}</span>
+              <span>{inNaira ? '₦' : '$'}</span>
               <input id="wd-amt" className="ui-input" inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1'))} />
               <button type="button" className="wl-max" onClick={max}>Max</button>
             </div>

@@ -94,6 +94,79 @@ function Empty({ children }: { children: ReactNode }) {
   return <p className="ah-none">{children}</p>
 }
 
+// ── Crypto: the platform (hot) wallet and stuck crypto money ──
+// Backend GET /admin/crypto (services/cryptoOps.service.js): the platform
+// wallet's SOL and USDC on Solana next to the USDC members hold, and USDC
+// deposits / crypto withdrawals still unsettled after 10 minutes. A sweep
+// settles them every 3 minutes; ones with no signature need a person. (2026-11-13)
+type StuckRow = { id: string; kind: 'deposit' | 'withdrawal'; status: string; amount: number; currency: string; reference: string; signature: string | null; toAddress: string | null; username: string | null; createdAt: string; ageMinutes: number; note: string | null }
+type Crypto = {
+  wallet: { address: string; usdcAccount: string; sol: number; usdc: number; at: string } | null
+  error: string | null
+  membersUsdc: number; membersUsdcLocked: number; withdrawingUsdc: number; solFeeBuffer: number
+  coverage?: number | null
+  alerts: string[]
+  stuck: StuckRow[]
+}
+const usdc = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 6 })} USDC`
+const short = (x: string) => (x.length > 16 ? `${x.slice(0, 6)}…${x.slice(-6)}` : x)
+
+function CryptoCard() {
+  const [c, setC] = useState<Crypto | null>(null)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = async (fresh = false) => {
+    setBusy(true); setErr('')
+    try { setC(await apiRequest<Crypto>(`/admin/crypto${fresh ? '?fresh=1' : ''}`)) } catch (e: any) { setErr(e?.message || 'Could not load the crypto wallet') }
+    setBusy(false)
+  }
+  useEffect(() => { load() }, [])
+  const lowSol = !!c?.wallet && c.wallet.sol < c.solFeeBuffer
+  const shortUsdc = !!c?.wallet && c.wallet.usdc < c.membersUsdc
+  return (
+    <section className="ah-card ui-card" aria-labelledby="ah-crypto-h">
+      <div className="ah-card-head">
+        <h2 id="ah-crypto-h">Crypto wallet</h2>
+        <button className="ui-btn ui-btn-ghost" onClick={() => load(true)} disabled={busy}><i className="ti ti-refresh" /> {busy ? 'Reading Solana…' : 'Read again'}</button>
+      </div>
+      <p className="ah-sub">The platform wallet that pays crypto withdrawals, next to the USDC members hold with us (including money held for jobs and orders). Crypto withdrawals pause by themselves when the wallet can't cover one or its SOL is under {c ? c.solFeeBuffer : 0.01} SOL.</p>
+      {err && !c ? <p className="ah-none" role="alert">{err}</p> : !c ? <p className="ah-none">Loading…</p> : (
+        <>
+          {c.alerts.length > 0 && <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--red)', fontSize: 14, lineHeight: 1.5 }}>{c.alerts.map((a) => <li key={a}>{a}</li>)}</ul>}
+          <div className="ah-stats">
+            <div className={`ah-stat${lowSol ? ' hot' : ''}`}><small>Platform SOL</small><b>{c.wallet ? c.wallet.sol.toLocaleString('en-US', { maximumFractionDigits: 4 }) : '-'}</b></div>
+            <div className={`ah-stat${shortUsdc ? ' hot' : ''}`}><small>Platform USDC</small><b>{c.wallet ? c.wallet.usdc.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '-'}</b></div>
+            <div className="ah-stat"><small>Members hold (USDC)</small><b>{c.membersUsdc.toLocaleString('en-US', { maximumFractionDigits: 2 })}</b></div>
+            <div className="ah-stat"><small>Of that, held for jobs/orders</small><b>{c.membersUsdcLocked.toLocaleString('en-US', { maximumFractionDigits: 2 })}</b></div>
+            <div className="ah-stat"><small>Withdrawals confirming</small><b>{c.withdrawingUsdc.toLocaleString('en-US', { maximumFractionDigits: 2 })}</b></div>
+          </div>
+          {c.wallet && <p className="ah-sub">Wallet <span className="ah-mono">{c.wallet.address}</span> · read {time(c.wallet.at)}</p>}
+          <h3>Stuck for 10+ minutes ({c.stuck.length})</h3>
+          {!c.stuck.length ? <p className="ah-none">None. The sweep settles deposits and withdrawals Solana confirms late.</p> : (
+            <div className="ah-table">
+              <table>
+                <thead><tr><th>What</th><th>Who</th><th>Amount</th><th>Age</th><th>Signature</th><th>Note</th></tr></thead>
+                <tbody>
+                  {c.stuck.map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.kind === 'deposit' ? 'Deposit' : 'Withdrawal'}<br /><span className="ah-mono">{r.reference}</span></td>
+                      <td>{r.username ? <Link to={`/user/${encodeURIComponent(r.username)}`}>@{r.username}</Link> : '-'}{r.toAddress && <><br /><span className="ah-mono">to {short(r.toAddress)}</span></>}</td>
+                      <td className="ah-num">{r.currency === 'USDC' ? usdc(r.amount) : `${r.amount} ${r.currency}`}</td>
+                      <td className="ah-num">{r.ageMinutes < 60 ? `${r.ageMinutes} min` : age(Math.floor(r.ageMinutes / 60))}</td>
+                      <td>{r.signature ? <a className="ah-mono" href={`https://solscan.io/tx/${r.signature}`} target="_blank" rel="noreferrer">{short(r.signature)}</a> : '-'}</td>
+                      <td className="ah-ua">{r.note || 'Waiting for Solana; the sweep will settle it.'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
 export default function AdminHealth() {
   const [data, setData] = useState<Health | null>(null)
   const [error, setError] = useState('')
@@ -178,6 +251,8 @@ export default function AdminHealth() {
             <button className="ui-btn ui-btn-ghost" onClick={load} disabled={loading}><i className="ti ti-refresh" /> {loading && data ? 'Refreshing…' : 'Refresh'}</button>
           </div>
         </div>
+
+        <CryptoCard />
 
         {loading && !data ? <div className="ah-empty">Loading…</div>
           : error && !data ? <div className="ah-empty" role="alert">{error}</div>

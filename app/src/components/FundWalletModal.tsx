@@ -491,7 +491,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
             </h3>
             {result?.status === 'PENDING' && (
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 8px' }}>
-                Your payment was sent. It will show in your wallet once the Solana network confirms it.
+                Your payment was sent. It will show in your wallet once the Solana network confirms it, usually within a few minutes. A deposit that confirms later arrives as USDC (it isn't converted to naira automatically).
               </p>
             )}
             {/* The server converted the deposit straight away (Settings: convert USDC to naira automatically) (2026-11-02) */}
