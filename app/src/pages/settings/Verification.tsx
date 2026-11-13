@@ -37,7 +37,7 @@ export const MANUAL_UPLOAD_MS = 300_000
 // The server saves both photos before the request shows up, so a check made
 // right after a timeout can be a few seconds early: look once more after this
 export const ARRIVAL_RECHECK_MS = 5_000
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024 // the server's limit per photo (kyc.routes.js)
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024 // the server's limit per photo (kyc.routes.js, 10 MB since 2026-11-13)
 export const MANUAL_SENT = 'Sent. Our team will check your ID.'
 export const MANUAL_ALREADY = "Your earlier request is already with our team, so these photos weren't sent. We'll let you know when it's checked."
 
@@ -57,7 +57,7 @@ export function mayHaveArrived(e: any): boolean {
 export function manualSendError(e: any): string {
   if (timedOut(e)) return 'Your photos took too long to send on this connection. Check your data or move to a spot with better signal, then try again.'
   if (dropped(e)) return 'The connection dropped while sending your photos. Check your data, then try again.'
-  if (/file too large/i.test(errText(e))) return 'A photo is too large. Please choose a smaller one (up to 5 MB).'
+  if (/file too large/i.test(errText(e))) return 'A photo is too large. Please choose a smaller one (up to 10 MB), or upload a screenshot of it.'
   if (broken(e)) return "Couldn't send your photos. Please try again."
   return errText(e)
 }
