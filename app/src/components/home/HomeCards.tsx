@@ -57,20 +57,20 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
   const said = spoken(show(amount, cur), amount, cur);
 
   return (
-    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${said}` : `${said} per worker`}. View job`}>
+    <Link to={`/tasks/${task.id}`} className="hc-card hc-job" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${said}` : `${said} per worker`}. View job`}>
       <div className="hc-top">
         <span className="hc-type">{contest ? <><i className="ti ti-award" />Contest</> : <><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</>}</span>
         {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star" style={{ color: "#bd8517" }} />Highlighted</span>}
       </div>
 
       <div className="hc-by">
-        <Avatar src={poster.avatarUrl} name={name} />
+        <Avatar src={poster.avatarUrl} name={name} size={34} />
         <span className="hc-by-txt"><span>Listed by</span><b><span className="hc-by-name">{name}</span>{poster.premium && <PremiumMark />}</b>{poster.posterProfile?.isVerified && <VerifiedBusinessLine name={poster.posterProfile.verifiedName} />}</span>
       </div>
 
       <div className="hc-reward">
         <span className="hc-lbl">{contest ? "1st place prize" : "Reward per worker"}</span>
-        <Money amount={amount} currency={cur} convert={convert} size={30} positive />
+        <Money amount={amount} currency={cur} convert={convert} size={25} positive />
       </div>
 
       <div className="hc-reqs">

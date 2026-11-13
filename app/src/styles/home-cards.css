@@ -158,3 +158,100 @@
   .hc-by-txt b { font-size: 14.5px; }
   .hc-by-txt > span, .hc-lbl, .hc-cat, .hc-reqs { font-size: 13px; }
 }
+
+/* ─── Job card, wurk.fun look (2026-11-13) ─────────────────────────────────────
+   Measured from wurk.fun's job card (audit/WURK-JOB-CARD-SPEC.md): hairline
+   card, 20px radius, a glass reward box, mint amount, mono numbers, a 4px bar.
+   Only the job card (.hc-job) changes; product/community cards keep their look.
+   Light is the faithful light version; dark values are wurk's exact ones.
+   Text stays 11px or more (wurk's 10px labels are 11px here). */
+.hc-job {
+  --job-card: #fff;
+  --job-line: #e4e4e7;
+  --job-ink: #18181b;
+  --job-muted: #6b6b73;
+  --job-soft: #f4f4f5;
+  --job-amt: #0f7a54;
+  --job-bar: #e4e4e7;
+  --job-fill: #3f9a78;
+  --job-glass: linear-gradient(125deg, rgba(244, 248, 250, .95), rgba(250, 251, 252, .9) 70%, rgba(237, 244, 247, .9));
+  --job-glass-line: rgba(110, 135, 150, .22);
+  --job-glass-sh: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(15, 30, 40, .05);
+  gap: 14px; padding: 20px; border-radius: 20px;
+  background: var(--job-card); border: .67px solid var(--job-line); color: var(--job-ink);
+  box-shadow: 0 2px 4px rgba(21, 21, 23, .04);
+}
+.hc-job:hover { border-color: #c9c9cf; box-shadow: 0 10px 28px -18px rgba(21, 21, 23, .25); }
+.hc-job .hc-type { font: 500 11px/1.4 var(--font-mono); letter-spacing: .08em; color: var(--job-muted); }
+.hc-job .hc-pill { height: 22px; border: .67px solid var(--job-line); border-radius: 999px; background: var(--job-card); font-size: 11px; color: var(--job-ink); }
+.hc-job .hc-av { border-radius: 10px; border: .67px solid var(--job-line); background: var(--job-soft); }
+.hc-job .hc-by-txt > span { font-size: 11px; line-height: 13px; color: var(--job-muted); }
+.hc-job .hc-by-txt b { font-size: 13px; font-weight: 550; color: var(--job-ink); }
+
+.hc-job .hc-reward {
+  border: .67px solid var(--job-glass-line); border-radius: 14px; padding: 16px 17px 15px;
+  background: var(--job-glass); box-shadow: var(--job-glass-sh); gap: 6px;
+}
+.hc-job .hc-lbl { font-size: 11px; color: var(--job-muted); }
+.hc-job .o-money-main { font-weight: 550; letter-spacing: -.055em; line-height: 1.05; }
+.hc-job .o-money.money-pos .o-money-main { color: var(--job-amt); }
+.hc-job .o-money-main small { font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--job-muted); }
+.hc-job .o-money-alt { font: 400 11px/1.4 var(--font-mono); color: var(--job-muted); }
+
+.hc-job .hc-reqs { font-size: 11px; color: var(--job-muted); min-height: 16px; }
+.hc-job .hc-reqs i { font-size: 12px; }
+.hc-job .hc-brief { gap: 4px; }
+.hc-job .hc-cat { font-size: 11px; line-height: 17.6px; color: var(--job-muted); }
+.hc-job .hc-brief p { font-size: 13px; line-height: 1.55; letter-spacing: -.01em; color: var(--job-ink); -webkit-line-clamp: 3; min-height: calc(13px * 1.55 * 3); }
+.hc-job .hc-row { font-size: 11px; color: var(--job-muted); }
+.hc-job .hc-row strong { font: 500 11px var(--font-mono); color: var(--job-ink); }
+.hc-job .hc-bar { height: 4px; border-radius: 4px; background: var(--job-bar); }
+.hc-job .hc-bar span { background: var(--job-fill); }
+.hc-job .hc-dots { font-size: 11px; color: var(--job-muted); gap: 4px 12px; }
+.hc-job .hc-dots li::before { background: var(--job-muted); width: 3px; height: 3px; }
+.hc-job .hc-foot { border-top: .67px solid var(--job-line); }
+.hc-job .hc-foot time { font-size: 12px; color: var(--job-muted); }
+.hc-job .hc-foot time.hc-ended { color: var(--red); }
+.hc-job .hc-go { font-size: 13px; color: var(--job-ink); }
+.hc-job .hc-done { color: var(--green); }
+.hc-job .hc-done.hc-no { color: var(--job-muted); }
+.hc-job .hc-arrow { border-radius: 10px; border: .67px solid var(--job-line); background: var(--job-soft); }
+.hc-job:hover .hc-arrow { background: var(--job-ink); color: var(--job-card); border-color: var(--job-ink); }
+
+html[data-theme="dark"] .hc-card.hc-job {
+  --job-card: #000;
+  --job-line: #29292d;
+  --job-ink: #f4f4f5;
+  --job-muted: #a0a0a8;
+  --job-soft: #101012;
+  --job-amt: #8de0ba;
+  --job-bar: #29292d;
+  --job-fill: #85baa4;
+  --job-glass: linear-gradient(125deg, rgba(29, 36, 41, .8), rgba(16, 20, 22, .75) 70%, rgba(23, 32, 37, .66));
+  --job-glass-line: rgba(155, 175, 185, .17);
+  --job-glass-sh: inset 0 1px 0 rgba(255, 255, 255, .06), inset 0 -1px 0 rgba(0, 0, 0, .4);
+  background: var(--job-card); border-color: var(--job-line);
+  box-shadow: 0 2px 4px rgba(21, 21, 23, .008);
+}
+html[data-theme="dark"] .hc-card.hc-job:hover { border-color: #3f3f46; box-shadow: 0 24px 50px -30px rgba(0, 0, 0, .95); }
+html[data-theme="dark"] .hc-job .hc-reward { background: var(--job-glass); border-color: var(--job-glass-line); }
+html[data-theme="dark"] .hc-job .hc-pill { background: #000; border-color: var(--job-line); color: var(--job-ink); }
+html[data-theme="dark"] .hc-job .hc-bar { background: var(--job-bar); }
+html[data-theme="dark"] .hc-job .hc-bar span { background: var(--job-fill); }
+html[data-theme="dark"] .hc-job .hc-dots li::before { background: var(--job-muted); }
+html[data-theme="dark"] .hc-job .hc-arrow, html[data-theme="dark"] .hc-job .hc-av { background: var(--job-soft); border-color: var(--job-line); }
+html[data-theme="dark"] .hc-job:hover .hc-arrow { background: var(--job-ink); color: #000; border-color: var(--job-ink); }
+
+/* Phones: the brief stays a little bigger than wurk's 13px to read easily
+   (phone audit); labels keep wurk's small size at the 11px floor */
+@media (max-width: 767px) {
+  .hc-job .hc-brief p { font-size: 14px; min-height: calc(14px * 1.55 * 3); }
+  .hc-job .hc-by-txt b { font-size: 14px; }
+  .hc-job .hc-by-txt > span, .hc-job .hc-lbl, .hc-job .hc-cat, .hc-job .hc-reqs { font-size: 11px; }
+}
+/* Narrow carousel cards (tablet, 3 a row) */
+@container (max-width: 260px) {
+  .hc-job { padding: 14px; }
+  .hc-job .hc-reward { padding: 12px 13px; }
+  .hc-job .hc-brief p { font-size: 12.5px; min-height: calc(12.5px * 1.55 * 3); }
+}
