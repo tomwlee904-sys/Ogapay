@@ -79,7 +79,7 @@ const keptHome = (userId?: string) => (userId && lastHome && lastHome.userId ===
 
 // The ₦1,000 first job bonus (backend wallet.service rewardSignupBonus): paid once
 // someone is verified by NIN or ID AND has finished their first paid job
-const FIRST_JOB_BONUS = 500 // was 1,000 until 2026-11-14 (now after 5 paid jobs)
+const FIRST_JOB_BONUS = 1000
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
 const STATUS: Record<string, string> = { OPEN: 'Open', IN_PROGRESS: 'In progress', COOLING_DOWN: 'Wrapping up', DRAFT: 'Draft' }
@@ -312,7 +312,7 @@ export default function Dashboard() {
     hirer
       ? { done: hires || held.length > 0, label: 'Add money to post a job', sub: "It's held safely until you approve the work.", to: '/deposit', cta: 'Add money' }
       : { done: hasPayout, label: 'Add a way to get paid', sub: ghana ? 'A mobile money number or a Solana wallet.' : 'A bank account or a Solana wallet.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: hirer ? `Free with ${idWord}. Unlocks withdrawals and sending money.` : `Free with ${idWord}. Unlocks withdrawals, and your ${bonus} bonus after 5 paid jobs.`, to: '/settings/verification', cta: 'Verify' },
+    { done: kycOk, label: 'Verify your identity', sub: hirer ? `Free with ${idWord}. Unlocks withdrawals and sending money.` : `Free with ${idWord}. Unlocks withdrawals and your ${bonus} first job bonus.`, to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length
 
@@ -400,12 +400,12 @@ export default function Dashboard() {
       {firstActive ? (
         <>
           <h2 id="db-first">Finish "{firstActive.task?.title || 'your job'}"</h2>
-          <p className="db-first-pay"><b>{show(Number(firstActive.task?.reward || 0), firstActive.task?.currency || 'NGN')}</b> + <b>{bonus}</b> bonus after 5 paid jobs</p>
+          <p className="db-first-pay"><b>{show(Number(firstActive.task?.reward || 0), firstActive.task?.currency || 'NGN')}</b> + <b>{bonus}</b> first job bonus</p>
         </>
       ) : firstPick && (
         <>
           <h2 id="db-first">{firstPick.title}</h2>
-          <p className="db-first-pay">Earn <b>{show(Number(firstPick.reward || 0), firstPick.currency || 'NGN')}</b> + <b>{bonus}</b> bonus after 5 paid jobs</p>
+          <p className="db-first-pay">Earn <b>{show(Number(firstPick.reward || 0), firstPick.currency || 'NGN')}</b> + <b>{bonus}</b> first job bonus</p>
         </>
       )}
       <ol className="db-first-steps">

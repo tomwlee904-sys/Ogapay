@@ -29,9 +29,9 @@ export const UNLOCKS = 'withdraw to your bank and get your own account number'
 // What needs Level 1 by NIN or ID (Level 2 by an ID photo counts too), not only
 // the bank check. Said the same way everywhere (Dashboard, Verification, Send).
 export const SEND_RULE = 'Sending money to other members needs your NIN or ID (Level 1 by NIN, or Level 2). The bank account check lets you withdraw, but not send.'
-export const BONUS_RULE = 'The ₦500 first job bonus needs your NIN or ID (Level 1 by NIN, or Level 2) plus 5 paid jobs, and can be withdrawn once you have earned ₦5,000 from jobs.'
+export const BONUS_RULE = 'The ₦1,000 first job bonus needs your NIN or ID (Level 1 by NIN, or Level 2) plus your first paid job, and can be withdrawn once you have earned ₦5,000 from jobs.'
 // For someone verified by the bank check only: the way on is an ID photo (Level 2)
-export const BANK_ONLY_NEXT = 'Your bank account verified you, so you can withdraw. For the first job bonus and to send money, send a photo of your ID (Level 2).'
+export const BANK_ONLY_NEXT = 'Your bank account verified you, so you can withdraw. For the ₦1,000 first job bonus and to send money, send a photo of your ID (Level 2).'
 
 // The level someone at `tier` works towards: with Didit, one check goes straight to Level 2
 export const nextTierFor = (tier: number, didit: boolean) => (didit && tier < 2 ? 2 : tier + 1)
