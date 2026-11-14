@@ -81,6 +81,7 @@ const JobMonitor = lazyPage(() => import('./pages/JobMonitor'))
 const EditProfile = lazyPage(() => import('./pages/EditProfile'))
 const TaskHistory = lazyPage(() => import('./pages/TaskHistory'))
 const Developer = lazyPage(() => import('./pages/Developer'))
+const ApiReference = lazyPage(() => import('./pages/ApiReference'))
 const Roadmap = lazyPage(() => import('./pages/Roadmap'))
 const About = lazyPage(() => import('./pages/About'))
 const ForBusinesses = lazyPage(() => import('./pages/ForBusinesses'))
@@ -204,6 +205,7 @@ export default function App() {
             <Route path="/vault" element={<Vault />} />
             <Route path="/vault/history" element={<VaultHistory />} />
             <Route path="/developer" element={<Developer />} />
+            <Route path="/developer/api" element={<ApiReference />} />
             <Route path="/safe" element={<Navigate to="/vault" replace />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />

@@ -36,6 +36,8 @@ export interface Task {
   platformFee?: number;
   expiresAt?: string | null;
   featured?: boolean;
+  // Apps and AI agents (API keys) may take and send work for this job
+  agentsAllowed?: boolean;
 }
 
 export interface ApiResponse<T> {

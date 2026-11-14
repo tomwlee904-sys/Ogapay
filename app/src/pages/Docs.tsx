@@ -38,6 +38,7 @@ const SECTIONS: { title: string; guides: Guide[] }[] = [
       { icon: 'users', title: 'Communities', desc: 'Joining, creating and running a community.', to: '/faq#communities' },
       { icon: 'shield-lock', title: 'Vault and $PAY', desc: 'How platform fees are shared with $PAY holders every 12 hours.', to: '/faq#vault' },
       { icon: 'code', title: 'Developer API', desc: 'API keys for your own apps and AI agents: read jobs and balances, and post jobs and pay for approved work.', to: '/developer' },
+      { icon: 'book', title: 'API reference', desc: 'Every endpoint with examples, webhooks, and connecting AI agents over MCP.', to: '/developer/api' },
     ],
   },
 ]

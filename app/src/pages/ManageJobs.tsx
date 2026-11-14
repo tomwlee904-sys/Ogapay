@@ -56,6 +56,8 @@ type Sub = {
   workerHandle?: string | null; unfollowedAt?: string | null
   // What they were really paid (a raised pay doesn't change it); null if nothing was paid
   paidAmount?: number | string | null
+  // Sent with an API key (an app or AI agent), not on the website
+  viaApi?: boolean
 }
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
@@ -81,6 +83,8 @@ type Task = {
   // counted from the pick (cooldownStartedAt)
   deliveryDays?: number | null; cooldownStartedAt?: string | null
   posterId?: string
+  // Apps and AI agents (API keys) may take and send work
+  agentsAllowed?: boolean
   _count?: { submissions?: number; applications?: number }
 }
 type Application = {
@@ -423,6 +427,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
   const [edGender, setEdGender] = useState<string>(task.targetGender || "");
   // Follow jobs: the platform whose username workers type ("" = don't ask)
   const [edHandle, setEdHandle] = useState<string>(task.askHandle || "");
+  const [edAgents, setEdAgents] = useState<boolean>(!!task.agentsAllowed);
   // Where workers must live: "" anyone, or one country (backend targetCountries)
   const [edCountry, setEdCountry] = useState<string>(task.targetCountries?.[0] || "");
   // Similar jobs: people who took part in any of them can't take this one (and the other way round)
@@ -445,6 +450,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     setEdCountry(task.targetCountries?.[0] || "");
     setEdGender(task.targetGender || "");
     setEdHandle(task.askHandle || "");
+    setEdAgents(!!task.agentsAllowed);
     setEdErr(""); setEditing(true);
   };
   // Same check as Create job: a job that sends people to a survey, form, site or
@@ -472,6 +478,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     if (edCountry !== (task.targetCountries?.[0] || "")) body.targetCountries = edCountry ? [edCountry] : [];
     if (edGender !== (task.targetGender || "")) body.targetGender = edGender || null;
     if (edHandle !== (task.askHandle || "")) body.askHandle = edHandle || null;
+    if (edAgents !== !!task.agentsAllowed) body.agentsAllowed = edAgents;
     setEdBusy(true); setEdErr("");
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -527,6 +534,11 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
                 {HANDLE_PLATFORMS.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
               </select>
               <p className="mj-edit-note">Workers must type it to send their work. If someone unfollows after being paid, report it here: they get a warning and can't take follow jobs for {UNFOLLOW_BLOCK_DAYS} days.</p>
+              <label className="mj-similar-row" style={{ marginTop: 12 }}>
+                <input type="checkbox" checked={edAgents} onChange={(e) => setEdAgents(e.target.checked)} />
+                <span>Let AI agents and apps do this job</span>
+              </label>
+              <p className="mj-edit-note">Work sent by an app or AI agent is marked so you can check it. Leave this off for jobs that need a real person, like follows.</p>
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toLocaleDateString("en-CA")} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
               {canNeedCommunity && (requirable.length > 0 || reqCommunity) && (
@@ -615,6 +627,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
                 {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
                   <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
+                    {s.viaApi && <p className="mj-auto"><Icon n="robot" s={14} /> Sent by an app / AI agent</p>}
                     <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
                     <PayoutCheckStatus sub={s} who="poster" />
                     <HandleLine code={task.askHandle} s={s} />

@@ -28,7 +28,8 @@
 .dv-eps { display: grid; }
 .dv-ep { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
 .dv-ep:first-child { border-top: 0; }
-.dv-method { height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 700 11px var(--font-mono, ui-monospace, monospace); display: grid; place-items: center; }
+.dv-method { height: 22px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: 700 11px var(--font-mono, ui-monospace, monospace); display: grid; place-items: center; }
+.dv-method.is-post, .dv-method.is-patch, .dv-method.is-delete { background: var(--text); border-color: var(--text); color: var(--bg); }
 .dv-path { font: 600 13px var(--font-mono, ui-monospace, monospace); color: var(--text); overflow-wrap: anywhere; }
 .dv-ep p { margin: 3px 0 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
 .dv-foot { font-size: 13px; color: var(--text3); }
@@ -39,7 +40,40 @@
 .dv-check b { color: var(--text); }
 .dv-write { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--orange, #d97706) 40%, var(--border)); font: 500 11px var(--font); color: var(--orange, #d97706); vertical-align: middle; }
 
+/* API reference (/developer/api), webhooks and agent links */
+.dv-wrap { min-width: 0; }
+.dv-card { min-width: 0; overflow-wrap: anywhere; }
+.dv-code { min-width: 0; max-width: 100%; }
+.dv-code-l { display: block; font: 500 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin: 0 0 6px; }
+.dv-code-l + pre + .dv-copy { top: 25px; }
+.dv-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dv-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.dv-toc a { padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; color: var(--text); text-decoration: none; background: var(--card); }
+.dv-toc a:hover { border-color: var(--text3); }
+.dv-grp { font: 500 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin: 18px 0 6px; }
+.dv-op { border-top: 1px solid var(--border); padding: 14px 0; min-width: 0; }
+.dv-op:first-of-type { border-top: 0; }
+.dv-op-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.dv-op-h .dv-method { padding: 0 8px; min-width: 48px; }
+.dv-op-h .dv-write { margin-left: 0; }
+.dv-read { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); font: 500 11px var(--font); color: var(--text3); }
+.dv-op p { margin: 6px 0 10px; font-size: 13px; color: var(--text2); line-height: 1.55; }
+.dv-tw { overflow-x: auto; margin: 0 0 12px; border: 1px solid var(--border); border-radius: 10px; }
+.dv-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.dv-tbl th, .dv-tbl td { text-align: left; padding: 7px 10px; border-top: 1px solid var(--border); vertical-align: top; color: var(--text2); }
+.dv-tbl th { border-top: 0; font-weight: 600; color: var(--text3); font-size: 11.5px; background: var(--bg2); }
+.dv-tbl td code { font: 12px var(--font-mono, ui-monospace, monospace); color: var(--text); white-space: nowrap; }
+.dv-tbl td small { color: var(--text3); }
+.dv-ul { margin: 0 0 12px; padding-left: 18px; font-size: 13px; color: var(--text2); line-height: 1.6; }
+.dv-ul code { font: 12.5px var(--font-mono, ui-monospace, monospace); color: var(--text); }
+.dv-note { padding: 10px 12px; border: 1px solid var(--text); border-radius: 10px; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0 0 12px; }
+.dv-events { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0; }
+.dv-events .dv-check { margin-top: 0; }
+.dv-hook-off { color: var(--red, #dc2626); font-weight: 600; }
+.dv-key-a { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
 @media (max-width: 560px) {
+  .dv-key-a { flex-direction: column; }
   .dv-head h1 { font-size: 26px; }
   .dv-create { flex-direction: column; }
   .dv-key { align-items: flex-start; }

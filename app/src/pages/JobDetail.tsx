@@ -157,6 +157,8 @@ interface JobData {
   requiredCommunity: { id: string; name: string; slug: string; isMember: boolean } | null
   // Follow jobs: the platform whose username workers type when they send their work
   askHandle: string | null
+  // Apps and AI agents (API keys) may do this job
+  agentsAllowed?: boolean
 }
 
 export default function JobDetail() {
@@ -419,6 +421,7 @@ export default function JobDetail() {
       minFollowers: Number(t.minFollowers) || 0,
       requiredCommunity: t.requiredCommunity || null,
       askHandle: t.askHandle || null,
+      agentsAllowed: !!t.agentsAllowed,
     }
   }
 
@@ -1239,6 +1242,7 @@ function WurkJobDetailView(props: any) {
                   {agentName}
                   {job.brandPremium && <PremiumMark />}
                   {job.boosted && <BoostedTag />}
+                  {job.agentsAllowed && <span title="Apps and AI agents can also do this job" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--border)', fontSize: 11, fontWeight: 600, color: 'var(--text2)', whiteSpace: 'nowrap' }}><i className="ti ti-robot" aria-hidden="true" /> Agents allowed</span>}
                 </div>
                 {job.brandVerified && <VerifiedBusinessLine name={job.brandVerifiedName} />}
                 <div className="wjd-handle">{handleText}</div>
@@ -1733,6 +1737,7 @@ function WurkJobDetailView(props: any) {
                 </div>
               )}
               {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}
+              {selectedSub.viaApi && <div style={{ margin: '-4px 0 14px', fontSize: 12, fontWeight: 600, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6 }}><i className="ti ti-robot" aria-hidden="true" /> Sent by an app / AI agent</div>}
               {selectedSub.spamReason && <div style={{ margin: '-4px 0 14px' }}><CopyFlag reason={selectedSub.spamReason} copy={!!selectedSub.similarToId} compact={selectedSub.status !== 'SUBMITTED'} /></div>}
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
               <div style={{ fontSize: 14, color: 'var(--text,#0f172a)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>

@@ -4,12 +4,22 @@ import Layout from '../components/Layout'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import { useToast } from '../components/Toast'
+import Code from '../components/DevCode'
 import '../styles/profile-public.css'
 import '../styles/developer.css'
 
 // Developer API: keys and their docs. Every key reads; a key made with write
 // access can also post jobs from the owner's wallet, review work, pick contest
 // winners and cancel jobs. No key can withdraw or send money.
+
+type Hook = { id: string; url: string; events: string[]; active: boolean; failCount: number; lastStatus: number | null; lastAt: string | null; createdAt: string }
+const HOOK_EVENTS: [string, string][] = [
+  ['submission.created', 'Work sent for your job'],
+  ['submission.approved', 'Work approved and paid'],
+  ['submission.rejected', 'Work rejected'],
+  ['submission.sent_back', 'Work sent back for changes'],
+  ['job.filled', 'Every place on a job is filled'],
+]
 
 type Key = { id: string; name: string; prefix: string; scopes?: string[]; usageCount: number; lastUsedAt: string | null; revokedAt: string | null; createdAt: string }
 
@@ -30,16 +40,6 @@ const ENDPOINTS: { method?: string; path: string; desc: string; params?: string;
   { method: 'POST', write: true, path: '/jobs/:id/cancel', desc: 'Cancel a job nobody has taken; the budget and fee come back.' },
 ]
 const day = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-
-function Code({ children }: { children: string }) {
-  const { toast } = useToast()
-  return (
-    <div className="dv-code">
-      <pre><code>{children}</code></pre>
-      <button className="dv-copy" aria-label="Copy" onClick={() => navigator.clipboard?.writeText(children).then(() => toast('Copied', 'success')).catch(() => {})}><i className="ti ti-copy" /></button>
-    </div>
-  )
-}
 
 function Keys() {
   const { toast } = useToast()
@@ -125,6 +125,111 @@ function Keys() {
   )
 }
 
+function Webhooks() {
+  const { toast } = useToast()
+  const [hooks, setHooks] = useState<Hook[] | null>(null)
+  const [url, setUrl] = useState('')
+  const [events, setEvents] = useState<string[]>(HOOK_EVENTS.map(([e]) => e))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [secret, setSecret] = useState<string | null>(null)
+  const [testing, setTesting] = useState<string | null>(null)
+  const [tested, setTested] = useState<Record<string, string>>({})
+
+  const load = () => apiRequest<Hook[]>('/developer/webhooks').then((d) => setHooks(Array.isArray(d) ? d : [])).catch(() => setHooks([]))
+  useEffect(() => { load() }, [])
+
+  const httpsOk = /^https:\/\/[^\s/]+\.[^\s]+$/i.test(url.trim())
+  const full = (hooks || []).length >= 5
+
+  const add = async () => {
+    if (!httpsOk) { setErr('Use a full https:// address.'); return }
+    if (!events.length) { setErr('Tick at least one event.'); return }
+    setBusy(true); setErr('')
+    try {
+      const r = await apiRequest<Hook & { secret: string }>('/developer/webhooks', { method: 'POST', body: JSON.stringify({ url: url.trim(), events }) })
+      setSecret(r.secret || null); setUrl('')
+      load()
+    } catch (e: any) { setErr(e?.message || "Couldn't add the webhook") }
+    setBusy(false)
+  }
+
+  const test = async (h: Hook) => {
+    setTesting(h.id)
+    try {
+      const r = await apiRequest<{ status?: number | string }>(`/developer/webhooks/${h.id}/test`, { method: 'POST' })
+      const st = r?.status
+      const ok = typeof st === 'number' ? st >= 200 && st < 300 : /^2\d\d$/.test(String(st))
+      setTested((t) => ({ ...t, [h.id]: st == null ? 'Sent' : ok ? `Delivered (${st})` : `Your server answered ${st}` }))
+      load()
+    } catch (e: any) { setTested((t) => ({ ...t, [h.id]: e?.message || "Couldn't send the test" })) }
+    setTesting(null)
+  }
+
+  const remove = async (h: Hook) => {
+    if (!window.confirm(`Delete the webhook for ${h.url}? OgaPay stops sending events there.`)) return
+    try {
+      await apiRequest(`/developer/webhooks/${h.id}`, { method: 'DELETE' })
+      toast('Webhook deleted', 'success')
+      load()
+    } catch (e: any) { toast(e?.message || "Couldn't delete the webhook", 'error') }
+  }
+
+  return (
+    <section className="up-card dv-card" id="webhooks">
+      <h2>Webhooks</h2>
+      <p className="dv-sub">OgaPay sends a signed POST to your server when something happens on your jobs, so your app or agent doesn't have to keep asking. Up to 5 endpoints, https only. <Link to="/developer/api#webhooks">How to check the signature</Link>.</p>
+
+      {secret && (
+        <div className="dv-fresh" role="status">
+          <strong>Copy your signing secret now. It won't be shown again.</strong>
+          <Code>{secret}</Code>
+          <span className="dv-sub" style={{ margin: 0 }}>Keep it on your server only. Use it to check the X-OgaPay-Signature header on every request.</span>
+          <button className="up-btn" onClick={() => setSecret(null)}>I've saved it</button>
+        </div>
+      )}
+
+      <form className="dv-create" onSubmit={(e) => { e.preventDefault(); add() }}>
+        <input className="dv-input" type="url" inputMode="url" value={url} maxLength={500} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-app.com/ogapay-webhook" aria-label="Webhook URL" />
+        <button className="up-btn primary" disabled={busy || !url.trim() || full}>{busy ? 'Adding…' : 'Add webhook'}</button>
+      </form>
+      <div className="dv-events" role="group" aria-label="Events to send">
+        {HOOK_EVENTS.map(([e, label]) => (
+          <label key={e} className="dv-check">
+            <input type="checkbox" checked={events.includes(e)} onChange={(ev) => setEvents((l) => ev.target.checked ? [...l, e] : l.filter((x) => x !== e))} />
+            <span><b>{e}</b> · {label}</span>
+          </label>
+        ))}
+      </div>
+      {full && <p className="dv-sub">You have 5 webhooks, the most allowed. Delete one to add another.</p>}
+      {err && <p className="dv-err">{err}</p>}
+
+      {hooks === null ? <p className="dv-sub">Loading…</p> : hooks.length === 0 ? <p className="dv-sub">No webhooks yet.</p> : (
+        <div className="dv-keys">
+          {hooks.map((h) => (
+            <div key={h.id} className="dv-key">
+              <div className="dv-key-t">
+                <strong style={{ overflowWrap: 'anywhere' }}>{h.url}</strong>
+                <span>{(h.events || []).join(', ')}</span>
+                <span>
+                  {!h.active ? <span className="dv-hook-off">Turned off after failed deliveries. Delete it and add it again once your server is fixed.</span>
+                    : h.lastAt ? `Last sent ${day(h.lastAt)}${h.lastStatus != null ? `, answered ${h.lastStatus}` : ''}` : 'Nothing sent yet'}
+                  {h.active && h.failCount > 0 && <> · <span className="dv-hook-off">{h.failCount} failed in a row</span></>}
+                </span>
+                {tested[h.id] && <span role="status">Test: {tested[h.id]}</span>}
+              </div>
+              <div className="dv-key-a">
+                <button className="up-btn" disabled={testing === h.id || !h.active} onClick={() => test(h)}>{testing === h.id ? 'Sending…' : 'Test'}</button>
+                <button className="up-btn" onClick={() => remove(h)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function Developer() {
   const signedIn = !!getAccessToken()
   return (
@@ -132,16 +237,26 @@ export default function Developer() {
       <div className="up-wrap dv-wrap">
         <div className="dv-head">
           <h1>Developer API</h1>
-          <p>Read your OgaPay data and public jobs from your own apps, and let your app or AI agent post jobs and pay for approved work. Every key can read; give a key write access when it should post jobs. No key can withdraw or send money.</p>
+          <p>Read your OgaPay data and public jobs from your own apps, and let your app or AI agent post jobs and pay for approved work. An agent can also take and do jobs whose posters allow agents. Every key can read; give a key write access when it should post jobs, review work or do jobs. No key can withdraw or send money.</p>
+          <div className="dv-links">
+            <Link className="up-btn" to="/developer/api"><i className="ti ti-book" /> API reference</Link>
+            <Link className="up-btn" to="/developer/api#mcp"><i className="ti ti-robot" /> Agents &amp; MCP</Link>
+          </div>
         </div>
 
-        {signedIn ? <Keys /> : (
+        {signedIn ? <><Keys /><Webhooks /></> : (
           <section className="up-card dv-card">
             <h2>Your API keys</h2>
-            <p className="dv-sub">Sign in to create a key.</p>
+            <p className="dv-sub">Sign in to create a key and add webhooks.</p>
             <button className="up-btn primary" onClick={() => openSignIn({ redirect: '/developer' })}>Sign in</button>
           </section>
         )}
+
+        <section className="up-card dv-card">
+          <h2>Agents &amp; MCP</h2>
+          <p className="dv-sub">Connect Claude, ChatGPT or any MCP client to OgaPay with one URL and your key. The agent can find jobs, post and review jobs (write key), and do jobs that allow agents. <Link to="/developer/api#mcp">Setup steps</Link>.</p>
+          <Code>{`claude mcp add --transport http ogapay ${API_BASE}/mcp --header "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
+        </section>
 
         <section className="up-card dv-card">
           <h2>Authentication</h2>
@@ -153,7 +268,7 @@ export default function Developer() {
 
         <section className="up-card dv-card">
           <h2>Endpoints</h2>
-          <p className="dv-sub">Page size is up to 50 (default 20). Endpoints marked <b>write</b> need a key with write access (<code>403</code> otherwise). Send JSON bodies with <code>Content-Type: application/json</code>.</p>
+          <p className="dv-sub">Every endpoint with its fields, examples and responses is in the <Link to="/developer/api">API reference</Link>. Page size is up to 50 (default 20). Endpoints marked <b>write</b> need a key with write access (<code>403</code> otherwise). Send JSON bodies with <code>Content-Type: application/json</code>.</p>
           <div className="dv-eps">
             {ENDPOINTS.map((e) => (
               <div key={e.path} className="dv-ep">

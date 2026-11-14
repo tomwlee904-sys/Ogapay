@@ -607,6 +607,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [deliveryDays, setDeliveryDays] = useState<string>(DELIVERY_TIMES.some(([d]) => d === String(init.deliveryDays)) ? String(init.deliveryDays) : "1");
   const [hideAfter, setHideAfter] = useState<boolean>(!!init.hideAfterComplete);
   const [watermark, setWatermark] = useState<boolean>(!!init.watermark);
+  // Apps and AI agents (API keys) may take and send work for this job (off by default)
+  const [agentsAllowed, setAgentsAllowed] = useState<boolean>(false);
   const [excludeJobs, setExcludeJobs] = useState<string[]>([]);
   const [shareTemplate, setShareTemplate] = useState(false);
   // Refine with AI: the brief before the last rewrite, for Undo
@@ -793,6 +795,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(isSelection && { isSelection: true, selectionHours: Number(selectionHours), ...(deliveryDays !== "1" && { deliveryDays: Number(deliveryDays) }) }),
         ...(hideAfter && { hideAfterComplete: true }),
         ...(watermark && { watermark: true }),
+        agentsAllowed,
         ...(excludeJobs.length && { excludeDoersOfTaskIds: excludeJobs }),
         ...(isContest && {
           isContest: true,
@@ -1134,6 +1137,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     )}
                   </div>
 
+                  <CfToggle on={agentsAllowed} onChange={setAgentsAllowed} label="Let AI agents and apps do this job" desc="Work sent by an app or AI agent is marked so you can check it. Leave this off for jobs that need a real person, like follows." />
+
                   <Fold title="Extra submission options" sub="Proof, watermarks, visibility and tracking" open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
                     <CfToggle on={screenshot} onChange={setScreenshot} label="Screenshot required" desc="People must attach at least one screenshot with their submission." />
                     <CfToggle on={watermark} onChange={setWatermark} label="Watermarks on" desc="Images people send are stamped with OGAPAY. You see the stamped copy; you get the original when you approve the work." />
@@ -1175,6 +1180,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     {strict && <div><span>Added automatically</span><b>{strictText}</b></div>}
                     {excludeJobs.length > 0 && <div><span>Excluded</span><b>People from {excludeJobs.length} past job{excludeJobs.length > 1 ? "s" : ""}</b></div>}
                     {watermark && <div><span>Images</span><b>Watermarked</b></div>}
+                    {agentsAllowed && <div><span>AI agents</span><b>Apps and AI agents can do this job</b></div>}
                     {hideAfter && <div><span>When finished</span><b>Hidden from public lists</b></div>}
                     {checkable && <div><span>Payout check</span><b>{PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || "Instant"}</b></div>}
                     {files.length + templateFiles.length > 0 && <div><span>Attachments</span><b>{files.length + templateFiles.length} file{files.length + templateFiles.length > 1 ? "s" : ""}</b></div>}
