@@ -383,7 +383,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         <AddBankForm note="Use your own personal account, not a business account or someone else's." action={{ label: 'Verify me', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
       )}
       {/* What the bank check turns on, and what it doesn't (ver-1) */}
-      <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>This turns on withdrawals. It doesn't count for the ₦1,000 first job bonus or for sending money: those need your NIN or ID.</p>
+      <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>This turns on withdrawals. It doesn't count for the first job bonus or for sending money: those need your NIN or ID.</p>
       {(ninInstant || !didit) && (
         <p className="st2-muted" style={{ margin: '4px 0 0' }}>
           No bank account in your own name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>

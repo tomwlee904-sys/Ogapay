@@ -235,7 +235,7 @@ export default function TabReferralsContent() {
   const cap = stats?.rewardCap ?? 20
   const rewarded = stats?.rewardedReferrals ?? 0
   const people = stats?.referrals ?? []
-  const signup = stats?.signupBonus ?? 1000
+  const signup = stats?.signupBonus ?? 500
   const pct = Math.min(100, Math.round((rewarded / Math.max(1, cap)) * 100))
   const friends = [...people].sort((a, b) => STEP_ORDER[(a.step || 'job') as Step] - STEP_ORDER[(b.step || 'job') as Step])
   const someoneToRemind = people.some((p) => p.step === 'verify' || p.step === 'job')
@@ -246,7 +246,7 @@ export default function TabReferralsContent() {
   const prize = (n: number) => inDisplay(n, prizeCur, preferredCurrency, convert)
   const progressLine = board ? prizeProgress(board, prize) : null
   // Says what the friend gets, not just the inviter
-  const shareText = `Join me on OgaPay: verify your NIN, finish your first job and get a ${naira(signup, 0)} bonus on top of your pay.\n\nEarn from small jobs (follows, reviews, app tests), paid in Naira or USDC.\nSign up with my link: ${link}`
+  const shareText = `Join me on OgaPay: verify your NIN, finish 5 jobs and get a ${naira(signup, 0)} bonus on top of your pay.\n\nEarn from small jobs (follows, reviews, app tests), paid in Naira or USDC.\nSign up with my link: ${link}`
 
   const copy = () => navigator.clipboard?.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
   // Phones: the system share sheet (WhatsApp, SMS, Telegram...) in one tap; elsewhere copy the link
@@ -301,7 +301,7 @@ export default function TabReferralsContent() {
             <ol className="rf3-how" aria-label="How it works">
               <li><span><b>Share your link</b><br />on WhatsApp, X or Telegram</span></li>
               <li><span><b>Your friend verifies their NIN</b><br />and takes a job</span></li>
-              <li><span><b>They finish a paid job</b><br />you get {ngn(bonus)}, they get {ngn(signup)}</span></li>
+              <li><span><b>They finish a paid job</b><br />you get {ngn(bonus)}; after 5 paid jobs they get {ngn(signup)}</span></li>
             </ol>
           </section>
 

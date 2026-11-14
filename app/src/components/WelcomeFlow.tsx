@@ -146,7 +146,7 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
         {step === 'verify' && (
           <>
             <p className="wf-text">Level 1 lets you withdraw your earnings. It's free and takes a minute: use a bank account in your own name, or your NIN.</p>
-            <p className="wf-text">For the {show(1000, 'NGN')} first job bonus, verify with your NIN and finish your first paid job.</p>
+            <p className="wf-text">For the {show(500, 'NGN')} first job bonus, verify with your NIN and finish 5 paid jobs. You can withdraw it once you've earned {show(5000, 'NGN')} from jobs.</p>
             <div className="ui-actions wf-actions">
               <button type="button" className="ui-btn ui-btn-ghost" onClick={next}>Later</button>
               <Link to="/settings/verification" className="ui-btn ui-btn-dark" onClick={onFinish}>Verify now</Link>
