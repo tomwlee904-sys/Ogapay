@@ -204,17 +204,22 @@ X-OgaPay-Timestamp: 1763121600
 X-OgaPay-Signature: sha256=5d2a…
 
 {
-  "event": "submission.created",
+  "id": "7f1c…",
+  "type": "submission.created",
   "createdAt": "2026-11-14T12:00:00.000Z",
-  "data": { "jobId": "…", "submissionId": "…", … }
+  "data": {
+    "jobId": "…", "jobTitle": "…", "submissionId": "…", "status": "SUBMITTED",
+    "reward": 50, "currency": "NGN", "viaApi": false,
+    "workerUsername": "…", "posterUsername": "…"
+  }
 }`
 
 const HOOK_EVENTS: [string, string][] = [
-  ['submission.created', 'Someone sent work for one of your jobs.'],
-  ['submission.approved', 'Work on your job was approved and the worker paid.'],
-  ['submission.rejected', 'Work on your job was rejected.'],
-  ['submission.sent_back', 'Work was sent back to the worker for changes.'],
-  ['job.filled', 'Every place on one of your jobs is filled.'],
+  ['submission.created', 'Someone sent work for one of your jobs (sent to you as the poster).'],
+  ['submission.approved', 'Work you sent was approved and you were paid (sent to you as the worker).'],
+  ['submission.rejected', 'Work you sent was rejected (sent to you as the worker).'],
+  ['submission.sent_back', 'Work you sent was sent back for changes, with the note (sent to you as the worker).'],
+  ['job.filled', 'Every place on one of your jobs is taken (sent to you as the poster).'],
 ]
 
 const MCP_TOOLS: [string, string, boolean?][] = [
