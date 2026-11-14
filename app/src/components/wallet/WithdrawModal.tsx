@@ -250,6 +250,15 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             </>
           ) : (
             <>
+              {/* Members asked why crypto shows 0 (2026-11-14): earnings are in naira and
+                  naira can't be sent as crypto, so say so plainly and point to the bank */}
+              {Number(balances?.USDC?.available ?? 0) <= 0 && (
+                <p className="wl-note" style={{ margin: '0 0 14px' }}>
+                  You have no USDC to send. Your OgaPay earnings are in naira, and naira can only be withdrawn to a bank.
+                  {' '}<button type="button" onClick={() => { setTab(ghana ? 'momo' : 'bank'); setAmount(''); setError('') }} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', textDecoration: 'underline' }}>{ghana ? 'Withdraw to mobile money' : 'Withdraw to your bank'}</button>.
+                  {' '}This tab is only for USDC you hold on OgaPay.
+                </p>
+              )}
               <div className="wl-field">
                 <span className="ui-label">Currency</span>
                 <div className="wl-quick" style={{ marginTop: 0 }}>
