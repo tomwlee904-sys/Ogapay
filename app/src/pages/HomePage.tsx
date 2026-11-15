@@ -376,7 +376,7 @@ function Milestone({ value, label, format }: { value: number; label: string; for
   const v = useCountUp(value, 1800);
   return (
     <div className="hv-num hv-reveal">
-      <div className="hv-num-val">{format(v)}<span className="hv-num-plus">+</span></div>
+      <div className="hv-num-val">{format(v).replace(/\+$/, "")}<span className="hv-num-plus">+</span></div>
       <div className="hv-num-lbl">{label}</div>
     </div>
   );
