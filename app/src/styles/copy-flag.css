@@ -5,3 +5,8 @@
 .copy-flag-b { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, #d97706 22%, transparent); font-weight: 600; font-size: 11px; white-space: nowrap; }
 .copy-flag-b .ti { font-size: 13px; color: #d97706; }
 .copy-flag-compact { margin-top: 6px; padding: 6px 10px; }
+/* Possible duplicates across accounts (DupFlags) */
+.dup-flag { flex-direction: column; align-items: flex-start; }
+.dup-flag-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.dup-flag-list a { color: var(--text); font-weight: 600; text-decoration: underline; }
+.dup-flag-foot { color: var(--text2); }

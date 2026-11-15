@@ -16,6 +16,7 @@ import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
+import DupFlags from '../components/DupFlags'
 import { formatMoney } from '../lib/money'
 import { useMoney } from '../lib/useMoney'
 import { MIN_WITHDRAW_NGN } from '../lib/wallet'
@@ -1517,6 +1518,7 @@ function WurkJobDetailView(props: any) {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ color: 'var(--text,#0f172a)', fontSize: 14, fontWeight: 700 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
                               <div style={{ color: 'var(--text2,#475569)', fontSize: 13 }}>{sub.workerNotes || 'No message'}</div>
+                              <DupFlags flags={sub.reviewFlags} compact />
                               <CopyFlag reason={sub.spamReason} copy={!!sub.similarToId} compact />
                               {sub.status === 'SUBMITTED' && <PayoutCheckStatus sub={sub} who="poster" compact />}
                               {sub.proof && (
@@ -1738,6 +1740,7 @@ function WurkJobDetailView(props: any) {
               )}
               {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}
               {selectedSub.viaApi && <div style={{ margin: '-4px 0 14px', fontSize: 12, fontWeight: 600, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6 }}><i className="ti ti-robot" aria-hidden="true" /> Sent by an app / AI agent</div>}
+              {Array.isArray(selectedSub.reviewFlags) && selectedSub.reviewFlags.length > 0 && <div style={{ margin: '-4px 0 14px' }}><DupFlags flags={selectedSub.reviewFlags} /></div>}
               {selectedSub.spamReason && <div style={{ margin: '-4px 0 14px' }}><CopyFlag reason={selectedSub.spamReason} copy={!!selectedSub.similarToId} compact={selectedSub.status !== 'SUBMITTED'} /></div>}
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
               <div style={{ fontSize: 14, color: 'var(--text,#0f172a)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>

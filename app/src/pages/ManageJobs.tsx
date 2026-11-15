@@ -12,6 +12,8 @@ import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
+import DupFlags from '../components/DupFlags'
+import type { ReviewFlag } from '../lib/types'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
@@ -46,6 +48,8 @@ type Sub = {
   payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   // Set by the server when the entry looks copied from another one on this job, or only says "done"
   spamReason?: string | null; similarToId?: string | null
+  // Possible duplicates across accounts (same screenshot, phone or text); null when clean
+  reviewFlags?: ReviewFlag[] | null
   rating?: number | null; feedback?: string | null
   // Contest entries: the place this entry won (1 = first)
   place?: number | null
@@ -628,6 +632,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
                   <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
                     {s.viaApi && <p className="mj-auto"><Icon n="robot" s={14} /> Sent by an app / AI agent</p>}
+                    <DupFlags flags={s.reviewFlags} />
                     <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
                     <PayoutCheckStatus sub={s} who="poster" />
                     <HandleLine code={task.askHandle} s={s} />

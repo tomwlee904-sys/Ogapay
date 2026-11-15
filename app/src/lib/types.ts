@@ -90,3 +90,17 @@ export interface CampaignDraft {
   qualityScore?: number;
   difficulty?: string;
 }
+
+// Possible duplicates across accounts, found when the work was sent (server
+// dupFlags.service). Only posters and admins get these; null when clean.
+export type ReviewFlagType = 'SAME_FILE' | 'SAME_FILENAME' | 'SAME_DEVICE' | 'SAME_TEXT';
+export interface ReviewFlag {
+  type: ReviewFlagType;
+  usernames: string[];
+  submissionIds: string[];
+  detail?: string;
+  // A match was work sent for another job (file checks look across all jobs)
+  otherJob?: boolean;
+  // SAME_DEVICE: the same paired device (not just the same network and browser)
+  pairedDevice?: boolean;
+}
