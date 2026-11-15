@@ -9,6 +9,7 @@ import { trackSignUpConversion } from '../../lib/ads'
 import { chromeIntentUrl, copyText, inAppBrowserName, isAndroid } from '../../lib/inAppBrowser'
 import { RESEND_SECONDS, retryAfterOf, useResendTimer } from '../../lib/emailCode'
 import { suggestEmail } from '../../lib/emailTypos'
+import Turnstile, { turnstileOn, type TurnstileHandle } from '../Turnstile'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -145,6 +146,11 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const { login } = useAuth()
   const [view, setView] = useState<View>(initialView)
   const [busy, setBusy] = useState('')
+  // Cloudflare human check (only when VITE_TURNSTILE_SITE_KEY is set): password
+  // sign-in, email code request and forgot password send its single-use token
+  const [tsToken, setTsToken] = useState('')
+  const tsRef = useRef<TurnstileHandle>(null)
+  const needsCheck = turnstileOn && !tsToken
   const [error, setError] = useState('')
   const [notice, setNotice] = useState<Notice>(initialNotice ? { text: initialNotice } : null)
 
@@ -240,6 +246,14 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     setBusy(key); setError('')
     try { await fn() } catch (e: any) { setNotice(null); setError(friendly(e?.message)) } finally { setBusy('') }
   }
+  // A request that needs the human check: sends the token, then resets the widget
+  // either way (a token works once; after TURNSTILE_FAILED a fresh check is needed)
+  const withCheck = (body: Record<string, unknown>) => JSON.stringify(turnstileOn ? { ...body, turnstileToken: tsToken } : body)
+  const runChecked = (key: string, fn: () => Promise<void>) => run(key, async () => {
+    if (needsCheck) throw new Error("Please complete the check that you're human, then try again.")
+    try { await fn() } finally { if (turnstileOn) { setTsToken(''); tsRef.current?.reset() } }
+  })
+  const humanCheck = turnstileOn ? <Turnstile ref={tsRef} onToken={setTsToken} /> : null
 
   // ── Methods ──────────────────────────────────────────────────────────────
   const google = (anyway = false) => run('google', async () => {
@@ -259,8 +273,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const emailLogin = (e: FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password) { setError('Enter your email and password.'); return }
-    run('email', async () => {
-      const result = await apiRequest<any>('/auth/login', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), password, rememberMe: remember }) })
+    runChecked('email', async () => {
+      const result = await apiRequest<any>('/auth/login', { method: 'POST', auth: false, body: withCheck({ email: email.trim(), password, rememberMe: remember }) })
       if (remember) { localStorage.setItem('ogapay_remember_email', email.trim()); localStorage.removeItem('ogapay_remember_off') }
       else { localStorage.removeItem('ogapay_remember_email'); localStorage.setItem('ogapay_remember_off', '1') }
       finish(result)
@@ -289,8 +303,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const forgot = (e: FormEvent) => {
     e.preventDefault()
     if (!email.trim()) { setError('Enter the email on your account.'); return }
-    run('forgot', async () => {
-      await apiRequest('/auth/forgot-password', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim() }) })
+    runChecked('forgot', async () => {
+      await apiRequest('/auth/forgot-password', { method: 'POST', auth: false, body: withCheck({ email: email.trim() }) })
       setNotice({ text: 'If that email has an account, a reset link is on its way. Check your inbox.', ok: true })
     })
   }
@@ -306,10 +320,11 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     const fix = suggestEmail(to)
     if (fix && typo?.typed !== to) { setError(''); setTypo({ typed: to, fix }); return }
     setTypo(null)
-    run('mailcode', async () => {
+    // Adding an email to a new wallet account needs no human check (signed in already)
+    ;(view === 'addemail' ? run : runChecked)('mailcode', async () => {
       try {
         if (view === 'addemail') await apiRequest('/auth/email/add/request', { method: 'POST', auth: false, headers: asNew(), body: JSON.stringify({ email: to }) })
-        else await apiRequest('/auth/email-code/request', { method: 'POST', auth: false, body: JSON.stringify({ email: to }) })
+        else await apiRequest('/auth/email-code/request', { method: 'POST', auth: false, body: withCheck({ email: to }) })
       } catch (err: any) {
         // "We just sent a code": show the code box with the server's reason and
         // how long to wait (login-28)
@@ -527,8 +542,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
             </div>
           </div>
         )}
+        {!adding && humanCheck}
         {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'mailcode'}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Send code'}</button>
+        <button type="submit" className="si-primary" disabled={busy === 'mailcode' || (!adding && needsCheck)}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Send code'}</button>
         {adding
           ? <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} onClick={() => go('profile')}>Skip for now</button>
           : <p className="si-switch"><button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => go('password')}>Use a password instead</button></p>}
@@ -547,8 +563,10 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         <button type="submit" className="si-primary" disabled={busy === 'mailcodein' || mailCode.length !== 6}>{busy === 'mailcodein' ? <><Spinner /> Checking…</> : adding ? 'Add email' : 'Continue'}</button>
         <div className="si-row">
           <button type="button" className="si-link" style={{ minHeight: 40 }} onClick={() => { setCodeSent(false); setNotice(null); setError('') }}>Use another email</button>
-          <button type="button" className="si-link" style={{ minHeight: 40 }} disabled={busy === 'mailcode' || timer.left > 0} onClick={() => sendMailCode()}>{timer.label}</button>
+          <button type="button" className="si-link" style={{ minHeight: 40 }} disabled={busy === 'mailcode' || timer.left > 0 || (!adding && needsCheck)} onClick={() => sendMailCode()}>{timer.label}</button>
         </div>
+        {/* A new code needs a fresh human check, shown once the resend timer is done */}
+        {!adding && timer.left <= 0 && humanCheck}
         <p className="si-hint">After 5 wrong tries the code stops working and you need a new one.</p>
         {adding && <button type="button" className="si-link" style={{ alignSelf: 'center', minHeight: 40 }} onClick={() => go('profile')}>Skip for now</button>}
       </form>
@@ -607,8 +625,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
           <label className="si-check"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} /> Remember me</label>
           <button type="button" className="si-link" onClick={() => go('forgot')}>Forgot password?</button>
         </div>
+        {humanCheck}
         {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'email'}>{busy === 'email' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
+        <button type="submit" className="si-primary" disabled={busy === 'email' || needsCheck}>{busy === 'email' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
         <button type="button" className="si-secondary" onClick={() => { setCodeSent(false); go('email') }}>
           <i className="ti ti-mail" aria-hidden="true" /> Email me a code instead
         </button>
@@ -624,8 +643,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
           <label htmlFor="si-email3">Email address</label>
           <input id="si-email3" className="si-input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
+        {humanCheck}
         {errorLine}
-        <button type="submit" className="si-primary" disabled={busy === 'forgot'}>{busy === 'forgot' ? <><Spinner /> Sending…</> : 'Send reset link'}</button>
+        <button type="submit" className="si-primary" disabled={busy === 'forgot' || needsCheck}>{busy === 'forgot' ? <><Spinner /> Sending…</> : 'Send reset link'}</button>
       </form>
     )
   } else if (view === 'pair') {
