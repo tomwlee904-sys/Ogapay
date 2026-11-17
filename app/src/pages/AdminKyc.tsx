@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { useToast } from '../components/Toast'
 
 /* Admin: identity checks. Submissions land here when Didit couldn't confirm
    them automatically (a NIN when NIMC or Didit didn't answer, an ID + selfie
@@ -51,20 +52,27 @@ interface L2 {
 }
 const COUNTRY: Record<string, string> = { NG: 'Nigeria', GH: 'Ghana' }
 
-function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => void }) {
-  const [mode, setMode] = useState<null | 'approve' | 'reject'>(null)
+// "Reject and ban" (a fake ID): the reason the member sees, unless the admin changes it
+const BAN_REASON = "We couldn't verify this ID. Please send a clear photo of your own original NIN slip or card."
+
+function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string, banned?: boolean) => void }) {
+  const [mode, setMode] = useState<null | 'approve' | 'reject' | 'ban'>(null)
   const [reason, setReason] = useState('')
+  const [sure, setSure] = useState(false) // ban: the confirm step
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const name = r.user.name || r.user.username
   const act = async () => {
-    if (mode === 'reject' && reason.trim().length < 5) { setError('Give a reason. The member will see it.'); return }
+    if (mode !== 'approve' && reason.trim().length < 5) { setError('Give a reason. The member will see it.'); return }
+    if (mode === 'ban' && !sure) { setSure(true); setError(''); return }
     setBusy(true); setError('')
     try {
-      await apiRequest(`/kyc/admin/level2/${r.id}`, { method: 'PATCH', body: JSON.stringify(mode === 'approve' ? { action: 'approve' } : { action: 'reject', reason: reason.trim() }) })
-      onDone(r.id, mode === 'approve' ? `${name} is now Level 2.` : `${name}'s Level 2 request rejected. They've been told why.`)
-    } catch (e: any) { setError(e?.message || 'Could not save this'); setBusy(false) }
+      const body = mode === 'approve' ? { action: 'approve' } : { action: 'reject', reason: reason.trim(), ...(mode === 'ban' && { ban: true }) }
+      await apiRequest(`/kyc/admin/level2/${r.id}`, { method: 'PATCH', body: JSON.stringify(body) })
+      onDone(r.id, mode === 'approve' ? `${name} is now Level 2.` : mode === 'ban' ? `@${r.user.username} rejected and banned. Signed out, waiting work rejected, withdrawals held.` : `${name}'s Level 2 request rejected. They've been told why.`, mode === 'ban')
+    } catch (e: any) { setError(e?.message || 'Could not save this'); setBusy(false); setSure(false) }
   }
+  const cancel = () => { setMode(null); setError(''); setSure(false) }
   return (
     <article className="aw-row ui-card">
       <header className="aw-top">
@@ -89,16 +97,21 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => 
         <div className="aw-actions">
           <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Approve Level 2</button>
           <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
+          <button className="ui-btn aw-danger" onClick={() => { setMode('ban'); setReason((x) => x || BAN_REASON) }}><i className="ti ti-ban" /> Reject and ban</button>
         </div>
       ) : (
         <div className="aw-confirm">
           {mode === 'approve'
             ? <p>{name} becomes Level 2 (withdraw up to ₦10,000 a day) and counts as ID-verified for bonuses and sending money.</p>
-            : <><label htmlFor={`l2r-${r.id}`}>Reason (the member sees this)</label><input id={`l2r-${r.id}`} className="ui-input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. This is a photo of you, not your ID. Send a clear photo of your NIN slip or ID card." /></>}
+            : <>
+              {mode === 'ban' && <p className="ak-warn" role="note"><i className="ti ti-alert-triangle" /> This rejects the ID, closes the account, signs them out and rejects their waiting work. Use only for fake IDs.</p>}
+              <label htmlFor={`l2r-${r.id}`}>Reason (the member sees this)</label><input id={`l2r-${r.id}`} className="ui-input" value={reason} onChange={(e) => { setReason(e.target.value); setSure(false) }} placeholder="e.g. This is a photo of you, not your ID. Send a clear photo of your NIN slip or ID card." />
+              {mode === 'ban' && sure && <p className="aw-error" role="alert"><b>Are you sure?</b> @{r.user.username} is banned straight away. Their waiting withdrawals are held for an admin.</p>}
+            </>}
           {error && <p className="aw-error" role="alert">{error}</p>}
           <div className="aw-actions">
-            <button className="ui-btn ui-btn-dark" onClick={act} disabled={busy}>{busy ? 'Saving…' : mode === 'approve' ? 'Confirm: Level 2' : 'Confirm reject'}</button>
-            <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
+            <button className={`ui-btn ${mode === 'ban' ? 'aw-danger' : 'ui-btn-dark'}`} onClick={act} disabled={busy}>{busy ? 'Saving…' : mode === 'approve' ? 'Confirm: Level 2' : mode === 'ban' ? (sure ? 'Yes, reject and ban' : 'Reject and ban') : 'Confirm reject'}</button>
+            <button className="ui-btn ui-btn-ghost" onClick={cancel} disabled={busy}>Cancel</button>
           </div>
         </div>
       )}
@@ -110,7 +123,8 @@ type L2Order = 'oldest' | 'newest'
 interface L2Page { requests: L2[]; total: number; page: number; limit: number; hasMore: boolean }
 const L2_LIMIT = 50
 
-function Level2Requests() {
+function Level2Requests({ onBanned }: { onBanned: () => void }) {
+  const { toast } = useToast()
   const [rows, setRows] = useState<L2[] | null>(null)
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -147,7 +161,7 @@ function Level2Requests() {
         </div></div>
       {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
       {rows.length === 0 ? <div className="aw-empty">Nothing waiting for review. All caught up.</div> : (
-        <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setTotal((t) => Math.max(0, t - 1)); setNotice(msg); load(page, order) }} />)}</div>
+        <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg, banned) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setTotal((t) => Math.max(0, t - 1)); setNotice(msg); if (banned) { toast(msg); onBanned() } load(page, order) }} />)}</div>
       )}
       {(page > 1 || hasMore) && (
         <div className="aw-pager">
@@ -156,6 +170,58 @@ function Level2Requests() {
           <button className="ui-btn ui-btn-ghost" disabled={!hasMore} onClick={() => { setPage((p) => p + 1); window.scrollTo?.({ top: 0 }) }}>Next <i className="ti ti-arrow-right" /></button>
         </div>
       )}
+    </section>
+  )
+}
+
+/* Accounts banned (mostly "Reject and ban" for a fake ID). Unban lifts the ban
+   only: rejected work stays rejected and held withdrawals stay held. */
+interface Banned { id: string; username: string; name: string; bannedAt: string | null; reason: string | null; bannedBy: string | null }
+
+function BannedAccounts() {
+  const { toast } = useToast()
+  const [rows, setRows] = useState<Banned[] | null>(null)
+  const [total, setTotal] = useState(0)
+  const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState('')
+  const [confirm, setConfirm] = useState('')
+  useEffect(() => {
+    apiRequest<{ banned: Banned[]; total: number }>('/admin/banned?limit=100')
+      .then((d) => { setRows(d?.banned || []); setTotal(d?.total || 0) })
+      .catch((e: any) => setError(e?.message || 'Could not load banned accounts'))
+  }, [])
+  const unban = async (b: Banned) => {
+    if (confirm !== b.id) { setConfirm(b.id); return }
+    setBusy(b.id)
+    try {
+      await apiRequest(`/admin/users/${b.id}/unban`, { method: 'POST' })
+      setRows((x) => (x || []).filter((y) => y.id !== b.id)); setTotal((t) => Math.max(0, t - 1))
+      toast(`@${b.username} unbanned. Rejected work stays rejected.`)
+    } catch (e: any) { toast(e?.message || 'Could not unban', 'error') }
+    setBusy(''); setConfirm('')
+  }
+  if (error) return <div className="aw-note" role="alert">{error}</div>
+  if (!rows) return null
+  return (
+    <section className="ak-l2" aria-labelledby="ak-ban-h">
+      <div className="aw-head"><div><h2 id="ak-ban-h">Banned accounts ({total.toLocaleString()})</h2><p>Accounts banned for a fake ID. Unban lifts the ban only.</p></div>
+        <button className="ui-btn ui-btn-ghost" onClick={() => setOpen((o) => !o)} aria-expanded={open}>{open ? 'Hide' : 'Show'}</button></div>
+      {open && (rows.length === 0 ? <div className="aw-note">No banned accounts.</div> : (
+        <div className="aw-list">{rows.map((b) => (
+          <article key={b.id} className="aw-row ui-card ak-ban">
+            <div className="aw-who">
+              <b>{b.name || b.username} <Link to={`/user/${b.username}`} className="ak-handle">@{b.username}</Link></b>
+              <span>Banned {day(b.bannedAt)}{b.bannedBy ? ` by @${b.bannedBy}` : ''}</span>
+              {b.reason && <span>{b.reason}</span>}
+            </div>
+            <div className="aw-actions">
+              <button className="ui-btn ui-btn-ghost" onClick={() => unban(b)} disabled={busy === b.id}>{busy === b.id ? 'Saving…' : confirm === b.id ? 'Confirm unban' : 'Unban'}</button>
+              {confirm === b.id && busy !== b.id && <button className="ui-btn ui-btn-ghost" onClick={() => setConfirm('')}>Cancel</button>}
+            </div>
+          </article>
+        ))}</div>
+      ))}
     </section>
   )
 }
@@ -282,6 +348,7 @@ export default function AdminKyc() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [bannedKey, setBannedKey] = useState(0)
 
   const load = async (s = status, p = page, qq = search) => {
     setLoading(true); setError('')
@@ -361,6 +428,7 @@ export default function AdminKyc() {
         .ak-l2{margin:0 0 28px}
         .ak-l2 h2{font-size:18px;margin:0}
         .ak-order{display:inline-flex;gap:4px}
+        .ak-ban{flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap}
         .ak-order .ui-btn[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
       `}</style>
 
@@ -373,7 +441,8 @@ export default function AdminKyc() {
           <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
         </div>
 
-        <Level2Requests />
+        <Level2Requests onBanned={() => setBannedKey((k) => k + 1)} />
+        <BannedAccounts key={bannedKey} />
 
         <div className="aw-tabs" role="tablist">
           {TABS.map(([s, label]) => (
