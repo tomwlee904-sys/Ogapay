@@ -283,11 +283,22 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     sync(!!back, back)
   }, [params, diditOpen, setParams, sync])
 
+  // VeryAI said the link expired (VeryCallback sends ?human=expired): say so on
+  // the card with a retry. Read before Settings tidies the address bar.
+  const [humanExpired, setHumanExpired] = useState(() => params.get('human') === 'expired')
+  // Coming back with the browser's Back button can restore this page as it was
+  // ("Opening VeryAI…", disabled): make the button usable again
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) setHumanBusy(false) }
+    window.addEventListener('pageshow', onShow)
+    return () => window.removeEventListener('pageshow', onShow)
+  }, [])
   const startHuman = async () => {
     setHumanBusy(true)
     try {
       const r = await apiRequest<any>('/social/very/init', { method: 'POST' })
-      if (r?.authUrl) { window.location.href = r.authUrl; return }
+      // A brand-new VeryAI link every tap (never a saved one), opened straight away
+      if (r?.authUrl) { setHumanExpired(false); window.location.assign(r.authUrl); return }
       toast('Human verification is not available yet', 'error')
     } catch (e: any) {
       toast(e?.message || "Couldn't start human verification", 'error')
@@ -342,7 +353,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const humanPending = !me.humanVerifiedAt && !!providers?.very
   // A job that needs it links to #human: show that card, not the top of the page
   useEffect(() => {
-    if (window.location.hash !== '#human') return
+    if (window.location.hash !== '#human' && !humanExpired) return
     const t = setTimeout(() => document.getElementById('human')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300)
     return () => clearTimeout(t)
   }, [])
@@ -609,7 +620,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             </ol>
           </>
         )}
-        {humanPending && <ToneMsg m={humanMsg} />}
+        {humanPending && humanExpired && (
+          <div className="st2-panel" role="alert">
+            <strong>Link expired, tap again</strong>
+            <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>That VeryAI link ran out before the scan finished. Each tap makes a fresh link, so start a new check now.</p>
+            <div className="st2-actions">
+              <button className="up-btn primary" onClick={startHuman} disabled={humanBusy}>{humanBusy ? 'Opening VeryAI…' : 'Get a new link'}</button>
+            </div>
+          </div>
+        )}
+        {humanPending && !humanExpired && <ToneMsg m={humanMsg} />}
       </Card>
 
       {/* Many jobs are on X and need it connected (ver-18); skippable */}

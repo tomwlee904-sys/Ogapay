@@ -15,19 +15,29 @@ const SETTINGS = '/settings/verification'
 const SIGN_IN = `/login?redirect=${encodeURIComponent(SETTINGS)}`
 // Settings, Verification reads the same key
 const VERY_CLAIM_KEY = 'ogapay_very_claim'
+// VeryAI (or our server) saying the link/session ran out. Each tap on Verify
+// with VeryAI makes a brand-new link, so the fix is always "tap again".
+const EXPIRED = /expired|took too long|isn.t valid any more|invalid_request|invalid_grant|timed? ?out/i
+const VERY_EXPIRED_TEXT = 'That VeryAI link expired. Tap Verify with VeryAI again: each tap makes a fresh link.'
 
 const VeryCallback = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
   const done = useRef(false)
-  const [result, setResult] = useState<{ ok: boolean; text: string; waiting?: boolean } | null>(null)
+  const [result, setResult] = useState<{ ok: boolean; text: string; waiting?: boolean; expired?: boolean } | null>(null)
 
   useEffect(() => {
     if (done.current) return
     done.current = true
     const signedIn = !!getAccessToken()
     const fail = (message: string) => {
+      if (EXPIRED.test(message)) {
+        // Back to the Verify button, which shows "Link expired, tap again"
+        if (signedIn) navigate(`${SETTINGS}?human=expired#human`, { replace: true })
+        else setResult({ ok: false, expired: true, text: `${VERY_EXPIRED_TEXT} Sign in, then go to Settings, Verification.` })
+        return
+      }
       if (signedIn) navigate(`${SETTINGS}?human=error&message=` + encodeURIComponent(message), { replace: true })
       // An older server only finishes checks for a signed-in browser
       else if (/no token|invalid access token|unauthori[sz]ed/i.test(message)) setResult({ ok: false, text: 'Sign in to OgaPay in this browser, then start the check again from Settings.' })
@@ -61,7 +71,7 @@ const VeryCallback = () => {
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, fontFamily: 'inherit' }}>
         <div style={{ textAlign: 'center', maxWidth: 380 }}>
           <i className={`ti ${result.ok ? 'ti-circle-check' : 'ti-alert-circle'}`} style={{ fontSize: 44, color: result.ok ? 'var(--green)' : 'var(--red, #dc2626)' }} />
-          <h1 style={{ fontWeight: 700, fontSize: 18, marginTop: 10 }}>{result.waiting ? 'Sign in to finish' : result.ok ? 'Scan confirmed' : "Verification didn't go through"}</h1>
+          <h1 style={{ fontWeight: 700, fontSize: 18, marginTop: 10 }}>{result.waiting ? 'Sign in to finish' : result.expired ? 'Link expired, tap again' : result.ok ? 'Scan confirmed' : "Verification didn't go through"}</h1>
           <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>{result.text}</p>
           {result.ok && !result.waiting && (
             <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>

@@ -245,7 +245,7 @@ export default function Deposit() {
                     <i className="ti ti-building-bank" />
                     <h3>Get your account number</h3>
                     <p>A permanent account number in your name. Transfers to it land in your wallet.</p>
-                    {dvaErr && <div className="wl-err" role="alert" style={{ textAlign: 'left' }}><i className="ti ti-alert-circle" /><span>{dvaErr}</span></div>}
+                    {dvaErr && <div className="wl-err" role="alert" style={{ textAlign: 'left' }}><i className="ti ti-alert-circle" /><span>{dvaErr}{/Verification/.test(dvaErr) && <> <Link to="/settings/verification" style={{ fontWeight: 600, color: 'inherit', textDecoration: 'underline' }}>Go to Verification</Link></>}</span></div>}
                     <button type="button" className="ui-btn ui-btn-dark" disabled={dvaBusy} onClick={createDva}>{dvaBusy ? 'Creating…' : 'Get my account number'}</button>
                   </div>
                 )}

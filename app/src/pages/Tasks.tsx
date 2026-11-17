@@ -622,16 +622,33 @@ export default function Tasks() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [jobsState, setJobsState] = useState<JobsState>(JOBS_START)
+  // "Try again" bumps this to load the list again without reloading the page
+  const [attempt, setAttempt] = useState(0)
   // Older jobs, a page of 100 at a time (2026-11-08): only the newest 100 used to
   // load, so older open jobs never showed under any filter. Kept apart from the
   // newest page, which a refresh replaces.
   const [older, setOlder] = useState<{ list: any[]; page: number; more: boolean; busy: boolean }>({ list: [], page: 1, more: true, busy: false })
   const newest = jobsState.jobs ?? NO_JOBS
+  // ?starter=1 ("Find a starter job"): starter (highlighted) jobs only. They are
+  // also asked for on their own, so an older starter job past the newest page shows
+  const [starterOnly, setStarterOnly] = useState(searchParams.get('starter') === '1')
+  const [starterList, setStarterList] = useState<any[]>([])
+  useEffect(() => {
+    if (!starterOnly) return
+    let alive = true
+    apiRequest<any>(`/tasks?featured=1&limit=100${user ? '&eligible=1' : ''}`, { auth: !!user })
+      .then((data: any) => { if (alive) setStarterList(Array.isArray(data) ? data : data?.data || data?.tasks || []) })
+      .catch(() => { /* the newest page still shows its starter jobs */ })
+    return () => { alive = false }
+  }, [starterOnly, user?.id, attempt])
   const jobs = useMemo(() => {
-    if (!older.list.length) return newest
+    const extra = [...older.list, ...(starterOnly ? starterList : [])]
+    if (!extra.length) return newest
     const ids = new Set(newest.map((j: any) => j.id))
-    return [...newest, ...older.list.filter((j: any) => !ids.has(j.id))]
-  }, [newest, older.list])
+    const out = [...newest]
+    for (const j of extra) if (!ids.has(j.id)) { ids.add(j.id); out.push(j) }
+    return out
+  }, [newest, older.list, starterOnly, starterList])
   // A full newest page means there may be more
   const canLoadOlder = older.more && newest.length >= LIST_PAGE
   const loadOlder = async () => {
@@ -647,8 +664,6 @@ export default function Tasks() {
       showToast(e?.message || "Couldn't load older jobs", 'error')
     }
   }
-  // "Try again" bumps this to load the list again without reloading the page
-  const [attempt, setAttempt] = useState(0)
   const [search, setSearch] = useState(searchParams.get('search') || '')
   // The page number is in the address too, so Back from a job returns to the same page
   const [page, setPage] = useState(() => Math.max(1, Math.floor(Number(searchParams.get('page'))) || 1))
@@ -729,6 +744,7 @@ export default function Tasks() {
       if (req === 'x' && !(j.requiresX || j.requiresXBlue || Number(j.minXScore) > 0)) return false
       if (req === 'community' && !j.requiredCommunityId) return false
       if (req === 'rank' && rank <= 1) return false
+      if (starterOnly && !j.featured) return false
       if (availableOnly && !availableToMe(j, mySubmissions[j.id], user?.id, jobsState.eligibility)) return false
       return true
     })
@@ -752,7 +768,7 @@ export default function Tasks() {
   const paginated = filtered.slice((shown - 1) * perPage, shown * perPage)
   // A new search or filter starts again at page 1. Opening the list keeps the
   // page number from the address.
-  const filterKey = [search, sort, req, category, availableOnly].join('|')
+  const filterKey = [search, sort, req, category, availableOnly, starterOnly].join('|')
   const lastFilters = useRef(filterKey)
   useEffect(() => {
     if (lastFilters.current !== filterKey) { lastFilters.current = filterKey; setPage(1) }
@@ -764,15 +780,16 @@ export default function Tasks() {
       const set = (k: string, v: string, def: string) => { if (v && v !== def) next.set(k, v); else next.delete(k) }
       set('category', category, 'All'); set('search', search, ''); set('sort', sort, 'default'); set('req', req, 'all')
       set('available', availableOnly ? '1' : '', '')
+      set('starter', starterOnly ? '1' : '', '')
       set('page', page > 1 ? String(page) : '', '')
       return next
     }, { replace: true })
-  }, [category, search, sort, req, availableOnly, page, setSearchParams])
+  }, [category, search, sort, req, availableOnly, starterOnly, page, setSearchParams])
   // Remember this page of the list for "Find other jobs" and "Back" (lib/jobsList.ts)
   useEffect(() => { saveJobsList(searchParams.toString()) }, [searchParams])
 
   const goPage = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
-  const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false) }
+  const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false); setStarterOnly(false) }
   const view = jobsView(jobsState, filtered.length)
 
   return (
@@ -789,8 +806,10 @@ export default function Tasks() {
         {/* Short, so the first job shows in full on phones (like wurk.fun) */}
         <div className="ui-head tl-head">
           <div>
-            <h1 className="ui-title" style={{ marginTop: 0 }}>Jobs</h1>
-            <p className="ui-sub">Newest first. Paid in Naira or USDC when your work is approved.</p>
+            <h1 className="ui-title" style={{ marginTop: 0 }}>{starterOnly ? 'Starter jobs' : 'Jobs'}</h1>
+            {starterOnly
+              ? <p className="ui-sub">Easy first jobs to get you started. <button type="button" onClick={() => setStarterOnly(false)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--accent)', font: 'inherit', fontWeight: 600, cursor: 'pointer' }}>Show all jobs</button></p>
+              : <p className="ui-sub">Newest first. Paid in Naira or USDC when your work is approved.</p>}
           </div>
         </div>
 

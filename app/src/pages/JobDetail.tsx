@@ -585,7 +585,7 @@ const FIXES: Record<string, { label: string; to: string }> = {
   X_SCORE: { label: 'Connect X', to: '/settings/connections' },
   AUDIENCE: { label: 'Add your audience', to: '/settings/creator' },
   RANK: { label: 'How ranks work', to: '/rank' },
-  JOBS: { label: 'Find a starter job', to: '/tasks' },
+  JOBS: { label: 'Find a starter job', to: '/tasks?starter=1' },
   SIMILAR: { label: 'Find other jobs', to: '/tasks?available=1' },
   EXCLUDED: { label: 'Find other jobs', to: '/tasks?available=1' },
   CLOSED: { label: 'Find other jobs', to: '/tasks?available=1' },

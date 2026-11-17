@@ -93,6 +93,8 @@ export default function Settings() {
     }
     const human = params.get('human')
     if (human === 'verified') { toast("You're verified as a human", 'success'); shown = true }
+    // Also shown on the Human verification card with a retry (settings/Verification)
+    else if (human === 'expired') { toast('That VeryAI link expired. Tap Verify with VeryAI again.', 'error'); shown = true }
     else if (human === 'error') { toast(params.get('message') || 'VeryAI verification failed', 'error'); shown = true }
     if (shown) {
       toasted.current = true

@@ -53,7 +53,7 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
       ) : verified ? (
         <>
           <p className="wl-note wl-dir-note">Get a permanent account number in your name. Transfers to it land in your wallet.</p>
-          {err && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{err}</span></div>}
+          {err && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{err}{/Verification/.test(err) && <> <Link to="/settings/verification" style={{ fontWeight: 600, color: 'inherit', textDecoration: 'underline' }}>Go to Verification</Link></>}</span></div>}
           <div className="wl-dir-actions">
             <button type="button" className="ui-btn ui-btn-dark" disabled={busy} onClick={create}>{busy ? 'Creating…' : 'Get my account number'}</button>
           </div>
