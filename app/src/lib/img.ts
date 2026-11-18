@@ -3,6 +3,10 @@
 // sends WebP to browsers that take it (that avatar becomes ~4 KB). Anything that
 // isn't in our storage (or is a GIF/SVG, or a local preview) is returned as is.
 
+// One switch for every smaller copy (2026-11-18): false sends the original
+// pictures everywhere again (e.g. if Supabase image resizing is turned off)
+export const THUMBNAILS = true
+
 const OBJECT = '/storage/v1/object/public/'
 const RENDER = '/storage/v1/render/image/public/'
 // Few sizes, so the same resized copy is reused across pages and the CDN cache
@@ -12,6 +16,7 @@ const STEPS = [48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536]
  *  for avatars and icons (cropped to fill), leave it off to keep the shape. */
 export function sized(url: string | null | undefined, css: number, square = false): string {
   if (!url) return ''
+  if (!THUMBNAILS) return url
   if (!url.includes('.supabase.co' + OBJECT) || /\.(gif|svg)(\?|#|$)/i.test(url)) return url
   const want = Math.min(css * 2, 1536) // sharp on 2x screens
   const px = STEPS.find((s) => s >= want) || 1536

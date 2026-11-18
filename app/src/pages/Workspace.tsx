@@ -14,7 +14,7 @@ import '../styles/workspace.css'
 
 type Person = { id: string; username?: string; name?: string; avatarUrl?: string | null } | null
 type Sub = {
-  id: string; status: string; proof?: string | null; workerNotes?: string | null; attachments?: string[] | null
+  id: string; status: string; proof?: string | null; workerNotes?: string | null; attachments?: string[] | null; filesRemovedAt?: string | null
   originalAttachments?: { url: string; originalUrl: string }[] | null; submittedAt?: string | null; posterNotes?: string | null
 } | null
 type Space = {
@@ -115,6 +115,7 @@ export default function Workspace() {
                 <h2>The work</h2>
                 {sub.workerNotes && <p className="ws-note">{sub.workerNotes}</p>}
                 {sub.proof && /^https?:\/\//.test(sub.proof) && <a className="ws-file" href={sub.proof} target="_blank" rel="noopener noreferrer"><i className="ti ti-external-link" /> {sub.proof}</a>}
+                {sub.filesRemovedAt && files.length > 0 && <p className="ws-hint">Proof image removed after 90 days</p>}
                 {files.map((u, i) => <a key={u} className="ws-file" href={u} target="_blank" rel="noopener noreferrer"><i className="ti ti-paperclip" /> File {i + 1}{task.watermark ? ' (watermarked)' : ''}</a>)}
                 {originals.map((o, i) => <a key={o.originalUrl} className="ws-file" href={o.originalUrl} target="_blank" rel="noopener noreferrer"><i className="ti ti-photo" /> Original {i + 1}</a>)}
                 {task.watermark && role === 'POSTER' && sub.status !== 'APPROVED' && <p className="ws-hint">Images are watermarked. You get the originals when you approve the work.</p>}

@@ -1,4 +1,5 @@
 import { API_BASE, getAccessToken, invalidateInFlight } from './api'
+import { shrinkImage } from './shrinkImage'
 
 interface UploadRoute {
   path: string
@@ -207,7 +208,8 @@ async function directUpload(file: File, purpose: DirectPurpose, onProgress?: (pc
   const t = ticket.json?.data
   if (ticket.status !== 201 || !t?.uploadUrl) return legacy()
   try {
-    const put = await send('PUT', t.uploadUrl, file, { headers: { 'Content-Type': t.contentType, 'x-upsert': 'false' }, onProgress, signal })
+    // A year in browser and CDN caches: every upload path is new (2026-11-18)
+    const put = await send('PUT', t.uploadUrl, file, { headers: { 'Content-Type': t.contentType, 'x-upsert': 'false', 'cache-control': 'max-age=31536000' }, onProgress, signal })
     if (put.status < 200 || put.status >= 300) return legacy()
   } catch (e: any) {
     if (e?.cancelled) throw e
@@ -225,6 +227,8 @@ async function directUpload(file: File, purpose: DirectPurpose, onProgress?: (pc
 export type UploadedFile = { url: string; name: string; type: string; size: number | null }
 export const MAX_FILE_MB = 25
 export async function uploadFile(file: File, purpose: 'store-file' | 'support', onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<UploadedFile> {
+  // Photos are made smaller first (1600px, like other pictures); other files go as they are
+  if (/^image\/(jpeg|png|webp)$/.test(file.type)) file = await shrinkImage(file, { maxBytes: MAX_FILE_MB * 1024 * 1024, label: file.name }).catch(() => file)
   if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${MAX_FILE_MB} MB`)
   const d = await directUpload(file, purpose, onProgress, signal)
   onProgress?.(100)

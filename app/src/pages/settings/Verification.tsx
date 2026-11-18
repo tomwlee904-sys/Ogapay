@@ -83,7 +83,8 @@ export async function sendManualLevel2(
   const asked = latestRequest() // while the photo is made smaller, so no extra wait
   let id: File
   try {
-    id = await shrinkImage(front, { maxBytes: MAX_PHOTO_BYTES, label: 'your ID photo' })
+    // 1800px on the long side (2026-11-18): still easy to read, a fraction of a phone photo
+    id = await shrinkImage(front, { maxSide: 1800, quality: 0.82, maxBytes: MAX_PHOTO_BYTES, label: 'your ID photo' })
   } catch (e: any) {
     return { result: 'failed', text: e?.message || "Couldn't read your photo. Please choose it again." }
   }

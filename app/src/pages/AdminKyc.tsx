@@ -47,6 +47,10 @@ interface L2 {
   id: string; status: string; idType: string; idTypeName: string; idNumber: string | null; createdAt: string
   user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null; country?: string | null }
   idFrontUrl: string | null
+  /** The photo as sent (idFrontUrl may be a smaller copy) */
+  idFrontFullUrl?: string | null
+  /** The cleanup deleted the photo 30 days after the decision */
+  photoRemovedAt?: string | null
   // The ID doesn't fit the account's country (Ghana mobile money trusts it)
   countryWarning?: string | null
 }
@@ -89,7 +93,11 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string, ban
         <div><dt>Asks for</dt><dd>Level 2</dd></div>
       </dl>
       <div className="ak-photos">
-        {r.idFrontUrl ? <a href={r.idFrontUrl} target="_blank" rel="noreferrer"><img src={r.idFrontUrl} alt={`${name}'s ID`} /><span>ID</span></a> : <span className="aw-note">ID photo link expired: Refresh</span>}
+        {r.photoRemovedAt ? <span className="aw-note">Photo deleted after 30 days</span>
+          : r.idFrontUrl ? <a href={r.idFrontFullUrl || r.idFrontUrl} target="_blank" rel="noreferrer"><img src={r.idFrontUrl} alt={`${name}'s ID`} loading="lazy"
+            // The smaller copy failed (resizing off): show the photo as sent
+            onError={(e) => { const full = r.idFrontFullUrl; if (full && e.currentTarget.src !== full) e.currentTarget.src = full }} /><span>ID</span></a>
+          : <span className="aw-note">ID photo link expired: Refresh</span>}
       </div>
       {r.countryWarning && <p className="aw-auto review" role="note"><i className="ti ti-alert-triangle" /><span><b>Check the country.</b> {r.countryWarning}</span></p>}
       <p className="aw-kind"><i className="ti ti-search" /> Check that the ID is real and readable, the number matches the one typed above, and the name on the ID matches {name}.</p>

@@ -7,6 +7,7 @@ import { useToast } from "../components/Toast";
 import { categoryLabel } from "../lib/categories";
 import { listTemplates, saveTemplate, taskToTemplateData, isUnsure, MONEY_TIMEOUT_MS, type JobTemplate, type TemplateData } from "../components/create/shared";
 import { newKey } from "../lib/wallet";
+import { sized } from "../lib/img";
 import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
@@ -39,7 +40,7 @@ const SEND_BACK_LIMIT = 2;
 type Sub = {
   id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   startedAt?: string | null
-  proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
+  proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]; filesRemovedAt?: string | null
   autoApproveAt?: string | null
   // Sent back for changes (at most SEND_BACK_LIMIT times); the note is in posterNotes
   sentBackAt?: string | null; sentBackCount?: number
@@ -141,7 +142,7 @@ function jobCounts(t: Task) {
 }
 
 const Avatar = ({ w }: { w?: Sub["worker"] }) => (
-  <span className="mj-av">{w?.avatarUrl ? <img src={w.avatarUrl} alt="" /> : who(w).charAt(0).toUpperCase()}</span>
+  <span className="mj-av">{w?.avatarUrl ? <img src={sized(w.avatarUrl, 40, true)} alt="" loading="lazy" /> : who(w).charAt(0).toUpperCase()}</span>
 );
 // Follow jobs: "Instagram: @ada.k", opening their profile to check the follow
 const HandleLine = ({ code, s }: { code?: string | null; s: Sub }) => !code || !s.workerHandle ? null : (
@@ -155,13 +156,15 @@ function Proof({ s }: { s: Sub }) {
   const files = (Array.isArray(s.attachments) ? s.attachments : []).map((a: any) => typeof a === "string" ? a : a?.url || a?.path || "").filter(Boolean);
   const proof = typeof s.proof === "string" ? s.proof.trim() : "";
   if (!proof && !files.length) return null;
+  // Smaller copies in the list (lib/img); the link opens the full picture
   return (
     <div className="mj-proof">
+      {s.filesRemovedAt && files.length > 0 && <p className="mj-note">Proof image removed after 90 days</p>}
       {proof && (/^https?:\/\//.test(proof)
-        ? (isImg(proof) ? <a href={proof} target="_blank" rel="noopener noreferrer"><img src={proof} alt="Proof" /></a> : <a href={proof} target="_blank" rel="noopener noreferrer"><Icon n="external-link" s={14} /> {proof}</a>)
+        ? (isImg(proof) ? <a href={proof} target="_blank" rel="noopener noreferrer"><img src={sized(proof, 200)} alt="Proof" loading="lazy" /></a> : <a href={proof} target="_blank" rel="noopener noreferrer"><Icon n="external-link" s={14} /> {proof}</a>)
         : <p className="mj-note">{proof}</p>)}
       {files.map((u: string, i: number) => isImg(u)
-        ? <a key={i} href={u} target="_blank" rel="noopener noreferrer"><img src={u} alt={`Attachment ${i + 1}`} /></a>
+        ? <a key={i} href={u} target="_blank" rel="noopener noreferrer"><img src={sized(u, 200)} alt={`Attachment ${i + 1}`} loading="lazy" /></a>
         : <a key={i} href={u} target="_blank" rel="noopener noreferrer"><Icon n="paperclip" s={14} /> Attachment {i + 1}</a>)}
     </div>
   );
