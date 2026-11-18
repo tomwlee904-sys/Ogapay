@@ -5,6 +5,7 @@ import App from './App'
 import { reloadForUpdate } from './lib/staleBuild'
 import { initErrorReporting } from './lib/errorReport'
 import { initInstall } from './lib/install'
+import { captureSignupSource } from './lib/signupSource'
 // Text fonts, served from ogapay.app (they used to block the first paint from Google)
 import './styles/fonts.css'
 // Icons: the Tabler font cut down to the icons we use (scripts/icons-subset.mjs)
@@ -22,6 +23,9 @@ import './styles/glass.css' // last: frosted glass on floating panels
 
 // A page's code from an older deploy failed to load: reload once for the new version
 window.addEventListener('vite:preloadError', (e) => { if (reloadForUpdate()) e.preventDefault() })
+
+// Where this visitor came from (first visit only), sent when an account is made
+captureSignupSource()
 
 // "Install the app": keep the browser's install offer (it can come before React renders)
 initInstall()

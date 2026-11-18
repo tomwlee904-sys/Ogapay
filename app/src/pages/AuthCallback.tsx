@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 import { API_BASE, persistAuthSession } from "../lib/api";
 import { trackSignUpConversion } from "../lib/ads";
 import { openSignIn, safeRedirect, SIGN_IN_ERROR_KEY } from "../lib/signin";
+import { getSignupSource } from "../lib/signupSource";
 
 // Page the user was heading to before Google (set by the sign-in dialog)
 function afterLogin() {
@@ -65,7 +66,7 @@ export default function AuthCallback() {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   // The referral link's code (saved by /ref/:code), for a brand-new account
-                  body: JSON.stringify({ access_token: session.access_token, referralCode: (() => { try { return localStorage.getItem('ogapay_referral') || undefined } catch { return undefined } })() }),
+                  body: JSON.stringify({ access_token: session.access_token, referralCode: (() => { try { return localStorage.getItem('ogapay_referral') || undefined } catch { return undefined } })(), signupSource: getSignupSource() }),
                 }
               );
             } catch (exchangeErr) {

@@ -10,6 +10,7 @@ import { chromeIntentUrl, copyText, inAppBrowserName, isAndroid } from '../../li
 import { RESEND_SECONDS, retryAfterOf, useResendTimer } from '../../lib/emailCode'
 import { suggestEmail } from '../../lib/emailTypos'
 import Turnstile, { turnstileOn, type TurnstileHandle } from '../Turnstile'
+import { getSignupSource } from '../../lib/signupSource'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -360,7 +361,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
       let result: any
       try {
         result = await apiRequest<any>('/auth/email-code/verify', {
-          method: 'POST', auth: false, timeoutMs: 30000, body: JSON.stringify({ email: email.trim(), code: mailCode, ...(ref && { referralCode: ref }) }),
+          method: 'POST', auth: false, timeoutMs: 30000, body: JSON.stringify({ email: email.trim(), code: mailCode, ...(ref && { referralCode: ref }), signupSource: getSignupSource() }),
         })
       } catch (err: any) {
         if (/timed out|failed to fetch|network/i.test(err?.message || '')) { timedOut.current = true; throw new Error('Your connection dropped before we heard back. Tap Send a new code and enter it: it signs you in, even if your account was just made.') }
@@ -428,7 +429,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     setNotice(null)
     // A wallet no account uses yet makes a new account (login-17), then asks for an email
     const ref = referral()
-    const result = await apiRequest<any>('/auth/wallet/login', { method: 'POST', auth: false, body: JSON.stringify({ wallet, signature, ...(ref && { referralCode: ref }) }) })
+    const result = await apiRequest<any>('/auth/wallet/login', { method: 'POST', auth: false, body: JSON.stringify({ wallet, signature, ...(ref && { referralCode: ref }), signupSource: getSignupSource() }) })
     if (result?.isNewUser) startNew(result, result.needsEmail ? 'addemail' : 'profile')
     else finish(result)
   })
