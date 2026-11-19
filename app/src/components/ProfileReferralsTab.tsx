@@ -14,7 +14,7 @@ import { prizeRuns, runLabel } from '../lib/contestPrizes'
 // contest (your place first), 5) payments, folded. Desktop: the progress and
 // the contest sit in a side panel that stays in view.
 // The bonus is paid once a referred person is verified (Level 1) and finishes
-// their first paid job (a job someone other than the inviter posted), once per
+// 3 different paid jobs (jobs someone other than them or the inviter posted), once per
 // friend, for up to `rewardCap` people (backend referral.service
 // maybeTriggerReferralBonus). Plus a weekly contest for the top inviters
 // (referral.service weeklyLeaderboard).
@@ -22,10 +22,10 @@ import { prizeRuns, runLabel } from '../lib/contestPrizes'
 type Step = 'verify' | 'job' | 'processing' | 'paid' | 'capped'
 // Shown until the board loads (server: referral.service WEEKLY_PRIZES_NGN)
 const WEEKLY_PRIZES = [10000, 5000, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
-type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null; step?: Step }
+type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null; step?: Step; jobsDone?: number }
 type Stats = {
   referralCode: string; totalReferrals: number; rewardedReferrals: number; totalEarned: number | string
-  bonusPerReferral?: number; rewardCap?: number; referrals?: Referral[]; signupBonus?: number
+  bonusPerReferral?: number; rewardCap?: number; referrals?: Referral[]; signupBonus?: number; jobsNeeded?: number
 }
 type Leader = { rank: number; username: string | null; avatarUrl: string | null; friends: number; prize: number; isMe: boolean }
 // How far the member is from a prize place on the contest board (2026-11-02).
@@ -236,6 +236,9 @@ export default function TabReferralsContent() {
   const rewarded = stats?.rewardedReferrals ?? 0
   const people = stats?.referrals ?? []
   const signup = stats?.signupBonus ?? 1000
+  // Paid jobs a friend finishes before you get your bonus (3 since 2026-11-19)
+  const need = stats?.jobsNeeded ?? 3
+  const jobsWord = need === 1 ? 'a paid job' : `${need} paid jobs`
   const pct = Math.min(100, Math.round((rewarded / Math.max(1, cap)) * 100))
   const friends = [...people].sort((a, b) => STEP_ORDER[(a.step || 'job') as Step] - STEP_ORDER[(b.step || 'job') as Step])
   const someoneToRemind = people.some((p) => p.step === 'verify' || p.step === 'job')
@@ -301,7 +304,7 @@ export default function TabReferralsContent() {
             <ol className="rf3-how" aria-label="How it works">
               <li><span><b>Share your link</b><br />on WhatsApp, X or Telegram</span></li>
               <li><span><b>Your friend verifies their NIN</b><br />and takes a job</span></li>
-              <li><span><b>They finish a paid job</b><br />you get {ngn(bonus)}, they get {ngn(signup)}</span></li>
+              <li><span><b>They finish {jobsWord}</b><br />they get {ngn(signup)} after the first, you get {ngn(bonus)} after {need === 1 ? 'it' : `the ${need === 2 ? 'second' : need === 3 ? 'third' : `${need}th`}`}</span></li>
             </ol>
           </section>
 
@@ -327,7 +330,7 @@ export default function TabReferralsContent() {
                       {p.avatarUrl ? <img className="rf3-av" src={sized(p.avatarUrl, 36, true)} alt="" /> : <span className="rf3-av"><i className="ti ti-user" aria-hidden="true" /></span>}
                       <div style={{ minWidth: 0 }}>
                         <Link className="rf3-name" to={`/user/${p.username}`}>@{p.username}</Link>
-                        <span className={`rf3-step${st.ok ? ' ok' : canRemind ? ' wait' : ''}`}><i className={`ti ti-${st.icon}`} aria-hidden="true" /> {st.text === 'paid' ? `${ngn(bonus)} paid to you` : st.text}</span>
+                        <span className={`rf3-step${st.ok ? ' ok' : canRemind ? ' wait' : ''}`}><i className={`ti ti-${st.icon}`} aria-hidden="true" /> {st.text === 'paid' ? `${ngn(bonus)} paid to you` : step === 'job' ? `${Math.min(p.jobsDone || 0, need)} of ${need} paid jobs done` : st.text}</span>
                       </div>
                       {canRemind ? (note && note !== 'sending'
                         ? <span className="rf3-note" role="status">{note}</span>
@@ -344,7 +347,7 @@ export default function TabReferralsContent() {
           <details className="rf3-card rf3-fold">
             <summary className="rf3-head"><h2 className="rf3-h2">Referral payments</h2><span className="rf3-muted">{bonusesFailed ? '' : loading ? '…' : bonuses.length} <i className="ti ti-chevron-down" aria-hidden="true" /></span></summary>
             {bonusesFailed ? <Failed what="your referral payments" onRetry={retry} />
-              : bonuses.length === 0 ? <div className="rf3-empty">No payments yet. You're paid when a friend verifies their NIN and finishes their first paid job.</div>
+              : bonuses.length === 0 ? <div className="rf3-empty">No payments yet. You're paid when a friend verifies their NIN and finishes {jobsWord}.</div>
               : bonuses.map((b) => (
                 <div className="rf3-pay" key={b.id}>
                   <span>{day(b.createdAt)} · {b.status === 'COMPLETED' ? 'Paid' : b.status.charAt(0) + b.status.slice(1).toLowerCase()}</span>

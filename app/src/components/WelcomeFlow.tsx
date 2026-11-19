@@ -104,7 +104,7 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
 
         {step === 'invite' && (
           <form onSubmit={claim} noValidate>
-            <p className="wf-text">If a friend sent you an OgaPay link or code, add it here. They get a reward once you finish your first paid job.</p>
+            <p className="wf-text">If a friend sent you an OgaPay link or code, add it here. They get a reward once you finish 3 paid jobs.</p>
             <div className="wl-field">
               <label className="ui-label" htmlFor="wf-code">Referral code or link</label>
               <input id="wf-code" className="ui-input" value={code} onChange={(e) => { setCode(e.target.value); setError('') }}
