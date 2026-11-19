@@ -4,8 +4,10 @@
 // isn't in our storage (or is a GIF/SVG, or a local preview) is returned as is.
 
 // One switch for every smaller copy (2026-11-18): false sends the original
-// pictures everywhere again (e.g. if Supabase image resizing is turned off)
-export const THUMBNAILS = true
+// pictures everywhere again (e.g. if Supabase image resizing is turned off).
+// OFF since 2026-11-19: every picture Supabase resizes counts as an "image
+// transformation" and the Pro plan includes only 100 a month (we hit 431).
+export const THUMBNAILS = false
 
 const OBJECT = '/storage/v1/object/public/'
 const RENDER = '/storage/v1/render/image/public/'
