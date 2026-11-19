@@ -237,7 +237,7 @@ const PATHS: PathDef[] = [
         lead: "Say what needs doing, set the reward per person and the proof you want. Your budget sits in escrow and is paid out as you approve work.",
         cta: { label: "Create a job", to: "/create" },
         steps: [
-          ["Fund your wallet", "Pay in with Paystack or a bank transfer."],
+          ["Fund your wallet", "Pay in by card or bank transfer."],
           ["Post your job", "Instructions, reward per person and the proof you need."],
           ["Review and approve", "Check each submission. Anything left unreviewed for 72 hours is approved automatically."],
         ],

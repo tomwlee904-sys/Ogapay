@@ -39,7 +39,8 @@ export default function Deposit() {
     return m === 'card' || m === 'usdc' ? m : 'bank'
   })
   const [amount, setAmount] = useState(() => { const a = Number(params.get('amount')); return a > 0 ? String(Math.ceil(a)) : '' })
-  const [provider, setProvider] = useState<'FLUTTERWAVE' | 'PAYSTACK'>('FLUTTERWAVE')
+  // Card payments go through Flutterwave only (Paystack removed 2026-11-19)
+  const provider = 'FLUTTERWAVE'
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
   const [dva, setDva] = useState<Dva | null | undefined>(undefined)
@@ -54,7 +55,7 @@ export default function Deposit() {
   })
 
   // ── Coming back from the checkout ──
-  // Flutterwave adds ?status=&tx_ref=; Paystack adds ?reference=&trxref=
+  // Flutterwave adds ?status=&tx_ref= (?reference=/?trxref= are kept for older Paystack payments)
   const returned = params.get('tx_ref') || params.get('reference') || params.get('trxref')
   const [check, setCheck] = useState<Check | null>(() => returned
     ? { phase: params.get('status') === 'cancelled' ? 'cancelled' : params.get('status') === 'failed' ? 'failed' : 'checking', reference: returned }
@@ -253,7 +254,7 @@ export default function Deposit() {
             ) : method === 'card' ? (
               <>
                 <h2>Card, USSD or bank app</h2>
-                <p>You'll pay on {provider === 'FLUTTERWAVE' ? 'Flutterwave' : 'Paystack'}'s secure page, then come back here.</p>
+                <p>You'll pay on Flutterwave's secure page, then come back here.</p>
                 <div className="wl-field">
                   <label className="ui-label" htmlFor="dp-amt">Amount</label>
                   <div className="wl-amount">
@@ -269,10 +270,7 @@ export default function Deposit() {
                   {paying ? 'Opening payment page…' : amt ? `Pay ${naira(amt, 0)}` : 'Enter an amount'}
                 </button>
                 <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-                  Minimum {naira(MIN_DEPOSIT_NGN, 0)}, up to {naira(MAX_DEPOSIT_NGN, 0)} per payment. No OgaPay fee.{' '}
-                  <button type="button" className="wl-link" style={{ display: 'inline', fontWeight: 600, color: 'var(--text)' }} onClick={() => setProvider(provider === 'FLUTTERWAVE' ? 'PAYSTACK' : 'FLUTTERWAVE')}>
-                    Pay with {provider === 'FLUTTERWAVE' ? 'Paystack' : 'Flutterwave'} instead
-                  </button>
+                  Minimum {naira(MIN_DEPOSIT_NGN, 0)}, up to {naira(MAX_DEPOSIT_NGN, 0)} per payment. No OgaPay fee.
                 </p>
               </>
             ) : (

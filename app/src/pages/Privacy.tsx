@@ -97,7 +97,7 @@ export default function Privacy() {
               <h2><span>04</span>Who we share it with</h2>
               <p>We share personal data only with the service providers that help us run OgaPay, and only what they need:</p>
               <ul>
-                <li><b>Paystack and Flutterwave</b> process naira deposits and bank withdrawals and receive your payment details and the amount.</li>
+                <li><b>Flutterwave</b> processes naira deposits and bank withdrawals and receive your payment details and the amount.</li>
                 <li><b>Didit</b>, an identity verification provider, checked ID documents, selfies and NINs for people who verified before 2 November 2026. Checks since then are done by our own team.</li>
                 <li><b>Supabase</b> hosts our database and uploaded files. <b>Railway</b> runs our servers and <b>Vercel</b> hosts the website.</li>
                 <li><b>Resend</b> delivers our emails.</li>
