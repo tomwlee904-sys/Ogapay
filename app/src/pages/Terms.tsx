@@ -179,7 +179,7 @@ export default function Terms() {
                 <li><b>OgaPay's own items.</b> The Premium badge, worker frame, Priority Support and Task Boost take effect straight away and are not refundable once applied.</li>
                 <li><b>Deposits.</b> Money you add stays in your wallet until you spend or withdraw it. If you added money by mistake, you can withdraw it to your bank (the normal withdrawal minimum and fee apply). A deposit that is reversed, charged back or found to be fraudulent is taken back.</li>
                 <li><b>Withdrawals.</b> If a bank withdrawal can't be paid, or we reject it, the money goes back to your wallet and we tell you why. Crypto withdrawals and sending money to another member are final once sent and can't be refunded.</li>
-                <li><b>Mistakes on our side.</b> If we charge you in error, or a fault on OgaPay takes money it shouldn't, we refund it in full once we confirm it. Tell us within 30 days at support@ogapay.app or 0903 009 7844.</li>
+                <li><b>Mistakes on our side.</b> If we charge you in error, or a fault on OgaPay takes money it shouldn't, we refund it in full once we confirm it. Tell us within 30 days at support@ogapay.app.</li>
                 <li><b>How to ask.</b> For a store order, use Report a problem on the order. For anything else, contact support with your username and the date and amount, and we reply within 24 hours. We may refuse or reverse a refund that is part of fraud or abuse of these terms.</li>
                 <li>Nothing in this policy limits any right you have under the Federal Competition and Consumer Protection Act 2018 that can't be excluded by agreement.</li>
               </ul>
@@ -246,7 +246,7 @@ export default function Terms() {
               <ul>
                 <li>We may update these terms and our fees. We'll show the date at the top and tell you about important changes before they take effect. Fees always show before you pay.</li>
                 <li>These terms are governed by the laws of the Federal Republic of Nigeria, and the courts of Nigeria can hear any dispute. Please contact us first; most problems are quickest to solve that way.</li>
-                <li>Questions: <a href="mailto:support@ogapay.app">support@ogapay.app</a>, <a href="tel:+2349030097844">0903 009 7844</a> or the <Link to="/support">help centre</Link>. Privacy: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a>.</li>
+                <li>Questions: <a href="mailto:support@ogapay.app">support@ogapay.app</a> or the <Link to="/support">help centre</Link>. Privacy: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a>.</li>
               </ul>
             </section>
           </article>
