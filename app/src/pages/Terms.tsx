@@ -89,13 +89,13 @@ export default function Terms() {
 
             <section id="kyc">
               <h2><span>{n('kyc')}</span>Identity checks and limits</h2>
-              <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
+              <p>To withdraw money, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
               <ul>
                 <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN and date of birth, checked by our team): up to ₦5,000 a day. Bank withdrawals only go to accounts in your own name.</li>
                 <li>Level 2 (a photo of your NIN slip or card, or another ID, with its number, checked by our team): up to ₦10,000 a day</li>
                 <li>Level 3 (given by our team on request through support): up to ₦50,000 a day</li>
               </ul>
-              <p>Sending money to other members, and the ₦1,000 first job bonus, need your NIN or ID (Level 1 by NIN, or Level 2). Level 1 by bank account alone lets you withdraw, but not send money or get the bonus.</p>
+              <p>The ₦1,000 first job bonus needs your NIN or ID (Level 1 by NIN, or Level 2). Level 1 by bank account alone lets you withdraw, but not get the bonus.</p>
               <p>A day means the 24 hours before each withdrawal. Bank and crypto withdrawals count together, crypto at the naira rate on the day; ones that fail or are rejected don't count. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
             </section>
 
@@ -149,11 +149,13 @@ export default function Terms() {
             <section id="money">
               <h2><span>{n('money')}</span>Your wallet, deposits and withdrawals</h2>
               <ul>
-                <li><b>Balances.</b> Your wallet can hold naira (NGN) and crypto (USDC, SOL). Money held for your jobs, your store orders or a withdrawal in progress isn't available to spend.</li>
+                <li><b>Your balance is a record, not a bank account.</b> Your naira balance shows what OgaPay owes you for approved work, prizes, referral rewards and store sales, plus any credit you added. It earns no interest and is not insured by the NDIC. OgaPay is not a bank, a mobile money operator or a licensed payment service provider; payments are made through licensed banks and payment partners.</li>
+                <li><b>Credit.</b> Naira you add (by card or bank transfer) is credit: it pays for jobs and store purchases on OgaPay, and is used before your earnings. Credit can't be withdrawn or sent to another member. Money from a job or order that comes back to you (places nobody took, a cancelled order) comes back as credit, up to the credit you used for it. If you want unused credit refunded, contact support; refunds go only to a bank account in your own name and may be checked first.</li>
+                <li><b>Held money.</b> Money held for your jobs, your store orders or a withdrawal in progress isn't available to spend. Your wallet can also hold crypto (USDC, SOL).</li>
                 <li><b>Adding money.</b> By bank transfer to your own account number, by card, USSD or bank app through our payment partners, or with USDC on Solana. Money is added once the payment is confirmed. Payments made to the wrong account or reference may take longer to trace.</li>
-                <li><b>Withdrawing to a bank.</b> The minimum is ₦5,000 or its equivalent and the fee is 1.5% (at least ₦100); both are shown before you confirm. Bank withdrawals are paid every Thursday morning; a request made before then goes out that Thursday. They only go to a bank account in your own name, as your bank records it (if the bank spells your name differently, our team checks it first), and a bank account added less than a day before a payout is paid the Thursday after.</li>
+                <li><b>Withdrawing to a bank.</b> You can withdraw your earnings, not credit. The minimum is ₦5,000 or its equivalent and the fee is 1.5% (at least ₦100); both are shown before you confirm. Bank withdrawals are paid every Thursday morning; a request made before then goes out that Thursday. They only go to a bank account in your own name, as your bank records it (if the bank spells your name differently, our team checks it first), and a bank account added less than a day before a payout is paid the Thursday after.</li>
                 <li><b>Crypto.</b> Crypto withdrawals have no OgaPay fee, are sent on the Solana network straight away and can't be reversed. Check the address; we can't recover crypto sent to a wrong address.</li>
-                <li><b>Sending to other users</b> is free, instant and final once sent.</li>
+                <li><b>Sending to other members</b> is not available. A poster can add a tip for approved work on their own job.</li>
                 <li><b>Mistakes and reversals.</b> If money reaches your wallet by mistake or through a payment that is later reversed or found to be fraudulent, we may take it back or hold it while we check.</li>
                 <li>We may pause a payment or withdrawal to prevent fraud or to meet a legal duty, and will tell you why where we're allowed to.</li>
               </ul>

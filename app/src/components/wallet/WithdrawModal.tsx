@@ -77,7 +77,11 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   // Bank and mobile money both pay out naira (mobile money in cedis on the day)
   const inNaira = tab !== 'crypto'
   const cur = inNaira ? 'NGN' : coin
-  const available = Number(balances?.[cur]?.available ?? 0)
+  // Naira: only earnings can be withdrawn; credit (money you added) is for jobs and the store
+  const credit = inNaira ? Number(balances?.NGN?.credit ?? 0) : 0
+  const available = inNaira && balances?.NGN?.withdrawable !== undefined
+    ? Number(balances.NGN.withdrawable)
+    : Number(balances?.[cur]?.available ?? 0)
   const amt = parseFloat(amount) || 0
   const fee = inNaira && amt > 0 ? ngnWithdrawFee(amt) : 0
   // What the naira is worth in cedis at today's display rate (the exact cedis are
@@ -89,7 +93,9 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   // What's wrong with the amount, before asking the server
   const problem = useMemo(() => {
     if (!amt) return ''
-    if (amt > available) return `You have ${money(available, cur)} available.`
+    if (amt > available) return credit > 0
+      ? `You can withdraw ${money(available, cur)}. ${naira(credit)} of your balance is credit you added, which pays for jobs and store items but can't be withdrawn.`
+      : `You have ${money(available, cur)} available.`
     if (inNaira) {
       if (amt < MIN_WITHDRAW_NGN) return `The minimum is ${naira(MIN_WITHDRAW_NGN, 0)}.`
       if (amt > left) return usedUp

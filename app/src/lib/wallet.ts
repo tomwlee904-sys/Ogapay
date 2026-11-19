@@ -1,7 +1,7 @@
 // Wallet helpers shared by the wallet page, Add money and Withdraw.
 // Limits and fees mirror the API so the numbers shown are the ones charged.
 
-export type Balances = Record<string, { balance: number; lockedBalance: number; available: number; pendingBalance?: number }>
+export type Balances = Record<string, { balance: number; lockedBalance: number; available: number; pendingBalance?: number; credit?: number; withdrawable?: number }>
 export type Summary = Record<string, { deposited: number; withdrawn: number; withdrawing: number; earned: number }>
 export type Bank = { id: string; bankName: string; bankCode: string; accountNumber: string; accountName: string; isDefault: boolean }
 export type Tx = {
@@ -209,3 +209,8 @@ export function nextPayoutDay(from = new Date()): Date {
   return d
 }
 export const payoutDayLabel = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Lagos' })
+
+// Member-to-member money is off (2026-11-19, so OgaPay isn't a wallet): no Send,
+// no profile or blog tips. A poster can still tip a worker for approved work on
+// their own job. The backend refuses them too unless P2P_SEND=on there.
+export const MEMBER_TIPS = false

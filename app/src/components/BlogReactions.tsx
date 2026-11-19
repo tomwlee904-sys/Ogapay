@@ -4,7 +4,7 @@ import { apiRequest } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import { useAuth } from '../context/AuthContext'
 import { sized } from '../lib/img'
-import { kycOf } from '../lib/wallet'
+import { kycOf, MEMBER_TIPS } from '../lib/wallet'
 import { SEND_RULE } from '../lib/levels'
 import { useMoney } from '../lib/useMoney'
 
@@ -108,7 +108,7 @@ export default function BlogReactions({ slug, post }: { slug: string; post: any 
           <i className={`ti ${r.likedByMe ? 'ti-heart-filled' : 'ti-heart'}`} /> {r.likeCount} {r.likeCount === 1 ? 'like' : 'likes'}
         </button>
         <a className="br-btn" href="#comments"><i className="ti ti-message-circle" /> {r.commentCount} {r.commentCount === 1 ? 'comment' : 'comments'}</a>
-        {!isAuthor && (
+        {!isAuthor && MEMBER_TIPS && (
           <button type="button" className="br-btn" onClick={() => (user ? setTipOpen(true) : signIn())}>
             <i className="ti ti-coin" /> Tip the author
           </button>

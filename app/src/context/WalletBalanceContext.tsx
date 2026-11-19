@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext'
 const BALANCE_TTL = 10_000 // 30 seconds
 const RETRY_MS = 4_000
 
-export type BalanceData = Record<string, { balance: number; lockedBalance: number; available: number; pendingBalance?: number }> | null
+export type BalanceData = Record<string, { balance: number; lockedBalance: number; available: number; pendingBalance?: number; credit?: number; withdrawable?: number }> | null
 
 interface WalletBalanceState {
   balances: BalanceData

@@ -190,6 +190,7 @@ export default function Deposit() {
           <div>
             <Link to={back || '/wallet'} className="wl-link"><i className="ti ti-arrow-left" /> {back ? 'Back' : 'Wallet'}</Link>
             <h1 className="ui-title">Add money</h1>
+            <p className="ui-sub" style={{ marginTop: 6 }}>Money you add is credit for posting jobs and buying in the store. It can't be withdrawn or sent to someone; only what you earn can be withdrawn.</p>
           </div>
         </div>
 

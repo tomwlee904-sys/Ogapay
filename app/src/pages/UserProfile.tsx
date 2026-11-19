@@ -19,6 +19,7 @@ import ShareButton from '../components/ShareButton'
 import { XProfileSummary } from '../components/profile/XProfile'
 import type { XPublic } from '../lib/xprofile'
 import { useMoney } from '../lib/useMoney'
+import { MEMBER_TIPS } from '../lib/wallet'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 const TABS: Tab[] = ["store", "portfolio", "reviews", "communities"]
@@ -478,7 +479,7 @@ export default function UserProfile() {
                 )}
                 {!isMe && <button className="up-btn" onClick={message}><i className="ti ti-message" /> Message</button>}
                 {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
-                {!isMe && <button className="up-btn" onClick={tip}><i className="ti ti-heart-handshake" /> Tip</button>}
+                {!isMe && MEMBER_TIPS && <button className="up-btn" onClick={tip}><i className="ti ti-heart-handshake" /> Tip</button>}
                 {!isMe && (
                   <button className={`up-btn up-compliment${complimented ? " on" : ""}`} onClick={compliment} aria-pressed={complimented} disabled={complimenting}>
                     <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}

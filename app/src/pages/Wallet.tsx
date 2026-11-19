@@ -138,6 +138,8 @@ export default function Wallet() {
 
   const ngn = balances?.NGN
   const available = Number(ngn?.available ?? 0)
+  const credit = Number(ngn?.credit ?? 0)
+  const withdrawable = ngn?.withdrawable !== undefined ? Number(ngn.withdrawable) : available
   const sumNgn = summary?.NGN
   // Bank withdrawals waiting to be paid are held too: show them once, as "on its way"
   const onItsWay = Number(sumNgn?.withdrawing ?? 0)
@@ -165,8 +167,13 @@ export default function Wallet() {
                   {loading ? <div className="ui-sk" style={{ height: 46, width: 220, marginTop: 8, borderRadius: 12 }} /> : (
                     <div className="wl-bal-num">{naira(available).split('.')[0]}<small>.{naira(available).split('.')[1]}</small></div>
                   )}
-                  {(onHold > 0 || onItsWay > 0) && (
+                  {(onHold > 0 || onItsWay > 0 || credit > 0) && (
                     <div className="wl-bal-notes">
+                      {credit > 0 && <span><i className="ti ti-ticket" /> {naira(credit)} is credit for jobs and the store <InfoTip label="What is credit?" title="Credit for jobs and the store">
+                        <p>Money you add to OgaPay is credit. Use it to post jobs and buy from the store. It can't be withdrawn or sent to someone.</p>
+                        <p>Money you earn from jobs, prizes, referrals and store sales can be withdrawn to your own bank. You can withdraw {naira(withdrawable)} now.</p>
+                        <p>If a job ends with places nobody took, that money comes back to you as credit. Need unused credit refunded? Contact support.</p>
+                      </InfoTip></span>}
                       {onHold > 0 && <span><i className="ti ti-lock" /> {naira(onHold)} held for your jobs <InfoTip label="What is held money?" title="Held for your jobs">
                         <p>Money for jobs you posted or things you bought, kept safe by OgaPay. Workers are paid from it when you approve their work; store sellers are paid when you confirm the order (or after 3 days).</p>
                         <p>Money for places nobody used comes back to your wallet when the job ends.</p>
@@ -178,7 +185,6 @@ export default function Wallet() {
                 <div className="wl-bal-actions">
                   <Link className="ui-btn ui-btn-dark" to="/deposit"><i className="ti ti-plus" /> Add money</Link>
                   <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setModal('withdraw')}><i className="ti ti-arrow-up-right" /> Withdraw</button>
-                  <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setModal('send')}><i className="ti ti-send" /> Send</button>
                 </div>
               </div>
               {coins.length > 0 && (
