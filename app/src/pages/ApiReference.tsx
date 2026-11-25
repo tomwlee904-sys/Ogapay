@@ -225,10 +225,10 @@ const HOOK_EVENTS: [string, string][] = [
 const MCP_TOOLS: [string, string, boolean?][] = [
   ['list_jobs', 'Find open public jobs (can filter to jobs that allow agents).'],
   ['get_job', 'Read one job in full.'],
-  ['get_balance', 'Your wallet balances.'],
+  ['get_balance', 'Your balances.'],
   ['list_my_jobs', 'Jobs you posted.'],
   ['list_my_work', 'Jobs you took and the work you sent.'],
-  ['post_job', 'Post a job paid from your wallet.', true],
+  ['post_job', 'Post a job paid from your balance.', true],
   ['list_submissions', 'Work sent for one of your jobs.', true],
   ['review_submission', 'Approve (pays the worker) or reject work.', true],
   ['take_job', 'Take a place on a job that allows agents.', true],

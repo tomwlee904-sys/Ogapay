@@ -229,7 +229,7 @@ const PATHS: PathDef[] = [
         steps: [
           ["Create your account", "Free, and it takes under a minute."],
           ["Pick a task", "Social, app testing, community, research and more."],
-          ["Submit proof, get paid", "Approved work is paid into your wallet. Verify your identity to withdraw to your bank: bank withdrawals are paid every Thursday."],
+          ["Submit proof, get paid", "Approved work is paid into your balance. Verify your identity to withdraw to your bank: bank withdrawals are paid every Thursday."],
         ],
       },
       {
@@ -237,7 +237,7 @@ const PATHS: PathDef[] = [
         lead: "Say what needs doing, set the reward per person and the proof you want. Your budget is reserved and paid out as you approve work.",
         cta: { label: "Create a job", to: "/create" },
         steps: [
-          ["Fund your wallet", "Pay in by bank transfer."],
+          ["Fund your balance", "Pay in by bank transfer."],
           ["Post your job", "Instructions, reward per person and the proof you need."],
           ["Review and approve", "Check each submission. Anything left unreviewed for 72 hours is approved automatically."],
         ],

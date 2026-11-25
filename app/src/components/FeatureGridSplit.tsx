@@ -253,14 +253,14 @@ export default function FeatureGridSplit() {
     <>
       <FeatureBlock
         title="Complete Tasks, Get Paid Instantly"
-        description="Browse real tasks posted by Nigerian employers — social media engagement, content writing, design, research, testing, and more. Complete a task, get approved, and watch the money hit your wallet immediately."
+        description="Browse real tasks posted by Nigerian employers — social media engagement, content writing, design, research, testing, and more. Complete a task, get approved, and watch the money hit your balance immediately."
         accent="currency-naira"
         mockup={
           <TerminalMockup
             cmd="ogapay task complete --id 42"
             output={[
               "Task 'Design social media banner' approved",
-              "₦2,500 deposited to wallet",
+              "₦2,500 added to balance",
               "New balance: ₦18,750",
             ]}
           />

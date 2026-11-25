@@ -31,7 +31,7 @@ const ENDPOINTS: { method?: string; path: string; desc: string; params?: string;
   { path: '/my/jobs', desc: 'Jobs you posted, any status.', params: 'page, limit' },
   { path: '/my/submissions', desc: 'Work you submitted, with its status and payment.', params: 'page, limit' },
   { path: '/my/balance', desc: 'Your wallets: balance, locked and available.' },
-  { path: '/my/transactions', desc: 'Your wallet history.', params: 'page, limit' },
+  { path: '/my/transactions', desc: 'Your balance history.', params: 'page, limit' },
   { method: 'POST', write: true, path: '/jobs', desc: 'Post a job, a contest or a members-only job (same fields as the website). The budget and 10% fee are reserved from your balance. Up to 30 an hour per key.', params: 'title, description, category, reward, currency, maxWorkers, deadline?, isContest?, prizes?, entryTarget?, randomDraw? (contests: winners drawn at random when entries close), communityId?, payoutCooldownMinutes? (social jobs: 0, 5, 30, 60, 360 or 1440; work can only be paid that long after it is sent, then the X post is checked again)' },
   { write: true, path: '/jobs/:id/submissions', desc: 'Work sent for your job, with the proof. On jobs with a payout check, payoutCheck is WAITING until payoutCheckDueAt, then PASSED, SKIPPED, FAILED or UNKNOWN with payoutCheckReason; approving is refused while it is WAITING.' },
   { method: 'POST', write: true, path: '/submissions/:id/approve', desc: 'Approve work: the worker is paid from the job budget.', params: 'rating? (1-5), feedback?' },
@@ -100,7 +100,7 @@ function Keys() {
       </form>
       <label className="dv-check">
         <input type="checkbox" checked={write} onChange={(e) => setWrite(e.target.checked)} />
-        <span><b>Allow writing</b>: this key can post jobs paid from your wallet, approve or reject work and cancel jobs. It can never withdraw or send money.</span>
+        <span><b>Allow writing</b>: this key can post jobs paid from your balance, approve or reject work and cancel jobs. It can never withdraw or send money.</span>
       </label>
       {needOtp && (
         <input className="dv-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\s/g, ''))} placeholder="Code from your authenticator app" aria-label="2FA code" style={{ marginTop: 10 }} />

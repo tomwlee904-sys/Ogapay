@@ -177,8 +177,8 @@ export function payoutNote(t: Tx) {
   const s = payoutStatusOf(t)
   // Our team often ends the reason with a full stop; drop it so it isn't doubled
   const why = String(t.metadata?.rejectReason || '').trim().replace(/[.!?\s]+$/, '')
-  if (s === 'failed') return `${why ? `Not paid: ${why}. ` : ''}The money is back in your wallet.`
-  if (s === 'refunded') return 'The money was sent back to your wallet.'
+  if (s === 'failed') return `${why ? `Not paid: ${why}. ` : ''}The money is back in your balance.`
+  if (s === 'refunded') return 'The money was sent back to your balance.'
   return ''
 }
 

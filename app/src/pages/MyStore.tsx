@@ -264,7 +264,7 @@ export default function MyStore() {
         <div className="ms2-head">
           <div>
             <h1>My Store</h1>
-            <p>Sell services and digital products. Buyers pay from their OgaPay wallet; the money comes to you when they confirm delivery, or 3 days after you mark it delivered.</p>
+            <p>Sell services and digital products. Buyers pay from their OgaPay balance; the money comes to you when they confirm delivery, or 3 days after you mark it delivered.</p>
           </div>
           <div className="acts">
             {user?.username && <Link className="up-btn" to={`/user/${user.username}?tab=store`}><i className="ti ti-eye" /> View public store</Link>}
@@ -285,7 +285,7 @@ export default function MyStore() {
         <div className="ms2-stats">
           <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} hidden` : ''}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{summary ? orderCounts.all || 0 : '…'}</b><small>{summary ? `${open} to deliver` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{summary ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
+          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{summary ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your balance'}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-star" /> Rating</span><b>{rated.length ? avg.toFixed(1) : '—'}</b><small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small></div>
         </div>
 
@@ -690,7 +690,7 @@ function ProductEditor({ product, needs, ghana, onClose, onSaved }: { product: P
                 // Saved in naira, rounded to the naira, at today's rate
                 set('price', Number(v) > 0 ? String(Math.round(Number(v) * nairaPerCedi)) : '')
               }} />
-              <small>{priceNum > 0 ? `About ${formatCedi(priceNum / nairaPerCedi)} today. ` : ''}Buyers pay in naira from their OgaPay wallet, so the cedi amount moves a little with the rate.</small>
+              <small>{priceNum > 0 ? `About ${formatCedi(priceNum / nairaPerCedi)} today. ` : ''}Buyers pay in naira from their OgaPay balance, so the cedi amount moves a little with the rate.</small>
             </label>
           )}
         </div>

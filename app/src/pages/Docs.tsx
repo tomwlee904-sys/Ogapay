@@ -13,7 +13,7 @@ const SECTIONS: { title: string; guides: Guide[] }[] = [
     guides: [
       { icon: 'rocket', title: 'How OgaPay works', desc: 'What you can do here, what you need to start, and who can use it.', to: '/faq#basics' },
       { icon: 'id-badge-2', title: 'Verify your identity', desc: 'KYC levels, what each one unlocks, OgaScore and Human Verified.', to: '/faq#kyc' },
-      { icon: 'wallet', title: 'Your wallet', desc: 'Adding money by bank transfer, and the currencies your wallet holds.', to: '/faq#wallet' },
+      { icon: 'wallet', title: 'Your balance', desc: 'Adding money by bank transfer, and the currencies your balance holds.', to: '/faq#wallet' },
     ],
   },
   {

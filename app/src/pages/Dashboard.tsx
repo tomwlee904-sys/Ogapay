@@ -424,8 +424,8 @@ export default function Dashboard() {
         </li>
       </ol>
       <p className="db-first-note">{ghana
-        ? `The ${bonus} is added to your wallet with your first approved job, once your Ghana Card is checked.`
-        : `The ${bonus} is added to your wallet with your first approved job, once you're verified with your NIN or ID. The bank account check alone doesn't count.`}</p>
+        ? `The ${bonus} is added to your balance with your first approved job, once your Ghana Card is checked.`
+        : `The ${bonus} is added to your balance with your first approved job, once you're verified with your NIN or ID. The bank account check alone doesn't count.`}</p>
     </section>
   )
 
@@ -612,7 +612,7 @@ export default function Dashboard() {
 
           {/* Three numbers, compact on phones so your jobs show on the first screen (dash-22) */}
           <div className="db-snap">
-            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{balanceText || <i className="db-sk-num" aria-label="Loading" />}</b><small>{balanceParts || 'Open wallet →'}</small></Link>
+            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{balanceText || <i className="db-sk-num" aria-label="Loading" />}</b><small>{balanceParts || 'Open balance →'}</small></Link>
             {/* Verification is its own thing, not the worker rank beside it (dash-16) */}
             <Link to="/settings/verification" className="db-stat">
               <span>Verification</span>

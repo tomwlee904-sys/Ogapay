@@ -15,7 +15,7 @@ export type SeoPage = {
   faqs: [string, string][]
 }
 
-const PAY = 'Approved work is paid into your OgaPay wallet in Naira or USDC. To move it to your bank, verify your identity and withdraw from ₦5,000; bank withdrawals are paid every Thursday.'
+const PAY = 'Approved work is paid into your OgaPay balance in Naira or USDC. To move it to your bank, verify your identity and withdraw from ₦5,000; bank withdrawals are paid every Thursday.'
 const FREE = 'No. OgaPay is free to join, and no real job asks you to pay to start. If anyone asks you for a fee to unlock work or a withdrawal, it is a scam.'
 
 export const SEO_PAGES: SeoPage[] = [
@@ -28,7 +28,7 @@ export const SEO_PAGES: SeoPage[] = [
     h1: 'Earn money online in Nigeria',
     intro: [
       'OgaPay is a Nigerian marketplace where people and businesses post small paid jobs, and you do them from your phone. Follow a page, test an app, answer a survey, write a short review or translate a line into Pidgin, Yoruba, Igbo or Hausa.',
-      'Every job shows the pay before you start, and the poster’s money is already held by OgaPay, so you know it is there. You send your proof, the poster checks it, and approved work is paid into your wallet.',
+      'Every job shows the pay before you start, and the poster’s money is already held by OgaPay, so you know it is there. You send your proof, the poster checks it, and approved work is paid into your balance.',
       'It is not a get-rich-quick scheme. Most jobs pay ₦50 to ₦1,000, and bigger writing or design jobs pay more. What you earn depends on the work you do.',
     ],
     faqs: [

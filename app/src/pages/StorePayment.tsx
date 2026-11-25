@@ -337,7 +337,7 @@ export default function StorePayment() {
     setPaying(false)
     // The same key goes with the next tap, so trying again can't charge twice
     setError(item.official
-      ? "We couldn't confirm your payment. Check your wallet history before you try again. Trying again won't charge you twice."
+      ? "We couldn't confirm your payment. Check your balance history before you try again. Trying again won't charge you twice."
       : "We couldn't confirm your payment. Check My orders before you try again. Trying again won't charge you twice.")
   }
 
@@ -588,11 +588,11 @@ export default function StorePayment() {
                     <b>{money(total, item.currency)}</b>
                   </div>
 
-                  <div className="sc-opt-head"><span className="n">1</span> Pay from your OgaPay wallet</div>
+                  <div className="sc-opt-head"><span className="n">1</span> Pay from your OgaPay balance</div>
                   <div className="sc-method">
                     <span className="sc-method-ic"><i className="ti ti-wallet" aria-hidden="true" /></span>
                     <div className="sc-method-t">
-                      <strong>Your {item.currency} wallet</strong>
+                      <strong>Your {item.currency} balance</strong>
                       {balanceKnown
                         ? <span>Available: {money(available, item.currency)}</span>
                         : balanceError && !balanceLoading
@@ -621,7 +621,7 @@ export default function StorePayment() {
                       ? <>You need <b>{money(short, item.currency)}</b> more. </>
                       : null}
                     {item.currency === 'NGN'
-                      ? 'Top up by bank transfer (to your own Flutterwave account number once you’re verified), or with your bank app or USSD. The money lands in your wallet and you come back here to pay.'
+                      ? 'Top up by bank transfer (to your own Flutterwave account number once you’re verified), or with your bank app or USSD. The money lands in your balance and you come back here to pay.'
                       : `Send ${item.currency} to your OgaPay wallet address. It lands in your wallet and you come back here to pay.`}
                   </p>
                   <div className="sc-methods">

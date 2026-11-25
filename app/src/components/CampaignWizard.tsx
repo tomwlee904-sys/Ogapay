@@ -128,7 +128,7 @@ export default function CampaignWizard() {
       const walletEntry = walletBalances?.[activeCur];
         const currentBalance = walletEntry ? (Number(walletEntry.balance) || 0) : 0;
         if (currentBalance < budget) {
-          alert("Insufficient balance. Please top up your wallet first.");
+          alert("Insufficient balance. Please top up your balance first.");
           navigate("/wallet");
           setLoading(false);
           return;
@@ -827,7 +827,7 @@ export default function CampaignWizard() {
 
   const renderBudget = () => (
     <div style={{ padding: "16px" }}>
-      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700 }}>Budget & Wallet</h3>
+      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700 }}>Budget & Balance</h3>
       <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--text3)" }}>Review costs and fund your campaign</p>
 
       {budget && (
@@ -883,9 +883,9 @@ export default function CampaignWizard() {
           marginBottom: 16,
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}><i className="ti ti-alert-triangle" aria-hidden="true" style={{ color: "#d97706" }} /> Not enough in your wallet</div>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}><i className="ti ti-alert-triangle" aria-hidden="true" style={{ color: "#d97706" }} /> Not enough in your balance</div>
         <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8 }}>
-          Your wallet balance: ₦{walletBalance.toLocaleString()}
+          Your balance: ₦{walletBalance.toLocaleString()}
           <br />
           You need: ₦{budget?.grandTotal?.toLocaleString() || "—"}
         </div>
@@ -902,12 +902,12 @@ export default function CampaignWizard() {
             cursor: "pointer",
           }}
         >
-          <i className="ti ti-plus" aria-hidden="true" /> Top up wallet
+          <i className="ti ti-plus" aria-hidden="true" /> Top up balance
         </button>
       </div>
       ) : (
         <div style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 16, fontSize: 12, color: "var(--text2)" }}>
-          Your wallet balance (₦{walletBalance.toLocaleString()}) covers this campaign.
+          Your balance (₦{walletBalance.toLocaleString()}) covers this campaign.
         </div>
       )}
 
@@ -936,7 +936,7 @@ export default function CampaignWizard() {
       { label: "A title (5+ characters)", passed: (details.title || "").trim().length >= 5 },
       { label: "Instructions for workers (20+ characters)", passed: (details.instructions || "").trim().length >= 20 },
       { label: `Reward of at least ₦${MIN_REWARD} per worker`, passed: (details.reward || 0) >= MIN_REWARD },
-      { label: "Enough money in your wallet", passed: walletBalance >= (budget?.grandTotal || 0) },
+      { label: "Enough money in your balance", passed: walletBalance >= (budget?.grandTotal || 0) },
     ];
     const allGood = checks.every((c) => c.passed);
     return (

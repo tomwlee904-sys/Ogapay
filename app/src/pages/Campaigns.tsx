@@ -155,7 +155,7 @@ export default function Campaigns() {
             <label className="ui-label" htmlFor="cp-desc">Notes (optional)</label>
             <textarea id="cp-desc" className="ui-input" style={{ height: 72, padding: 10, resize: 'vertical' }} maxLength={500} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
-          <p className="wl-note" style={{ margin: '0 0 14px' }}>The budget is for tracking: jobs are still paid from your wallet when you post them. Only jobs in {editing === 'new' ? form.currency : (editing as Campaign).currency} can join this campaign.</p>
+          <p className="wl-note" style={{ margin: '0 0 14px' }}>The budget is for tracking: jobs are still paid from your balance when you post them. Only jobs in {editing === 'new' ? form.currency : (editing as Campaign).currency} can join this campaign.</p>
           {formErr && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{formErr}</span></div>}
           <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" disabled={saving || form.name.trim().length < 2} onClick={save}>{saving ? 'Saving…' : editing === 'new' ? 'Create campaign' : 'Save changes'}</button>
         </Sheet>

@@ -16,7 +16,7 @@ export const TOPICS: Topic[] = [
       { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
       { q: 'How does it work end to end?', a: 'A poster funds a task, and the budget is reserved. Workers apply and submit proof. The poster approves, rejects or disputes each submission. Approved work is paid from the job budget to the worker\'s wallet, and any unused budget goes back to the poster.' },
       { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet, a connected X account or a blue tick on X. To withdraw money you need to verify your identity (Level 1 or above).' },
-      { q: 'Can I earn and post jobs from the same account?', a: 'Yes. One account can do both. Your earnings, the jobs you post and your wallet all live in the same place.' },
+      { q: 'Can I earn and post jobs from the same account?', a: 'Yes. One account can do both. Your earnings, the jobs you post and your balance all live in the same place.' },
       { q: 'Is OgaPay only for Nigeria?', a: 'Anyone can sign up and earn. Naira deposits and bank withdrawals work with Nigerian banks; everyone else can deposit and withdraw in USDC on Solana.' },
     ],
   },
@@ -44,7 +44,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'posting', title: 'Creating and managing jobs', items: [
-      { q: 'How do I post a job?', a: 'Go to Create, pick Custom job, X campaign or Quick task, write the brief, set the reward and number of places, then fund it from your wallet. The job goes live as soon as it is funded.' },
+      { q: 'How do I post a job?', a: 'Go to Create, pick Custom job, X campaign or Quick task, write the brief, set the reward and number of places, then fund it from your balance. The job goes live as soon as it is funded.' },
       { q: 'What is the difference between Challenge and Selection mode?', a: 'Challenge pays every approved submission, up to the number of places you set. Selection is for one-off projects: people apply, and you choose one person to do the work and receive the full reward.' },
       { q: 'Can I limit who takes part?', a: 'Yes. You can require KYC, a minimum OgaScore, a minimum worker rank, a connected wallet, a connected X account or a blue tick on X, and you can post only to your own community.' },
       { q: 'How do I review submissions?', a: 'Open the job and choose View submissions (or use Manage jobs). Approve pays the worker immediately; Reject returns that place to the pool with your note.' },
@@ -61,9 +61,9 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: 'wallet', title: 'Deposits and wallet', items: [
-      { q: 'How do I add money?', a: 'Pay in Naira by bank transfer to your own Flutterwave account number from the Wallet page, or with your bank app or USSD through Flutterwave. Naira you add is credit for posting jobs and buying in the store; it cannot be withdrawn or sent to someone. Only money you earn can be withdrawn. For crypto, send USDC from a connected Phantom, Backpack or Solflare wallet; SOL can be swapped to USDC as you deposit.' },
-      { q: 'Which currencies does my wallet hold?', a: 'Naira (NGN) and USDC. You can choose which one to display in Settings.' },
+    id: 'wallet', title: 'Deposits and balance', items: [
+      { q: 'How do I add money?', a: 'Pay in Naira by bank transfer to your own Flutterwave account number from the Balance page, or with your bank app or USSD through Flutterwave. Naira you add is credit for posting jobs and buying in the store; it cannot be withdrawn or sent to someone. Only money you earn can be withdrawn. For crypto, send USDC from a connected Phantom, Backpack or Solflare wallet; SOL can be swapped to USDC as you deposit.' },
+      { q: 'Which currencies does my balance hold?', a: 'Naira (NGN) and USDC. You can choose which one to display in Settings.' },
       { q: 'How do I connect a crypto wallet?', a: 'Go to Settings, choose Connect wallet and sign a short message with your wallet. Signing proves ownership; OgaPay never asks for your seed phrase or private key.' },
       { q: 'Is my money safe?', a: 'Balances sit on OgaPay\'s ledger with every movement recorded. Withdrawals need KYC, you can add two-factor authentication and OTP confirmation, and you can see and remove paired devices in Settings.' },
     ],
@@ -71,17 +71,17 @@ export const TOPICS: Topic[] = [
   {
     id: 'withdrawals', title: 'Withdrawals', items: [
       { q: 'Can I withdraw money I added?', a: 'No. Money you add is credit for jobs and the store. You can withdraw what you earn: job pay, prizes, referral rewards and store sales. If a job ends with places nobody took, that money comes back as credit. For a refund of unused credit, contact support.' },
-      { q: 'How do I withdraw?', a: 'Open Wallet, choose Withdraw, pick a saved bank account (NGN) or enter a Solana address (USDC or SOL), enter the amount and confirm.' },
+      { q: 'How do I withdraw?', a: 'Open Balance, choose Withdraw, pick a saved bank account (NGN) or enter a Solana address (USDC or SOL), enter the amount and confirm.' },
       { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The most you can withdraw in a day depends on your verification level: ₦5,000 at Level 1, ₦10,000 at Level 2 and ₦50,000 at Level 3. Bank and crypto withdrawals count together over the last 24 hours, and the Withdraw screen shows how much you have left.' },
       { q: 'How long does it take?', a: 'Bank withdrawals are paid every Thursday morning: anything you request before then goes out that Thursday. The money only goes to a bank account in your own name, as your bank records it; if your bank spells your name a little differently, our team checks it first, which can take longer. A bank account added less than a day before a Thursday payout is paid the Thursday after. Crypto withdrawals arrive once the Solana transaction confirms, typically within minutes.' },
-      { q: 'My withdrawal failed. Where is my money?', a: 'Funds are only locked while a withdrawal is processing. If the payout fails, the lock is released and the money is available in your wallet again.' },
+      { q: 'My withdrawal failed. Where is my money?', a: 'Funds are only locked while a withdrawal is processing. If the payout fails, the lock is released and the money is available in your balance again.' },
     ],
   },
   {
     id: 'referrals', title: 'Referrals and bonuses', items: [
       { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited finishes 3 different paid jobs (jobs posted by someone else, not you). Signing up or verifying alone does not pay. Paid once per friend.' },
       { q: 'Is there a limit?', a: 'Referral bonuses are paid for up to 20 referrals per person. This stops people farming the programme with fake accounts.' },
-      { q: 'Do new users get a bonus?', a: 'Yes. ₦1,000 goes into your wallet once both are done: you verify your identity with your NIN or ID (free in Settings → Verification) and you finish your first paid job. You can spend it on OgaPay straight away, and withdraw or send it once you have earned ₦5,000 from jobs. Verifying with only a bank account lets you withdraw, but doesn’t count for the bonus. One bonus per person.' },
+      { q: 'Do new users get a bonus?', a: 'Yes. ₦1,000 goes into your balance once both are done: you verify your identity with your NIN or ID (free in Settings → Verification) and you finish your first paid job. You can spend it on OgaPay straight away, and withdraw or send it once you have earned ₦5,000 from jobs. Verifying with only a bank account lets you withdraw, but doesn’t count for the bonus. One bonus per person.' },
     ],
   },
   {
@@ -93,7 +93,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'store', title: 'Buying and selling in the store', items: [
-      { q: 'How does buying in the store work?', a: 'Choose Buy now on a product and pay from your OgaPay wallet. OgaPay holds the payment, and a chat opens with the seller so you can share details and arrange delivery. You can follow every order in Store, My orders.' },
+      { q: 'How does buying in the store work?', a: 'Choose Buy now on a product and pay from your OgaPay balance. OgaPay holds the payment, and a chat opens with the seller so you can share details and arrange delivery. You can follow every order in Store, My orders.' },
       { q: 'What is buyer protection?', a: 'The seller only gets your payment when you press Confirm received, or 3 days after they mark the order delivered. If something is wrong, choose Report a problem before then: the payment stays on hold while OgaPay looks into it. Until the seller starts work you can also cancel and get your money back.' },
       { q: 'When do sellers get paid?', a: 'When the buyer confirms they received the order, or automatically 3 days after you mark it delivered if they report no problem. While the payment is held you can cancel and refund the buyer. Orders and payments are in My Store, Orders.' },
       { q: 'Are there store fees?', a: 'No. Sellers receive the full price of each order.' },
@@ -103,14 +103,14 @@ export const TOPICS: Topic[] = [
     id: 'communities', title: 'Communities', items: [
       { q: 'What are communities?', a: 'Groups built around a niche or an audience, with members, a group chat, a leaderboard and a feed of open and completed jobs.' },
       { q: 'How do I join one?', a: 'Open Communities and choose Join. Open communities let you in straight away; private ones send your request to the admins.' },
-      { q: 'Can I create my own and post jobs to it?', a: 'Yes. Create a community, invite people, and share paid jobs with your members first so your next task starts with people you already trust. Creating a community costs ₦500 from your naira wallet (it keeps spam communities out); you see the fee before you create, and nothing is charged if creating fails.' },
-      { q: 'Can I turn my USDC into naira?', a: 'Yes. In Wallet, choose Convert USDC to naira and enter an amount (or 25%, 50%, Max). You see the rate and the exact naira amount before you confirm, and there is no fee. USDC held for a job or a withdrawal cannot be converted. If we can\'t get a fresh naira price, converting pauses for a few minutes and your USDC stays safe. You can also switch on automatic conversion in Settings: new USDC you\'re paid or deposit is converted to naira as it arrives, and USDC already in your wallet stays as it is. If we can\'t get a fresh price when it arrives, it stays USDC and you can convert it by hand.' },
+      { q: 'Can I create my own and post jobs to it?', a: 'Yes. Create a community, invite people, and share paid jobs with your members first so your next task starts with people you already trust. Creating a community costs ₦500 from your naira balance (it keeps spam communities out); you see the fee before you create, and nothing is charged if creating fails.' },
+      { q: 'Can I turn my USDC into naira?', a: 'Yes. On the Balance page, choose Convert USDC to naira and enter an amount (or 25%, 50%, Max). You see the rate and the exact naira amount before you confirm, and there is no fee. USDC held for a job or a withdrawal cannot be converted. If we can\'t get a fresh naira price, converting pauses for a few minutes and your USDC stays safe. You can also switch on automatic conversion in Settings: new USDC you\'re paid or deposit is converted to naira as it arrives, and USDC already in your balance stays as it is. If we can\'t get a fresh price when it arrives, it stays USDC and you can convert it by hand.' },
     ],
   },
   {
     id: 'troubleshooting', title: 'Troubleshooting', items: [
-      { q: 'My withdrawal says Failed or Rejected. Where is my money?', a: 'Back in your wallet. The amount is only held while a withdrawal is processing. If the bank transfer fails or our team rejects the withdrawal, the hold is released and the money is available again straight away. You get a notification with the reason (for example the bank\'s message), so check your bank details and try again.' },
-      { q: 'My withdrawal has said Processing for days.', a: 'Bank withdrawals are paid once a week, on Thursday at 10:00 Lagos time, so a withdrawal you request on Friday waits until the next Thursday. It is paid the Thursday after that if the bank account was added less than a day before the payout. A withdrawal also waits for our team when your bank spells your name a little differently from your OgaPay account, or when your account is waiting for a check because it looks linked to other accounts. The money stays held in your wallet the whole time.' },
+      { q: 'My withdrawal says Failed or Rejected. Where is my money?', a: 'Back in your balance. The amount is only held while a withdrawal is processing. If the bank transfer fails or our team rejects the withdrawal, the hold is released and the money is available again straight away. You get a notification with the reason (for example the bank\'s message), so check your bank details and try again.' },
+      { q: 'My withdrawal has said Processing for days.', a: 'Bank withdrawals are paid once a week, on Thursday at 10:00 Lagos time, so a withdrawal you request on Friday waits until the next Thursday. It is paid the Thursday after that if the bank account was added less than a day before the payout. A withdrawal also waits for our team when your bank spells your name a little differently from your OgaPay account, or when your account is waiting for a check because it looks linked to other accounts. The money stays held in your balance the whole time.' },
       { q: 'Why was my withdrawal refused when I requested it?', a: 'The message tells you which rule stopped it. The usual ones: the amount is under the ₦5,000 minimum (or its value in USDC); it is over what is left of your daily limit (the message says when more frees up); you haven\'t verified to Level 1 yet; the bank account isn\'t in your name; or the bank account is already used by another OgaPay account.' },
       { q: 'Why can\'t I withdraw more today?', a: 'The daily limit counts everything you withdrew in the last 24 hours, bank and crypto together, in naira at today\'s rate: ₦5,000 at Level 1, ₦10,000 at Level 2 and ₦50,000 at Level 3. It is a rolling 24 hours, not a calendar day, so each withdrawal stops counting 24 hours after you made it. Withdrawals that failed or were rejected don\'t count. Verify to a higher level in Settings to raise it.' },
       { q: 'I paid by bank transfer but my balance didn\'t go up.', a: 'After you pay, the Add money page asks Flutterwave about the payment every few seconds, and most deposits show within a minute. If it says the payment is still being checked, don\'t pay again: the deposit is matched to its reference as soon as the provider confirms it. If it still hasn\'t arrived after an hour, contact Support with the payment reference and your bank or card receipt.' },
@@ -126,7 +126,7 @@ export const TOPICS: Topic[] = [
       { q: 'My 2FA code doesn\'t work.', a: 'Codes from your authenticator app change every 30 seconds, so type the current one. If codes are always wrong, set your phone\'s time to automatic. If you lost the phone, sign in with one of the backup codes you saved when you turned 2FA on, or contact Support.' },
       { q: 'I can\'t add my bank account.', a: 'The account must be in your own name, as your bank records it, and it can\'t already be used by another OgaPay account: each person can have one OgaPay account and each bank account belongs to one of them.' },
       { q: 'I\'m not getting job alerts on my phone.', a: 'Turn them on in Settings, Notifications, Push alerts, and allow notifications when your browser asks. On iPhone, add OgaPay to your home screen first. To avoid spam you get at most 10 new-job alerts a day.' },
-      { q: 'The seller never delivered my order.', a: 'Report a problem on the order, or cancel it if the seller hasn\'t started. An order the seller hasn\'t marked delivered 14 days after you bought it is refunded to your wallet automatically.' },
+      { q: 'The seller never delivered my order.', a: 'Report a problem on the order, or cancel it if the seller hasn\'t started. An order the seller hasn\'t marked delivered 14 days after you bought it is refunded to your balance automatically.' },
       { q: 'A page looks broken or out of date.', a: 'We update OgaPay often. Refresh the page (or close and reopen the app) to load the latest version. If it is still broken, tell Support which page and what you see, with a screenshot.' },
     ],
   },
@@ -136,7 +136,7 @@ export const TOPICS: Topic[] = [
       { q: 'Which channels are really OgaPay?', a: 'This website (ogapay.app), @Ogapayhq on X, t.me/ogapayhq on Telegram and the email address support@ogapay.app. Other accounts using our name, including t.me/ogapay, are not us.' },
       { q: 'Someone asked me to pay to get a job.', a: 'That\'s a scam. Workers never pay to take a job on OgaPay: the reward is already reserved by the poster before the job goes live. Don\'t send money, and report the person.' },
       { q: 'Someone wants to pay me, or be paid, outside OgaPay.', a: 'Keep payments on OgaPay. Outside the platform there is no reserved budget, no buyer protection and no record we can check, so we can\'t help you get money back.' },
-      { q: 'Someone sent me a screenshot of a payment.', a: 'Only trust your own OgaPay wallet. Screenshots are easy to fake. Money for a job, a sale or a send shows in your Wallet transactions.' },
+      { q: 'Someone sent me a screenshot of a payment.', a: 'Only trust your own OgaPay balance. Screenshots are easy to fake. Money for a job, a sale or a send shows in your Wallet transactions.' },
       { q: 'How do I report a scam, a fake job or a bad user?', a: 'Report the job from its page, or the person from their profile, or open a ticket on the Support page. Add links and screenshots so our team can act quickly.' },
       { q: 'Can I have more than one OgaPay account?', a: 'No. One account per person. Accounts that share a bank account, a phone number or an ID number are linked and checked by our team: their bonuses are held and their withdrawals wait for a review until it\'s cleared.' },
       { q: 'Why can I only withdraw to a bank account in my own name?', a: 'So a stolen account can\'t be emptied into someone else\'s bank. We check the name on the account with the bank\'s own record (through Flutterwave), not the name you type. If it only partly matches, our team checks it before the money is sent.' },

@@ -12,7 +12,7 @@ const features = [
   },
   {
     title: "Freedom & Flexibility",
-    subtitle: "Pick tasks that fit your time, skill, and goals. Complete work, submit proof, and get paid into your OgaPay wallet without fixed hours, gatekeepers, or complicated setup.",
+    subtitle: "Pick tasks that fit your time, skill, and goals. Complete work, submit proof, and get paid into your OgaPay balance without fixed hours, gatekeepers, or complicated setup.",
     textFirst: false,
     img: storyImg("000_1000488580.png"),
   },

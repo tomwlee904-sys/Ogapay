@@ -294,7 +294,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
 
                   {step === 3 && (
                     <div className="cf-review">
-                      <div><span>Available in your {currency} wallet</span><b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
+                      <div><span>Available in your {currency} balance</span><b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                       {Object.keys(created).length > 0 && <div><span>Already published</span><b>{Object.keys(created).length} of {lines.length} actions</b></div>}
                     </div>
                   )}

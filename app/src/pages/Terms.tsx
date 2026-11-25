@@ -18,7 +18,7 @@ const SECTIONS = [
   { id: 'contests', title: 'Contests' },
   { id: 'working', title: 'Doing jobs' },
   { id: 'creators', title: 'Creators and audiences' },
-  { id: 'money', title: 'Your wallet, deposits and withdrawals' },
+  { id: 'money', title: 'Your balance, deposits and withdrawals' },
   { id: 'store', title: 'The store' },
   { id: 'refunds', title: 'Refund policy' },
   { id: 'communities', title: 'Communities and the blog' },
@@ -73,7 +73,7 @@ export default function Terms() {
           <article className="lg-text">
             <section id="about">
               <h2><span>{n('about')}</span>Who we are and these terms</h2>
-              <p>OgaPay connects people who need small jobs done ("posters") with people who do them ("workers"), lets businesses hire creators, and lets people sell products and services in the store. We hold money for jobs and orders, move it when work is approved or an order is received, and keep a record of every payment in your wallet.</p>
+              <p>OgaPay connects people who need small jobs done ("posters") with people who do them ("workers"), lets businesses hire creators, and lets people sell products and services in the store. We hold money for jobs and orders, move it when work is approved or an order is received, and keep a record of every payment in your balance.</p>
               <p>How we handle your personal data is explained in our <Link to="/privacy">Privacy policy</Link>, which is part of these terms.</p>
             </section>
 
@@ -106,7 +106,7 @@ export default function Terms() {
                 <li><b>Who can take part.</b> You can limit a job to verified people, people with a connected X account or a blue tick on X, a connected wallet, a minimum rank or OgaScore, a minimum verified audience (see Creators), or members of a community you run. Requirements are checked when someone applies; they don't guarantee the quality of the work.</li>
                 <li><b>Review work promptly.</b> When a worker submits, you approve or reject it. We remind you 24 hours after a submission; if you still haven't reviewed it 72 hours after it was sent, it is approved automatically and the worker is paid.</li>
                 <li><b>Rejecting work.</b> Only reject work that doesn't meet what your job asked for, and say why. Rejections can be reported and reviewed.</li>
-                <li><b>Cancelling and closing.</b> You can cancel a job before anyone has taken a place; everything held for it, including the fee, goes back to your wallet. When a job closes or ends with places unused, the unused rewards and the matching part of the fee go back to your wallet. Rewards for approved work are not returned.</li>
+                <li><b>Cancelling and closing.</b> You can cancel a job before anyone has taken a place; everything held for it, including the fee, goes back to your balance. When a job closes or ends with places unused, the unused rewards and the matching part of the fee go back to your balance. Rewards for approved work are not returned.</li>
                 <li><b>What you can't post:</b> anything illegal, deceptive or harmful; jobs asking workers to break the law or another platform's rules; requests for passwords, codes or personal financial details; adult content; and jobs that are really advertising a scheme or asking workers to pay you.</li>
               </ul>
             </section>
@@ -115,10 +115,10 @@ export default function Terms() {
               <h2><span>{n('contests')}</span>Contests</h2>
               <ul>
                 <li>In a contest you set a prize for each place (up to 20 places). All the prizes plus the platform fee are held when the contest goes live.</li>
-                <li>While entries are open you can raise prizes or add places at the end, up to 20 in all. The extra prize money plus the platform fee on it is held from your wallet at that time, and everyone who has entered is told. Prizes can't be lowered, places can't be taken away, a lower place can't pay more than the one above it, and a place already awarded keeps the prize it was paid.</li>
+                <li>While entries are open you can raise prizes or add places at the end, up to 20 in all. The extra prize money plus the platform fee on it is held from your balance at that time, and everyone who has entered is told. Prizes can't be lowered, places can't be taken away, a lower place can't pay more than the one above it, and a place already awarded keeps the prize it was paid.</li>
                 <li>When entries close you have 3 days to rank the winners from the entries that follow your brief. If you don't, the earliest entries that weren't rejected win, in the order they were sent, so the prizes are always paid.</li>
                 <li>In a contest where every place pays the same prize, you can also award places before entries close. Once every place is awarded, the contest ends early and no more entries can be sent.</li>
-                <li>Prizes for places with no eligible entry, and the matching part of the fee, go back to your wallet. A contest that gets no entries is refunded in full.</li>
+                <li>Prizes for places with no eligible entry, and the matching part of the fee, go back to your balance. A contest that gets no entries is refunded in full.</li>
                 <li>Entrants must send their own original work. By entering, you allow the poster to use the winning entry for the purpose the brief describes, unless the brief says otherwise.</li>
               </ul>
             </section>
@@ -129,7 +129,7 @@ export default function Terms() {
                 <li>Only apply for jobs you can do, and meet any requirements the poster set.</li>
                 <li>Submit genuine proof of your own work. Faked, copied or automated submissions will be rejected and can get your account suspended.</li>
                 <li>When a job's places are all taken, it pauses for 24 hours so the people who took a place can send their work; anyone who hasn't submitted by then loses their place.</li>
-                <li>You're paid into your wallet when the poster approves your work, or automatically 72 hours after you sent it if nobody reviewed it.</li>
+                <li>You're paid into your balance when the poster approves your work, or automatically 72 hours after you sent it if nobody reviewed it.</li>
                 <li>You are an independent person doing individual jobs, not an employee of OgaPay or of the poster. You're responsible for any tax on what you earn.</li>
                 <li>Where a job involves another website or app (for example a social network), you're responsible for following that service's rules.</li>
               </ul>
@@ -147,7 +147,7 @@ export default function Terms() {
             </section>
 
             <section id="money">
-              <h2><span>{n('money')}</span>Your wallet, deposits and withdrawals</h2>
+              <h2><span>{n('money')}</span>Your balance, deposits and withdrawals</h2>
               <ul>
                 <li><b>Your balance is a record, not a bank account.</b> Your naira balance shows what OgaPay owes you for approved work, prizes, referral rewards and store sales, plus any credit you added. It earns no interest and is not insured by the NDIC. OgaPay is not a bank, a mobile money operator or a licensed payment service provider; payments are made through licensed banks and payment partners.</li>
                 <li><b>Credit.</b> Naira you add (by bank transfer, bank app or USSD) is credit: it pays for jobs and store purchases on OgaPay, and is used before your earnings. Credit can't be withdrawn or sent to another member. Money from a job or order that comes back to you (places nobody took, a cancelled order) comes back as credit, up to the credit you used for it. If you want unused credit refunded, contact support; refunds go only to a bank account in your own name and may be checked first.</li>
@@ -156,7 +156,7 @@ export default function Terms() {
                 <li><b>Withdrawing to a bank.</b> You can withdraw your earnings, not credit. The minimum is ₦5,000 or its equivalent and the fee is 1.5% (at least ₦100); both are shown before you confirm. Bank withdrawals are paid every Thursday morning; a request made before then goes out that Thursday. They only go to a bank account in your own name, as your bank records it (if the bank spells your name differently, our team checks it first), and a bank account added less than a day before a payout is paid the Thursday after.</li>
                 <li><b>Crypto.</b> Crypto withdrawals have no OgaPay fee, are sent on the Solana network straight away and can't be reversed. Check the address; we can't recover crypto sent to a wrong address.</li>
                 <li><b>Sending to other members</b> is not available. A poster can add a tip for approved work on their own job.</li>
-                <li><b>Mistakes and reversals.</b> If money reaches your wallet by mistake or through a payment that is later reversed or found to be fraudulent, we may take it back or hold it while we check.</li>
+                <li><b>Mistakes and reversals.</b> If money reaches your balance by mistake or through a payment that is later reversed or found to be fraudulent, we may take it back or hold it while we check.</li>
                 <li>We may pause a payment or withdrawal to prevent fraud or to meet a legal duty, and will tell you why where we're allowed to.</li>
               </ul>
             </section>
@@ -165,7 +165,7 @@ export default function Terms() {
               <h2><span>{n('store')}</span>The store</h2>
               <ul>
                 <li>Sellers are responsible for what they sell: describe it honestly, deliver what was promised, and only sell things they have the right to sell. Selling in the store is free; sellers receive the full price.</li>
-                <li><b>Buyer protection.</b> When you buy, the price is taken from your wallet and held by OgaPay, and a chat opens with the seller to arrange delivery. The seller is paid when you confirm you received the order, or 3 days after they mark it delivered if you haven't reported a problem.</li>
+                <li><b>Buyer protection.</b> When you buy, the price is taken from your balance and held by OgaPay, and a chat opens with the seller to arrange delivery. The seller is paid when you confirm you received the order, or 3 days after they mark it delivered if you haven't reported a problem.</li>
                 <li>If something is wrong, choose Report a problem before then: the payment stays held while we look at both sides, then we either refund you or pay the seller. Until the seller starts work you can cancel and get your money back, and the seller can refund you at any time while the payment is held.</li>
                 <li>OgaPay also sells a few items of its own: a Premium badge and a worker frame (shown on your profile for as long as your account is in good standing), Priority Support (your tickets go to the top of our queue for 30 days) and Task Boost (one of your open jobs is listed first for 24 hours). They take effect straight away and aren't refundable once applied.</li>
               </ul>
@@ -173,13 +173,13 @@ export default function Terms() {
 
             <section id="refunds">
               <h2><span>{n('refunds')}</span>Refund policy</h2>
-              <p>This is how money comes back to you on OgaPay. Refunds go to your OgaPay wallet, in the currency you paid, and you can then withdraw them to your bank as usual.</p>
+              <p>This is how money comes back to you on OgaPay. Refunds go to your OgaPay balance, in the currency you paid, and you can then withdraw them to your bank as usual.</p>
               <ul>
                 <li><b>Jobs you post.</b> If you cancel a job before anyone has taken a place, everything held for it, including the fee, is refunded. When a job closes or ends with places unused, the rewards for those places and the matching part of the fee are refunded. Rewards for work you approved, or that was approved automatically, are not refunded.</li>
                 <li><b>Contests.</b> Prizes for places with no eligible entry, and the matching part of the fee, are refunded. A contest that gets no entries is refunded in full. Prizes already awarded are not refunded.</li>
                 <li><b>Store orders.</b> Your payment is held until you confirm you received the order. You get a full refund if you cancel before the seller starts, if the seller refunds you, or if the seller doesn't mark the order delivered in time (14 days after you paid, or the promised delivery time plus 7 days if that is longer). If something is wrong, choose Report a problem before the payment is released: we look at both sides and refund you, pay the seller, or split the amount. Once you confirm you received an order, or the payment is released after the waiting time, it can't be refunded through OgaPay.</li>
                 <li><b>OgaPay's own items.</b> The Premium badge, worker frame, Priority Support and Task Boost take effect straight away and are not refundable once applied.</li>
-                <li><b>Deposits.</b> Money you add stays in your wallet until you spend or withdraw it. If you added money by mistake, you can withdraw it to your bank (the normal withdrawal minimum and fee apply). A deposit that is reversed, charged back or found to be fraudulent is taken back.</li>
+                <li><b>Deposits.</b> Money you add stays in your balance until you spend or withdraw it. If you added money by mistake, you can withdraw it to your bank (the normal withdrawal minimum and fee apply). A deposit that is reversed, charged back or found to be fraudulent is taken back.</li>
                 <li><b>Withdrawals.</b> If a bank withdrawal can't be paid, or we reject it, the money goes back to your wallet and we tell you why. Crypto withdrawals and sending money to another member are final once sent and can't be refunded.</li>
                 <li><b>Mistakes on our side.</b> If we charge you in error, or a fault on OgaPay takes money it shouldn't, we refund it in full once we confirm it. Tell us within 30 days at support@ogapay.app.</li>
                 <li><b>How to ask.</b> For a store order, use Report a problem on the order. For anything else, contact support with your username and the date and amount, and we reply within 24 hours. We may refuse or reverse a refund that is part of fraud or abuse of these terms.</li>

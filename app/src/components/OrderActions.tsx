@@ -99,8 +99,8 @@ export default function OrderActions({ order: o, role, onDone, lead, details = t
 
   // ── Buyer steps ──
   const cancel = () => {
-    if (!window.confirm(`Cancel your order for "${o.product.name}"? ${amount} goes back to your wallet.`)) return
-    send('POST', '/cancel', null, 'Order cancelled. The money is back in your wallet.')
+    if (!window.confirm(`Cancel your order for "${o.product.name}"? ${amount} goes back to your balance.`)) return
+    send('POST', '/cancel', null, 'Order cancelled. The money is back in your balance.')
   }
   // Only once the seller marks it delivered (the server checks too). On a
   // reported order it drops the report and pays the seller.

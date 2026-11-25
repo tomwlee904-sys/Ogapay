@@ -89,7 +89,7 @@ export default function MyStoreEarnings() {
       )}
 
       <section className="ms2-group">
-        <h2 className="ms2-group-h">Sales history <em>{p.total}</em><small>Every sale paid to your wallet, newest first</small></h2>
+        <h2 className="ms2-group-h">Sales history <em>{p.total}</em><small>Every sale paid to your balance, newest first</small></h2>
         {data.sales.length === 0 ? (
           <div className="up-empty"><i className="ti ti-coin" />No sales paid to you yet. When a buyer confirms an order (or 3 days after you mark it delivered), it shows here.</div>
         ) : (

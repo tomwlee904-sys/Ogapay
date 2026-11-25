@@ -78,7 +78,7 @@ export default function FundJobWalletModal({
       name: customerName || customerEmail,
     },
     customizations: {
-      title: 'Fund OgaPay Wallet',
+      title: 'Add to OgaPay balance',
       description: `Deposit ₦${Math.round(shortfall).toLocaleString('en-US')} to post your job`,
       logo: 'https://ogapay.io/logo.png',
     },
@@ -106,7 +106,7 @@ export default function FundJobWalletModal({
             if (pollCount > POLL_LIMIT) {
               if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
               setStep('error')
-              setError('Payment is taking longer than expected to confirm. Your money is safe — check your wallet balance in a moment, then try posting again.')
+              setError('Payment is taking longer than expected to confirm. Your money is safe — check your balance in a moment, then try posting again.')
               setIsProcessing(false)
               return
             }
@@ -208,7 +208,7 @@ export default function FundJobWalletModal({
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>
                 {isNgn
                   ? 'Pay with Flutterwave in the overlay. After successful payment, your job will be posted automatically.'
-                  : 'Crypto funding is not available yet. Please fund your wallet from the Wallet page and come back.'}
+                  : 'Crypto funding is not available yet. Please fund your wallet from the Balance page and come back.'}
               </div>
             </div>
 
@@ -268,7 +268,7 @@ export default function FundJobWalletModal({
               <i className="ti ti-circle-check" style={{color:"var(--green)"}} /> Payment Confirmed
             </div>
             <p style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 20 }}>
-              Your wallet has been funded. Posting your job now...
+              Your balance has been funded. Posting your job now...
             </p>
           </>
         )}

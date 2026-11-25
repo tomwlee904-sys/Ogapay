@@ -389,8 +389,8 @@ export default function SubmissionPage() {
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic ok"><i className={`ti ${mine?.contestResult === 'WON' ? 'ti-trophy' : 'ti-check'}`} /></span>
                 <h2>{mine?.contestResult === 'WON' ? `You won ${ordinal(mine.place || 1)} place` : 'Approved and paid'}</h2>
-                <p>{show(paidAmount, cur, { exact: true })} went to your wallet.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open wallet</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
+                <p>{show(paidAmount, cur, { exact: true })} went to your balance.</p>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open balance</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -398,7 +398,7 @@ export default function SubmissionPage() {
                 <h2>{status === 'REJECTED' ? (mine?.dispute?.outcome === 'SPLIT' ? 'Half the reward paid' : 'Not approved') : status === 'EXPIRED' ? 'Your slot expired' : 'OgaPay is taking a second look'}</h2>
                 <p>{status === 'REJECTED'
                   ? (mine?.dispute?.outcome === 'POSTER_WON' ? 'We looked at your work again and the rejection stays.'
-                    : mine?.dispute?.outcome === 'SPLIT' ? 'We looked at your work again and paid you half the reward. It went to your wallet.'
+                    : mine?.dispute?.outcome === 'SPLIT' ? 'We looked at your work again and paid you half the reward. It went to your balance.'
                     : "The poster didn't approve this work.")
                   : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.'
                   : "Our team is checking your work against the brief. You'll get a notification with the decision, and if it goes your way you're paid from the money held for this job."}</p>

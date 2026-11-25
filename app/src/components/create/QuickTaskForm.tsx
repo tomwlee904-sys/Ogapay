@@ -209,7 +209,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
       <button className="ui-btn ui-btn-dark ui-btn-lg" onClick={submit} disabled={busy}>
         {!isAuthed ? "Sign in to continue" : busy ? "Publishing…" : balance < total ? "Top up and pay" : `Pay ${money(total, cur)} and publish`} {!busy && <i className="ti ti-arrow-right" />}
       </button>
-      <p className="cw-terms" style={{ marginTop: -6 }}>The job goes live as soon as it's paid. Unused budget returns to your wallet when it closes.</p>
+      <p className="cw-terms" style={{ marginTop: -6 }}>The job goes live as soon as it's paid. Unused budget returns to your balance when it closes.</p>
 
       {showFund && (
         <FundJobWalletModal

@@ -25,7 +25,7 @@ const phases = [
     title: "Money and trust",
     status: "done",
     items: [
-      "Wallet in Naira, USDC and SOL",
+      "Balance in Naira, USDC and SOL",
       "Deposits by bank transfer to your own Flutterwave account number",
       "Withdrawals to Nigerian banks and crypto wallets",
       "Free transfers between OgaPay users",

@@ -336,10 +336,10 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     } catch (e: any) { toast(e?.message || "Couldn't change the job", "error"); }
   };
   const cancel = async () => {
-    if (!window.confirm("Cancel this job? Money held for unfilled slots, including their share of the fee, goes back to your wallet.")) return;
+    if (!window.confirm("Cancel this job? Money held for unfilled slots, including their share of the fee, goes back to your balance.")) return;
     try {
       await apiRequest(`/escrow/refund/${task.id}`, { method: "POST" });
-      toast("Job cancelled. The money is back in your wallet.", "success");
+      toast("Job cancelled. The money is back in your balance.", "success");
       onChanged({ subs: true }); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't cancel this job", "error"); }
   };
@@ -356,7 +356,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     const places = Number(task.maxWorkers) || 1;
     const extra = (to - reward) * places;
     const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
-    if (!window.confirm(`Raise the pay to ${money(to, cur)} per person?\n\n${money(extra, cur)} more is held for the ${places} places, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nWork you approve from now on is paid ${money(to, cur)}. Money for places nobody uses comes back when the job closes.`)) return;
+    if (!window.confirm(`Raise the pay to ${money(to, cur)} per person?\n\n${money(extra, cur)} more is held for the ${places} places, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your balance.\n\nWork you approve from now on is paid ${money(to, cur)}. Money for places nobody uses comes back when the job closes.`)) return;
     try {
       await apiRequest(`/tasks/${task.id}/raise-pay`, { method: "POST", body: JSON.stringify({ reward: to }), timeoutMs: MONEY_TIMEOUT_MS });
       toast(`Pay raised to ${money(to, cur)} per person`, "success");
@@ -379,7 +379,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     if (!Number.isInteger(n) || n < 1) { toast("Enter how many places to add", "error"); return; }
     const extra = reward * n;
     const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
-    if (!window.confirm(`Add ${n} place${n === 1 ? "" : "s"} at ${money(reward, cur)} each?\n\n${money(extra, cur)} is held for them, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nMoney for places nobody uses comes back when the job closes.`)) return;
+    if (!window.confirm(`Add ${n} place${n === 1 ? "" : "s"} at ${money(reward, cur)} each?\n\n${money(extra, cur)} is held for them, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your balance.\n\nMoney for places nobody uses comes back when the job closes.`)) return;
     const before = Number(task.maxWorkers) || 0;
     try {
       const r = await apiRequest<{ places: number; added?: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n, idempotencyKey: placesKey.current }), timeoutMs: MONEY_TIMEOUT_MS });
@@ -417,12 +417,12 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
       waiting ? `${waiting} piece${waiting === 1 ? "" : "s"} of work waiting for review will be approved and paid (${money(reward * waiting, cur)}). Check them first if you haven't.` : "No work is waiting for review.",
       backOut ? `${backOut} piece${backOut === 1 ? "" : "s"} of work you sent back for changes will be approved and paid as last sent (${money(reward * backOut, cur)}).` : "",
       holding ? `${holding} ${holding === 1 ? "person holding a place" : "people holding places"} without sending work will lose ${holding === 1 ? "it" : "them"}.` : "",
-      "The money for places nobody used comes back to your wallet. This can't be undone.",
+      "The money for places nobody used comes back to your balance. This can't be undone.",
     ].filter(Boolean);
     if (!window.confirm(`Stop "${task.title}"?\n\n${lines.join("\n")}`)) return;
     try {
       const r = await apiRequest<{ approved: number; released: number }>(`/tasks/${task.id}/stop`, { method: "POST" });
-      toast(`Job stopped.${r?.approved ? ` ${r.approved} paid.` : ""} The unused money is back in your wallet.`, "success");
+      toast(`Job stopped.${r?.approved ? ` ${r.approved} paid.` : ""} The unused money is back in your balance.`, "success");
       onChanged({ subs: true }); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't stop the job", "error"); }
   };

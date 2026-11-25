@@ -458,13 +458,13 @@ export default function JobDetail() {
       ? 'Close this job as an admin? Work already approved stays paid. The money for places nobody used, with its share of the fee, goes back to the poster\'s wallet. If someone still holds a place or has work waiting for review, it can\'t be closed yet. This can\'t be undone.'
       : forPoster
       ? 'Cancel this job as an admin? Nobody has taken it. The money held for it, including the fee, goes back to the poster\'s wallet. This can\'t be undone.'
-      : 'Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
+      : 'Cancel this job? The money held for it, including the fee, goes back to your balance. This can\'t be undone.')) return
     setCancelling(true)
     try {
       await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST', body: JSON.stringify(forPoster && why.trim() ? { reason: why.trim() } : {}) })
       setJob({ ...job, status: 'cancelled' })
       refreshUser?.()
-      window.alert(forPoster ? 'Job cancelled. The money is back in the poster\'s wallet.' : 'Job cancelled. The money is back in your wallet.')
+      window.alert(forPoster ? 'Job cancelled. The money is back in the poster\'s wallet.' : 'Job cancelled. The money is back in your balance.')
     } catch (e: any) {
       window.alert(e?.message || 'Could not cancel this job.')
     }
@@ -1285,12 +1285,12 @@ function WurkJobDetailView(props: any) {
                 </div>
                 {contest ? (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={contest.randomDraw
-                    ? "When entries close the winners are drawn at random from the entries the poster hasn't rejected. Each place's prize is paid to your wallet at once from the money already held for this contest. The seed and the drawn order are shown on this page so anyone can check the draw."
-                    : "When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">{contest.randomDraw
+                    ? "When entries close the winners are drawn at random from the entries the poster hasn't rejected. Each place's prize is paid to your balance at once from the money already held for this contest. The seed and the drawn order are shown on this page so anyone can check the draw."
+                    : "When entries close the poster ranks the best entries and each place's prize is paid to your balance from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">{contest.randomDraw
                     ? `Drawn at random: ${contest.prizes.length} ${contest.prizes.length === 1 ? 'prize' : 'prizes'}`
                     : `Prizes for the top ${contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}`}</div></div>
                 ) : (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your balance from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
                 )}
                 <div className="wjd-row"><div className="wjd-label">Selection type</div><div className="wjd-value">{contest ? (contest.randomDraw ? 'Random draw' : 'Poster ranks entries') : job.isSelection ? 'Poster picks one person' : 'Each approved person is paid'}</div></div>
                 {job.payoutCheck && (
@@ -1491,7 +1491,7 @@ function WurkJobDetailView(props: any) {
                   <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>You have 72 hours to send it (24 hours once every place is taken).</small>}</li>
                   <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why. Fake, edited or copied proof gets a warning, and 3 warnings in 30 days stop you taking jobs.</small></li>
                 </>)}
-                <li><b>{contest ? 'The prize goes' : `${show(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
+                <li><b>{contest ? 'The prize goes' : `${show(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay balance.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
               </ol>
             </section>
           )}
@@ -1622,7 +1622,7 @@ function WurkJobDetailView(props: any) {
                   ? <><strong>Apply with a short note.</strong> The poster reads the notes and picks one person.{jobRequirements(job).filter(r => r.icon !== 'award').length ? ` You need: ${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.` : ''}</>
                   : <><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</>}</li>
                 <li><strong>Do the work and send it in</strong> with the proof the poster asked for. {job.isSelection ? `If you're picked, you have ${deliveryText(job)} to send it, or your place opens again.` : "You have 72 hours to send it (24 hours once every place is taken), or your place goes to someone else."}</li>
-                <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
+                <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay balance.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
               </ol>
 
@@ -1735,7 +1735,7 @@ function WurkJobDetailView(props: any) {
               {selectedSub.status === 'APPROVED' && (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Payout</div>
-                  <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>{selectedSub.paidAmount != null ? `Paid ${formatMoney(Number(selectedSub.paidAmount), rewardCurrency)} to their wallet` : 'Paid to their wallet'}</span>
+                  <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>{selectedSub.paidAmount != null ? `Paid ${formatMoney(Number(selectedSub.paidAmount), rewardCurrency)} to their balance` : 'Paid to their balance'}</span>
                 </div>
               )}
               {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}

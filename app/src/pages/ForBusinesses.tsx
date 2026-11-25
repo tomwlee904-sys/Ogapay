@@ -9,7 +9,7 @@ import { displayCode, formatIn, type DisplayCode } from '../lib/money'
 
 const FACTS = [
   { icon: 'calendar-off', title: 'No subscription', text: 'Fund each job when you need it.' },
-  { icon: 'coins', title: 'Naira or USDC', text: 'Pay from your OgaPay wallet.' },
+  { icon: 'coins', title: 'Naira or USDC', text: 'Pay from your OgaPay balance.' },
   { icon: 'lock', title: 'Budget reserved', text: 'The budget is locked before anyone starts.' },
   { icon: 'receipt', title: '10% fee', text: 'On the budget, once. Workers keep the full reward.' },
 ]
@@ -135,7 +135,7 @@ export default function ForBusinesses() {
             <div><span>You fund</span><b>{formatIn(code, rewards + fee)}</b></div>
             <div><span>Each approved worker receives</span><b>{formatIn(code, per)}</b></div>
           </div>
-          <p>Cancel a job before anyone has taken it and the budget and fee come back to your wallet.</p>
+          <p>Cancel a job before anyone has taken it and the budget and fee come back to your balance.</p>
         </section>
 
         <section className="fb-sec">

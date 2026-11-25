@@ -289,14 +289,14 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 </Link>
               )}
 
-              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, wallet, settings">
+              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, balance, settings">
                 <Link className="oga-drawer-item" to="/profile" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user" /></span>
                   <span><strong>My Profile</strong><small>View and edit profile</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/wallet" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-wallet" /></span>
-                  <span><strong>Wallet</strong><small>Balance, deposits and withdrawals</small></span>
+                  <span><strong>Balance</strong><small>Deposits and withdrawals</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/earnings" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-coin" /></span>

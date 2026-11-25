@@ -1038,7 +1038,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
                   <div className="cf-field">
                     <label htmlFor="cj-dur">{isContest ? "Entries close after" : "Job closes after"} <InfoTip label="What happens when the job closes?" title="When it closes">
-                      <p>No one can take a place or send new work. Work already sent is still reviewed, and money for places nobody used comes back to your wallet.</p>
+                      <p>No one can take a place or send new work. Work already sent is still reviewed, and money for places nobody used comes back to your balance.</p>
                       <p>Work you don't review within 3 days is approved and paid automatically.</p>
                     </InfoTip></label>
                     <select id="cj-dur" className="ui-select" value={isContest && duration === "No deadline" ? "7 days" : duration} onChange={e => setDuration(e.target.value)}>
@@ -1046,7 +1046,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </select>
                     <p className="cf-hint">{isContest && deadline
                       ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. ${randomDraw ? "The winners are then drawn at random." : "You then have 3 days to rank the winners."}`
-                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${deadlineMoved ? ` (moved to ${deliveryLabel} after applications close)` : ""}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
+                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${deadlineMoved ? ` (moved to ${deliveryLabel} after applications close)` : ""}. Unused budget returns to your balance.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
                   {checkable && (
@@ -1184,12 +1184,12 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     {hideAfter && <div><span>When finished</span><b>Hidden from public lists</b></div>}
                     {checkable && <div><span>Payout check</span><b>{PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || "Instant"}</b></div>}
                     {files.length + templateFiles.length > 0 && <div><span>Attachments</span><b>{files.length + templateFiles.length} file{files.length + templateFiles.length > 1 ? "s" : ""}</b></div>}
-                    <div><span>Available in your {currency} wallet</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
+                    <div><span>Available in your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                   </div>
                   {balance < totalToPay && (
                     <div className="cw-banner" style={{ margin: 0 }}>
                       <span>You need {money(totalToPay - balance, currency)} more to publish this job.</span>
-                      <button className="ui-btn ui-btn-dark" onClick={() => setShowFundModal(true)}>Top up wallet</button>
+                      <button className="ui-btn ui-btn-dark" onClick={() => setShowFundModal(true)}>Top up balance</button>
                     </div>
                   )}
                   {submitError && <div className="cf-error">{submitError}</div>}
@@ -1332,7 +1332,7 @@ function CreateTask() {
     sessionStorage.removeItem("ogapay_fund_and_retry");
     const msg = document.createElement("div");
     msg.style.cssText = "position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:500;background:#17805c;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,0.2)";
-    msg.textContent = "Payment received. Your wallet is funded and you can post your job.";
+    msg.textContent = "Payment received. Your balance is funded and you can post your job.";
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 5000);
   }, []);

@@ -101,9 +101,9 @@ export default function Sidebar() {
         <Link className="sidebar-link" to="/faq"><i className="ti ti-help-circle" /> <span><strong>FAQ</strong><small>Answers and guides</small></span></Link>
         <Link className="sidebar-link" to="/support"><i className="ti ti-headset" /> <span><strong>Support</strong><small>Get help</small></span></Link>
 
-        <SidebarGroup label="Account" icon="user-circle" subtitle="Wallet, profile &amp; settings">
+        <SidebarGroup label="Account" icon="user-circle" subtitle="Balance, profile &amp; settings">
           <Link className="sidebar-link" to="/dashboard"><i className="ti ti-layout-dashboard" /> <span><strong>Dashboard</strong><small>Your overview</small></span></Link>
-          <Link className="sidebar-link" to="/wallet"><i className="ti ti-wallet" /> <span><strong>Wallet</strong><small>Balance &amp; transactions</small></span></Link>
+          <Link className="sidebar-link" to="/wallet"><i className="ti ti-wallet" /> <span><strong>Balance</strong><small>Money in &amp; transactions</small></span></Link>
           <Link className="sidebar-link" to="/profile"><i className="ti ti-user" /> <span><strong>My Profile</strong><small>View your profile</small></span></Link>
           <Link className="sidebar-link" to="/settings"><i className="ti ti-settings" /> <span><strong>Settings</strong><small>KYC, security, preferences</small></span></Link>
           {devMode && (

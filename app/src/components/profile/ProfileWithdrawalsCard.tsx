@@ -58,7 +58,7 @@ export default function ProfileWithdrawalsCard({ onWithdraw }: { onWithdraw?: ()
     <section className="profile-card pf-wd" aria-labelledby="pf-wd-title">
       <div className="profile-card-head">
         <span id="pf-wd-title" className="pf-wd-title"><i className="ti ti-history" /> Withdrawal History</span>
-        <Link to="/wallet" className="pf-wd-link">Wallet</Link>
+        <Link to="/wallet" className="pf-wd-link">Balance</Link>
       </div>
       {rows === null ? (
         <div className="pf-wd-list">{[0, 1, 2].map((i) => <div key={i} className="up-skel" style={{ height: 52, margin: '10px 16px', borderRadius: 12 }} />)}</div>
@@ -132,7 +132,7 @@ export default function ProfileWithdrawalsCard({ onWithdraw }: { onWithdraw?: ()
       {more && rows && !failed && (
         <div className="pf-wd-more"><button type="button" className="pf-wd-more-btn" disabled={busy} onClick={loadMore}>{busy ? 'Loading…' : 'Load more'}</button></div>
       )}
-      {/* Everything else that came in is on the Wallet page (2026-11-08) */}
+      {/* Everything else that came in is on the Balance page (2026-11-08) */}
       <Link to="/wallet?filter=in" className="pf-wd-in">Deposits, refunds and job payments →</Link>
     </section>
   )

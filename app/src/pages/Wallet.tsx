@@ -154,7 +154,7 @@ export default function Wallet() {
       <div className="ui-page">
         <div className="ui-head">
           <div>
-            <span className="ui-eyebrow"><i className="ti ti-wallet" /> Wallet</span>
+            <span className="ui-eyebrow"><i className="ti ti-wallet" /> Balance</span>
             <h1 className="ui-title">Your money</h1>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function Wallet() {
                       </InfoTip></span>}
                       {onHold > 0 && <span><i className="ti ti-lock" /> {naira(onHold)} held for your jobs <InfoTip label="What is held money?" title="Held for your jobs">
                         <p>Money for jobs you posted or things you bought, kept safe by OgaPay. Workers are paid from it when you approve their work; store sellers are paid when you confirm the order (or after 3 days).</p>
-                        <p>Money for places nobody used comes back to your wallet when the job ends.</p>
+                        <p>Money for places nobody used comes back to your balance when the job ends.</p>
                       </InfoTip></span>}
                       {onItsWay > 0 && <span><i className="ti ti-clock" /> {naira(onItsWay)} on its way to your bank</span>}
                     </div>

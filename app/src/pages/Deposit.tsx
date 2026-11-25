@@ -148,20 +148,20 @@ export default function Deposit() {
               ) : check.phase === 'done' ? (
                 <>
                   <div className="wl-done-ic"><i className="ti ti-check" /></div>
-                  <h3>{a} added to your wallet</h3>
+                  <h3>{a} added to your balance</h3>
                   <p>It's ready to use.</p>
                 </>
               ) : check.phase === 'slow' ? (
                 <>
                   <div className="wl-done-ic wait"><i className="ti ti-clock" /></div>
                   <h3>Still waiting for confirmation</h3>
-                  <p>Your bank hasn't confirmed the payment yet. If money left your account, it will be added to your wallet automatically and you'll get a notification.</p>
+                  <p>Your bank hasn't confirmed the payment yet. If money left your account, it will be added to your balance automatically and you'll get a notification.</p>
                 </>
               ) : (
                 <>
                   <div className="wl-done-ic bad"><i className="ti ti-x" /></div>
                   <h3>{check.phase === 'cancelled' ? 'Payment cancelled' : "Payment didn't go through"}</h3>
-                  <p>{check.phase === 'cancelled' ? 'Nothing was charged.' : "Nothing was added to your wallet. If you were charged, contact support with the reference below."}</p>
+                  <p>{check.phase === 'cancelled' ? 'Nothing was charged.' : "Nothing was added to your balance. If you were charged, contact support with the reference below."}</p>
                 </>
               )}
               <div className="ref">Reference {check.reference}</div>
@@ -188,7 +188,7 @@ export default function Deposit() {
       <div className="ui-page">
         <div className="ui-head">
           <div>
-            <Link to={back || '/wallet'} className="wl-link"><i className="ti ti-arrow-left" /> {back ? 'Back' : 'Wallet'}</Link>
+            <Link to={back || '/wallet'} className="wl-link"><i className="ti ti-arrow-left" /> {back ? 'Back' : 'Balance'}</Link>
             <h1 className="ui-title">Add money</h1>
             <p className="ui-sub" style={{ marginTop: 6 }}>Money you add is credit for posting jobs and buying in the store. It can't be withdrawn or sent to someone; only what you earn can be withdrawn.</p>
           </div>
@@ -237,7 +237,7 @@ export default function Deposit() {
                     </div>
                     <ol className="dp-steps">
                       <li>Open your bank app and send any amount to this account.</li>
-                      <li>The money shows in your wallet once the bank confirms it. We'll notify you.</li>
+                      <li>The money shows in your balance once the bank confirms it. We'll notify you.</li>
                       <li>Keep using the same number: it's yours.</li>
                     </ol>
                     <p className="wl-note" style={{ margin: '10px 0 0' }}>Limit: no OgaPay limit on transfers to this number. Your bank's own daily transfer limit applies. No OgaPay fee.</p>
@@ -246,7 +246,7 @@ export default function Deposit() {
                   <div className="dp-lock">
                     <i className="ti ti-building-bank" />
                     <h3>Get your account number</h3>
-                    <p>A permanent account number in your name. Transfers to it land in your wallet.</p>
+                    <p>A permanent account number in your name. Transfers to it land in your balance.</p>
                     {dvaErr && <div className="wl-err" role="alert" style={{ textAlign: 'left' }}><i className="ti ti-alert-circle" /><span>{dvaErr}{/Verification/.test(dvaErr) && <> <Link to="/settings/verification" style={{ fontWeight: 600, color: 'inherit', textDecoration: 'underline' }}>Go to Verification</Link></>}</span></div>}
                     <button type="button" className="ui-btn ui-btn-dark" disabled={dvaBusy} onClick={createDva}>{dvaBusy ? 'Creating…' : 'Get my account number'}</button>
                   </div>
@@ -281,7 +281,7 @@ export default function Deposit() {
                 <ol className="dp-steps" style={{ margin: '0 0 18px' }}>
                   <li>Connect your wallet and enter the amount.</li>
                   <li>Approve the transfer in your wallet. Short of USDC? You can swap some SOL first.</li>
-                  <li>It shows in your wallet after confirmation, usually within a minute.</li>
+                  <li>It shows in your balance after confirmation, usually within a minute.</li>
                 </ol>
                 <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" onClick={() => setUsdcOpen(true)}>Deposit USDC</button>
               </>

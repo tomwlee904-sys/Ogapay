@@ -61,7 +61,7 @@ export default function HirePage() {
   const why = !worker ? `Loading ${name}'s profile…`
     : !briefOk ? 'Write at least 20 characters about the job.'
     : amt < MIN_BUDGET ? `Set a budget of at least ${naira(MIN_BUDGET)}.`
-    : short ? 'Top up your wallet to cover the total.'
+    : short ? 'Top up your balance to cover the total.'
     : uploading ? 'Wait for your files to finish uploading.'
     : ''
   // What share of the total goes to the creator (the fee is added on top of the budget)
@@ -228,8 +228,8 @@ export default function HirePage() {
             <div className="hr-line total"><span>You pay</span><b>{amt ? naira(total) : "—"}</b></div>
             <div className="hr-split" aria-hidden="true"><span style={{ width: `${creatorShare}%` }} /></div>
             <p className="hr-small" style={{ marginTop: -4 }}>{creatorShare}% of what you pay goes to {name}, {Math.round((100 - creatorShare) * 10) / 10}% is OgaPay's fee.</p>
-            {user && <div className={`hr-line ${short ? "bad" : ""}`}><span>Wallet available</span><b>{available === null ? "…" : naira(available)}</b></div>}
-            {short && <div className="up-note err">Not enough in your wallet. <Link to="/wallet">Top up</Link></div>}
+            {user && <div className={`hr-line ${short ? "bad" : ""}`}><span>Balance available</span><b>{available === null ? "…" : naira(available)}</b></div>}
+            {short && <div className="up-note err">Not enough in your balance. <Link to="/wallet">Top up</Link></div>}
             {error && <div className="up-note err" role="alert">{error}</div>}
 
             {!user ? (

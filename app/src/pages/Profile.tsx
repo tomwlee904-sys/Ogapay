@@ -845,7 +845,7 @@ export default function Profile() {
                   <button type="button" className="pw-refresh tap" aria-label="Refresh balance" title="Refresh balance" onClick={reloadBalance} disabled={balSpin}>
                     <i className={`ti ti-refresh${balSpin ? ' pw-spin' : ''}`} aria-hidden="true" />
                   </button>
-                  <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Wallet</a>
+                  <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Balance</a>
                 </span>
               </div>
               <div className="profile-card-body">
@@ -948,7 +948,7 @@ export default function Profile() {
                         <span style={{fontFamily:'var(--font-mono, monospace)'}}>{Number(v || 0).toFixed(d)}</span>
                       </div>
                     ))}
-                    <a href="/wallet" style={{display:'inline-block',marginTop:8,fontSize:12,color:'var(--text)',fontWeight:700}}>Open wallet →</a>
+                    <a href="/wallet" style={{display:'inline-block',marginTop:8,fontSize:12,color:'var(--text)',fontWeight:700}}>Open Balance →</a>
                   </div>
                 )}
                 {/* Auto-convert (saved: preferences.autoConvert) */}

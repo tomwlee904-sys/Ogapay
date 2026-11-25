@@ -227,7 +227,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
       </div>
 
       {cancelled && !paid && (
-        <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to {canManage ? 'your wallet' : 'the poster'}.</p>
+        <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to {canManage ? 'your balance' : 'the poster'}.</p>
       )}
 
       {!paid && !cancelled && random && (
@@ -413,8 +413,8 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
         <>
           <p className="cp-note">
             {first > 0
-              ? `There are no entries to pick from. The prizes for the ${contest.prizes.length - first} place${contest.prizes.length - first === 1 ? '' : 's'} left, and their share of the fee, come back to your wallet automatically.`
-              : 'There are no entries to pick from. The prizes and fee come back to your wallet automatically.'}
+              ? `There are no entries to pick from. The prizes for the ${contest.prizes.length - first} place${contest.prizes.length - first === 1 ? '' : 's'} left, and their share of the fee, come back to your balance automatically.`
+              : 'There are no entries to pick from. The prizes and fee come back to your balance automatically.'}
             {closed > 0 && ` ${closedNote(closed)}`}
           </p>
           {error && <div className="cp-err">{error}</div>}
@@ -642,7 +642,7 @@ function RaisePrizes({ jobId, contest, currency, endsAt, forPoster, convert, onD
   // The server's fee, so what is shown here is what is held (10% if it doesn't say)
   const feePct = typeof contest.feePercent === 'number' && contest.feePercent >= 0 ? contest.feePercent : CONTEST_FEE_PERCENT
   const check = checkRaise(old, rows, currency, winners.map((w) => w.place), feePct)
-  const payer = forPoster ? "the poster's wallet" : 'your wallet'
+  const payer = forPoster ? "the poster's balance" : 'your balance'
   const sym = currency === 'NGN' ? '₦' : currency === 'USDC' ? '$' : '◎'
   // Early awards need every place to pay the same
   const earlyLost = !contest.randomDraw && new Set(old).size === 1 && new Set(check.prizes).size > 1

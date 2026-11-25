@@ -44,7 +44,7 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
         <>
           <div className="wl-acct-num">{spaced(dva.accountNumber)}</div>
           <div className="wl-acct-sub">{dva.bankName}{dva.accountName ? ` · ${dva.accountName}` : ''}</div>
-          <p className="wl-note wl-dir-note">Transfer here from any bank app to add money to your wallet.</p>
+          <p className="wl-note wl-dir-note">Transfer here from any bank app to add money to your balance.</p>
           <div className="wl-dir-actions">
             <button type="button" className="ui-btn ui-btn-ghost" onClick={copy}><i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} /> {copied ? 'Copied' : 'Copy number'}</button>
             {!embedded && <Link className="wl-link" to="/deposit">Other ways to add money</Link>}
@@ -52,7 +52,7 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
         </>
       ) : verified ? (
         <>
-          <p className="wl-note wl-dir-note">Get a permanent account number in your name. Transfers to it land in your wallet.</p>
+          <p className="wl-note wl-dir-note">Get a permanent account number in your name. Transfers to it land in your balance.</p>
           {err && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{err}{/Verification/.test(err) && <> <Link to="/settings/verification" style={{ fontWeight: 600, color: 'inherit', textDecoration: 'underline' }}>Go to Verification</Link></>}</span></div>}
           <div className="wl-dir-actions">
             <button type="button" className="ui-btn ui-btn-dark" disabled={busy} onClick={create}>{busy ? 'Creating…' : 'Get my account number'}</button>

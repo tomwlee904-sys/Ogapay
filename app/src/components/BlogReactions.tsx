@@ -186,7 +186,7 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
       <div className="ui-card" role="dialog" aria-modal="true" aria-label="Tip the author" style={{ width: 'min(400px, 100%)', padding: 22, display: 'grid', gap: 14 }} onClick={(e) => e.stopPropagation()}>
         <div>
           <b style={{ fontSize: 16, color: 'var(--text)' }}>Tip {author ? `@${author}` : 'the author'}</b>
-          <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--text2)' }}>Goes straight from your OgaPay naira wallet to theirs. No fee.</p>
+          <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--text2)' }}>Goes straight from your OgaPay naira balance to theirs. No fee.</p>
         </div>
         {!verified ? (
           <>

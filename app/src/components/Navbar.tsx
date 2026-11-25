@@ -65,7 +65,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   // The pill is every wallet added up (naira + USDC/USDT/SOL converted), so it
   // can be more than the naira you can spend that the Dashboard and Wallet show.
   // It says "Total" and explains itself on hover.
-  const balanceTip = `Total of all your wallets (naira, USDC, USDT and SOL) in ${code === 'USDC' ? 'dollars' : code === 'GHS' ? 'cedis' : 'naira'}. Your spendable naira is on the Wallet page.`
+  const balanceTip = `Total of all your balances (naira, USDC, USDT and SOL) in ${code === 'USDC' ? 'dollars' : code === 'GHS' ? 'cedis' : 'naira'}. Your spendable naira is on the Balance page.`
   // '…' until the balance has loaded: ₦0 only when it really is 0
   const balanceText = walletBalances ? formatIn(code, Math.max(0, total)) : '…'
 

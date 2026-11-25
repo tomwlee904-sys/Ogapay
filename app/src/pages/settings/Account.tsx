@@ -198,7 +198,7 @@ function DangerZone() {
           <form className="up-card st2-modal" role="dialog" aria-modal="true" aria-labelledby="st2-del" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
             <h3 id="st2-del">Delete your account?</h3>
             <p>Your profile is taken down and you can't sign in again. Payment and KYC records are kept for as long as the law requires.</p>
-            <p>To protect your money, an account can only be deleted when nothing is left on it: no wallet balance or funds on hold, no open jobs you posted, no withdrawals still processing, no unclaimed vault payouts, no undelivered store orders, no open disputes and no submitted work waiting for review.</p>
+            <p>To protect your money, an account can only be deleted when nothing is left on it: no balance or funds on hold, no open jobs you posted, no withdrawals still processing, no unclaimed vault payouts, no undelivered store orders, no open disputes and no submitted work waiting for review.</p>
 
             {checking && !check && <p><i className="ti ti-loader-2" /> Checking your account…</p>}
 

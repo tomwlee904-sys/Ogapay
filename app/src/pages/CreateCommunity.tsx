@@ -63,7 +63,7 @@ export default function CreateCommunity() {
       return
     }
     if (feeState !== 'ok' || !fee) { setError("We couldn't load the fee yet. Tap Try again."); return }
-    if (fee.fee > 0 && !window.confirm(`Create "${form.name.trim()}"? ${feeText(fee.fee)} will be taken from your naira wallet.`)) return
+    if (fee.fee > 0 && !window.confirm(`Create "${form.name.trim()}"? ${feeText(fee.fee)} will be taken from your naira balance.`)) return
 
     if (!localStorage.getItem('ogapay_access_token')) { navigate('/login'); return }
 
@@ -91,7 +91,7 @@ export default function CreateCommunity() {
       }
       // Say what was charged (the server's real amount, not the page's guess)
       const charged = Number(created?.feeCharged) || 0
-      toast(charged > 0 ? `Community created. ${feeText(charged)} was taken from your naira wallet.` : 'Community created', 'success')
+      toast(charged > 0 ? `Community created. ${feeText(charged)} was taken from your naira balance.` : 'Community created', 'success')
       if (coverImage && communityId) {
         // A cover that fails is said, not hidden (the community is made and paid for already)
         let coverOk = false
@@ -313,7 +313,7 @@ export default function CreateCommunity() {
                 <i className="ti ti-receipt" aria-hidden="true" />
                 <div>
                   <b>Creating a community costs {feeText(fee.fee)}</b>
-                  <span>Taken from your naira wallet when you create it (you have {feeText(fee.available)} available). It keeps spam communities out. If creating fails, nothing is charged.</span>
+                  <span>Taken from your naira balance when you create it (you have {feeText(fee.available)} available). It keeps spam communities out. If creating fails, nothing is charged.</span>
                   {!fee.canPay && <Link to="/deposit?back=/communities/create">Add money first</Link>}
                 </div>
               </div>

@@ -182,8 +182,8 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
         await sleep(2500);
       }
       throw new Error(sent?.status === 'CONFIRMED'
-        ? "The swap went through, but the USDC isn't showing in your wallet yet. Wait a minute, then start the deposit again."
-        : "The swap was sent but hasn't confirmed yet. Check your wallet in a minute, then start the deposit again.");
+        ? "The swap went through, but the USDC isn't showing in your balance yet. Wait a minute, then start the deposit again."
+        : "The swap was sent but hasn't confirmed yet. Check your balance in a minute, then start the deposit again.");
     } catch (e: any) {
       setError(e?.message || 'The swap failed. Nothing was swapped.');
     }
@@ -286,7 +286,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
     return (
       <div style={MODAL_STYLE} onClick={handleSafeClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
-          {renderHeader('Fund Wallet')}
+          {renderHeader('Add to balance')}
           {renderError()}
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
@@ -416,7 +416,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1, opacity: swapPhase ? 0.5 : 1 }} disabled={!!swapPhase} onClick={() => { setStep('select'); setEntryTab('crypto'); }}>Back</button>
             <button style={{ ...BTN, background: 'var(--green)', color: '#fff', flex: 1, opacity: swapPhase ? 0.6 : 1 }} disabled={!!swapPhase} onClick={handleSwap}>
-              {swapPhase ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> {swapPhase === 'signing' ? 'Approve in your wallet…' : swapPhase === 'sending' ? 'Swapping…' : 'Waiting for USDC…'}</> : 'Swap and continue'}
+              {swapPhase ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> {swapPhase === 'signing' ? 'Approve in your balance…' : swapPhase === 'sending' ? 'Swapping…' : 'Waiting for USDC…'}</> : 'Swap and continue'}
             </button>
           </div>
         </div>
@@ -497,7 +497,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
             {/* The server converted the deposit straight away (Settings: convert USDC to naira automatically) (2026-11-02) */}
             {result?.autoConverted && (
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 8px' }}>
-                Automatic conversion is on, so {result.autoConverted.usdcAmount} USDC became ₦{Number(result.autoConverted.ngnAmount).toLocaleString('en-NG', { minimumFractionDigits: 2 })} in your naira wallet (₦{Number(result.autoConverted.rate).toLocaleString('en-NG')} per USDC). You can turn this off in Settings.
+                Automatic conversion is on, so {result.autoConverted.usdcAmount} USDC became ₦{Number(result.autoConverted.ngnAmount).toLocaleString('en-NG', { minimumFractionDigits: 2 })} in your naira balance (₦{Number(result.autoConverted.rate).toLocaleString('en-NG')} per USDC). You can turn this off in Settings.
               </p>
             )}
             {result?.signature && (
