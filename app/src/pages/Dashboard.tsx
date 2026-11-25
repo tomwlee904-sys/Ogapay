@@ -311,7 +311,7 @@ export default function Dashboard() {
     // Hirers fund their jobs; workers need somewhere to withdraw to
     hirer
       ? { done: hires || held.length > 0, label: 'Add money to post a job', sub: "It's held safely until you approve the work.", to: '/deposit', cta: 'Add money' }
-      : { done: hasPayout, label: 'Add a way to get paid', sub: ghana ? 'A mobile money number or a Solana wallet.' : 'A bank account or a Solana wallet.', to: '/wallet', cta: 'Open wallet' },
+      : { done: hasPayout, label: 'Add a way to get paid', sub: ghana ? 'A mobile money number or a Solana wallet.' : 'A bank account or a Solana wallet.', to: '/wallet', cta: 'Open balance' },
     { done: kycOk, label: 'Verify your identity', sub: hirer ? `Free with ${idWord}. Unlocks withdrawals and sending money.` : `Free with ${idWord}. Unlocks withdrawals and your ${bonus} first job bonus.`, to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length

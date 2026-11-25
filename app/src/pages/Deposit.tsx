@@ -168,7 +168,7 @@ export default function Deposit() {
               <div className="ui-actions">
                 {check.phase === 'done' && back ? <Link className="ui-btn ui-btn-dark" to={back}>Continue where you were</Link> : null}
                 {(check.phase === 'failed' || check.phase === 'cancelled') && <button type="button" className="ui-btn ui-btn-dark" onClick={() => { leave(); setMethod('card') }}>Try again</button>}
-                <Link className={`ui-btn ${check.phase === 'done' && !back ? 'ui-btn-dark' : 'ui-btn-ghost'}`} to="/wallet">Go to wallet</Link>
+                <Link className={`ui-btn ${check.phase === 'done' && !back ? 'ui-btn-dark' : 'ui-btn-ghost'}`} to="/wallet">Go to balance</Link>
               </div>
             </div>
           </section>
