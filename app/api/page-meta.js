@@ -35,7 +35,7 @@ const firstPara = (s) => String(s || '').trim().split(/\n\s*\n/)[0]
 // The main list pages: title and description
 const PAGES = {
   '/tasks': ['Paid jobs | OgaPay', 'Paid jobs open right now in Nigeria. Do simple tasks, send your work and get paid in Naira or USDC when it is approved.'],
-  '/store': ['Store | OgaPay', 'Services and digital products from OgaPay creators: design, writing, websites and more, paid safely through escrow.'],
+  '/store': ['Store | OgaPay', 'Services and digital products from OgaPay creators: design, writing, websites and more, paid safely through OgaPay.'],
   '/blog': ['Blog | OgaPay', 'Guides, ideas and earning stories from the OgaPay community.'],
   '/leaderboard': ['Leaderboard | OgaPay', 'The people earning, hiring and inviting the most on OgaPay.'],
   '/vault': ['Vault | OgaPay', 'The OgaPay reward pool: how it fills up and who it pays.'],
@@ -44,19 +44,19 @@ const PAGES = {
   '/communities': ['Communities | OgaPay', 'Join groups on OgaPay and take jobs only their members can see.'],
   '/developer': ['Developer API | OgaPay', 'Post jobs and pay people from your own app with the OgaPay API.'],
   '/about': ['About OgaPay', "Africa's task network: find work, hire help and get paid in Naira or USDC."],
-  '/': ['OgaPay: earn and hire in Nigeria', 'Post paid jobs or earn by doing them. OgaPay holds the money in escrow and pays workers in naira or crypto when work is approved.'],
-  '/hire': ['Hire freelancers and workers in Nigeria | OgaPay', 'Hire people in Nigeria for small jobs, writing, design and promotion. Your money is held in escrow and only paid when you approve the work.'],
+  '/': ['OgaPay: earn and hire in Nigeria', 'Post paid jobs or earn by doing them. Workers are paid in naira or crypto when work is approved.'],
+  '/hire': ['Hire freelancers and workers in Nigeria | OgaPay', 'Hire people in Nigeria for small jobs, writing, design and promotion. Your budget is reserved and only paid when you approve the work.'],
   '/creators': ['Hire micro-influencers in Nigeria | OgaPay Creators', 'Find Nigerian micro-influencers and creators by audience and followers, and pay them to promote your business through OgaPay.'],
   // Reached through the /store/:id preview rule (metaFor 'product' hands it over)
-  '/store/creators': ['Creators on OgaPay Store | OgaPay', 'Nigerian creators selling design, writing, video and other services and digital products on OgaPay Store, paid safely through escrow.'],
+  '/store/creators': ['Creators on OgaPay Store | OgaPay', 'Nigerian creators selling design, writing, video and other services and digital products on OgaPay Store, paid safely through OgaPay.'],
   '/workers': ['Workers | OgaPay', 'Nigerian workers on OgaPay with their ranks, ratings and finished jobs. Hire someone directly.'],
-  '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, escrow, payouts, verification levels and fees.'],
+  '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, job budgets, payouts, verification levels and fees.'],
   '/support': ['Support | OgaPay', 'Get help with your OgaPay account, jobs, payments and withdrawals.'],
   // In the sitemap too, so each needs its own title (Google showed the home title for /socials)
   '/socials': ['Official OgaPay channels: X, Telegram and more | OgaPay', 'The only places OgaPay posts from. Follow for new jobs, updates and contests, and stay away from fake pages.'],
   '/roadmap': ['Roadmap | OgaPay', 'What OgaPay has built so far and what is coming next for workers and the people who hire them.'],
   '/privacy': ['Privacy policy | OgaPay', 'How OgaPay collects, uses and protects your personal information.'],
-  '/terms': ['Terms of service | OgaPay', 'The rules for using OgaPay: posting and doing jobs, payments, escrow, verification and withdrawals.'],
+  '/terms': ['Terms of service | OgaPay', 'The rules for using OgaPay: posting and doing jobs, payments, verification and withdrawals.'],
   '/license': ['Software license | OgaPay', 'The license for the OgaPay website and software.'],
   '/copyright': ['Copyright | OgaPay', 'Who owns the content on OgaPay and how to report work used without permission.'],
   // Landing pages (src/lib/seoPages.ts: keep the titles and descriptions the same)
@@ -66,7 +66,7 @@ const PAGES = {
   '/jobs/content-writing': ['Content writing jobs in Nigeria: paid reviews, articles and posts | OgaPay', 'Content writing jobs in Nigeria on OgaPay: honest reviews, blog articles and short posts, paid in Naira. Original work only.'],
   '/jobs/app-testing': ['App testing jobs in Nigeria: get paid to test apps and websites | OgaPay', 'Get paid to test apps and websites in Nigeria. Try the app on your phone, report what confused you or broke, and get paid in Naira when approved.'],
   '/jobs/surveys': ['Paid surveys in Nigeria: answer questions and earn | OgaPay', 'Paid surveys in Nigeria on OgaPay: answer short questions for businesses and earn Naira. Honest answers only, paid when approved.'],
-  '/jobs/design': ['Graphic design jobs in Nigeria: logos, flyers and more | OgaPay', 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC through escrow.'],
+  '/jobs/design': ['Graphic design jobs in Nigeria: logos, flyers and more | OgaPay', 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC when the work is approved.'],
 }
 
 // robots: e.g. 'noindex' for a page search engines must drop (a hidden product)
@@ -184,7 +184,7 @@ export async function metaFor(kind, id) {
     return headFor({
       title: `${p.title} · ${price} | OgaPay Store`,
       // (no doubled full stop when the description ends with one)
-      description: clip(`${(plain(p.description) || p.title).replace(/[\s.!?…]+$/, '')}. Sold by ${by}, paid safely through escrow.`, 200),
+      description: clip(`${(plain(p.description) || p.title).replace(/[\s.!?…]+$/, '')}. Sold by ${by}, paid safely through OgaPay.`, 200),
       url,
       image: picture(p.image),
       type: 'product',

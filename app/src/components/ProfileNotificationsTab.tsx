@@ -7,6 +7,7 @@ import { SkeletonTab, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useAuth } from '../context/AuthContext'
 import { PushOffer } from './PushAlerts'
 import { renderJobText } from '../lib/jobText'
+import { noEscrowWord } from '../lib/wallet'
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime()
@@ -101,7 +102,7 @@ function resolveIcon(type: string, title: string) {
 const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\uFE0F\u200D]\s*)+/u
 const cleanTitle = (t: unknown) => {
   const s = String(t ?? '')
-  return s.replace(LEADING_EMOJI, '') || s
+  return noEscrowWord(s.replace(LEADING_EMOJI, '') || s)
 }
 
 export default function TabNotificationsContent() {
@@ -237,7 +238,7 @@ export default function TabNotificationsContent() {
       type: n.type,
       title: cleanTitle(n.title),
       // older notifications have category codes (CONTENT_WRITING) in the text
-      desc: String(n.body || n.description || '').replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
+      desc: noEscrowWord(String(n.body || n.description || '')).replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
       time: n.createdAt ? timeAgo(n.createdAt) : '',
       read: n.read ?? n.isRead ?? false,
       link: linkFor(n),

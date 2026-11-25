@@ -14,7 +14,7 @@ const phases = [
       "Sign in with email or a Solana wallet",
       "Paid jobs: custom jobs, X campaigns and quick social tasks",
       "AI campaign builder",
-      "Escrow on every job, with automatic approval after 72 hours",
+      "Budget reserved on every job, with automatic approval after 72 hours",
       "Requirements for workers: KYC, OgaScore, rank or a connected X account",
       "Private direct hires",
       "Communities with members, chat and jobs",

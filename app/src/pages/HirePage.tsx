@@ -131,7 +131,7 @@ export default function HirePage() {
           <div className="up-card up-state">
             <i className="ti ti-circle-check" style={{ color: "var(--green)" }} />
             <h2>{name} has been hired</h2>
-            <p>{naira(amt)} is held in escrow and is paid to {name} when you approve the work. We've sent them your brief in a private chat.</p>
+            <p>{naira(amt)} is reserved and is paid to {name} when you approve the work. We've sent them your brief in a private chat.</p>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               {done.conversationId && <Link className="up-btn primary" to={`/messages?c=${done.conversationId}`}><i className="ti ti-message" /> Open chat</Link>}
               {done.taskId && <Link className="up-btn" to={`/tasks/${done.taskId}`}><i className="ti ti-briefcase" /> View job</Link>}
@@ -152,7 +152,7 @@ export default function HirePage() {
 
         <div className="hr-head">
           <h1>Hire {name}</h1>
-          <p>Set a budget and share a clear brief. The money is held in escrow until you approve the work.</p>
+          <p>Set a budget and share a clear brief. The money is reserved and paid only when you approve the work.</p>
           <ol className="hr-steps">
             <li className="done"><span>1</span> Creator</li>
             <li className={briefOk ? "done" : "on"}><span>2</span> Job details</li>
@@ -244,7 +244,7 @@ export default function HirePage() {
                 {why && !submitting && <p className="hr-small" id="hr-why" style={{ marginTop: 8 }}>{why}</p>}
               </>
             )}
-            <p className="hr-small"><i className="ti ti-shield-lock" /> Paid from your OgaPay wallet and held in escrow. {name} is paid when you approve the work.</p>
+            <p className="hr-small"><i className="ti ti-shield-lock" /> Paid from your OgaPay balance and reserved for this job. {name} is paid when you approve the work.</p>
           </aside>
         </div>
       </div>

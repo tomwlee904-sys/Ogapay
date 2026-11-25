@@ -179,7 +179,7 @@ const SERVICES = [
   { id: "affiliate_campaigns", name: "Affiliate Campaigns", icon: <IconGlobe />, color: "#dc2626", fields: ["affiliate_link", "commission", "count"], pricePerAction: 25, urlPlaceholder: "https://example.com/affiliate" },
   { id: "data_entry_jobs", name: "Data Entry Jobs", icon: <IconFile />, color: "var(--accent)", fields: ["instructions", "format", "count"], pricePerAction: 10, urlPlaceholder: "Job description" },
   { id: "freelance_jobs", name: "Freelance Jobs", icon: <IconSettings />, color: "#ea580c", fields: ["job_description", "skills", "budget"], pricePerAction: 50, urlPlaceholder: "Project description" },
-  { id: "escrow_projects", name: "Escrow Projects", icon: <IconWallet />, color: "#7c3aed", fields: ["project_scope", "milestones", "total_budget"], pricePerAction: 100, urlPlaceholder: "Project scope document" },
+  { id: "escrow_projects", name: "Milestone Projects", icon: <IconWallet />, color: "#7c3aed", fields: ["project_scope", "milestones", "total_budget"], pricePerAction: 100, urlPlaceholder: "Project scope document" },
   { id: "content_rewards", name: "Content Rewards", icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>, color: "#dc2626", fields: ["platform", "tracking_code", "instructions", "count"], pricePerAction: 50, urlPlaceholder: "TikTok / YouTube link" },
 ];
 

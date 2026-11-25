@@ -35,8 +35,8 @@ const features = [
     img: storyImg("003_1000488531.svg"),
   },
   {
-    title: "Secure Escrow",
-    subtitle: "Funds can be secured before work starts and released after approved delivery, helping protect both task owners and workers. OgaPay's escrow flow makes payments clearer, safer, and easier to trust.",
+    title: "Pay on Approval",
+    subtitle: "Funds can be secured before work starts and released after approved delivery, helping protect both task owners and workers. Paying only for approved work makes payments clearer, safer, and easier to trust.",
     textFirst: false,
     img: storyImg("004_1000488525.png"),
   },
@@ -48,7 +48,7 @@ const darkImgs: Record<string, string> = {
   "Hire Workers": storyImg("002_1000488538_dark.png"),
   "AI-Powered": storyImg("003_1000488531_dark.png"),
   "Communities": storyImg("001_1000488545_dark.png"),
-  "Secure Escrow": storyImg("004_1000488525_dark.png"),
+  "Pay on Approval": storyImg("004_1000488525_dark.png"),
 };
 
 function StoryCard({ feature, index }: { feature: typeof features[0]; index: number }) {

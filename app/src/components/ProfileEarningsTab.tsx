@@ -6,6 +6,7 @@ import { apiRequest } from '../lib/api'
 import { SkeletonTab, injectSkeletonStyles } from "../components/SkeletonLoader"
 import type { Currency } from '../lib/currency'
 import { jobsEarnedIn, lifetimeIn } from '../lib/earnings'
+import { noEscrowWord } from '../lib/wallet'
 
 // Earnings from the wallet ledger. This used to look for lower-case statuses
 // ("completed") and add amounts as text, so it showed ₦0, "?" and raw type names.
@@ -65,7 +66,7 @@ export default function TabEarningsContent() {
       const credit = Number(t.balanceAfter) > Number(t.balanceBefore) || (t.balanceAfter == null && Number(t.amount) > 0)
       if (!kind || !currency || !credit || !['COMPLETED', 'PENDING', 'PROCESSING'].includes(status)) continue
       const amount = Number(t.amount) || 0
-      items.push({ date: t.completedAt || t.createdAt, source: t.description || LABEL[kind], amount, currency, ngn: toNgn(amount, currency), kind, pending: status !== 'COMPLETED' })
+      items.push({ date: t.completedAt || t.createdAt, source: (t.description && noEscrowWord(t.description)) || LABEL[kind], amount, currency, ngn: toNgn(amount, currency), kind, pending: status !== 'COMPLETED' })
     }
 
     // Lifetime totals come from the server, added up over every transaction, not

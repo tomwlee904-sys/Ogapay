@@ -37,7 +37,7 @@ const HELP = [
   { id: 'withdrawals', icon: 'ti-building-bank', title: 'Withdrawals', desc: 'Bank and wallet payouts, limits, delays' },
   { id: 'wallet', icon: 'ti-wallet', title: 'Deposits and wallet', desc: 'Funding, balances, transfers' },
   { id: 'earning', icon: 'ti-clipboard-check', title: 'Earning and tasks', desc: 'Applying, proof, approvals' },
-  { id: 'posting', icon: 'ti-briefcase', title: 'Posting jobs', desc: 'Escrow, reviewing work, refunds' },
+  { id: 'posting', icon: 'ti-briefcase', title: 'Posting jobs', desc: 'Job budgets, reviewing work, refunds' },
   { id: 'kyc', icon: 'ti-shield-check', title: 'KYC and trust', desc: 'Verification tiers, OgaScore' },
   { id: 'referrals', icon: 'ti-affiliate', title: 'Referrals', desc: 'Invite links and bonuses' },
 ]

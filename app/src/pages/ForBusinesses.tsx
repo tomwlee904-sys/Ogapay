@@ -10,7 +10,7 @@ import { displayCode, formatIn, type DisplayCode } from '../lib/money'
 const FACTS = [
   { icon: 'calendar-off', title: 'No subscription', text: 'Fund each job when you need it.' },
   { icon: 'coins', title: 'Naira or USDC', text: 'Pay from your OgaPay wallet.' },
-  { icon: 'lock', title: 'Held in escrow', text: 'The budget is locked before anyone starts.' },
+  { icon: 'lock', title: 'Budget reserved', text: 'The budget is locked before anyone starts.' },
   { icon: 'receipt', title: '10% fee', text: 'On the budget, once. Workers keep the full reward.' },
 ]
 
@@ -25,7 +25,7 @@ const USES = [
 
 const STEPS = [
   { n: '01', title: 'Write the brief', text: 'Say what to do and what proof you want, then set the reward per person and how many people you need.' },
-  { n: '02', title: 'Fund it', text: 'The budget plus the 10% fee is locked in escrow, so workers can see the money is there.' },
+  { n: '02', title: 'Fund it', text: 'The budget plus the 10% fee is reserved, so workers can see the money is there.' },
   { n: '03', title: 'Review and pay', text: 'Approve work to pay the worker, or reject it with a reason. Work you leave unreviewed is approved automatically after 3 days at most, so nobody is kept waiting.' },
 ]
 

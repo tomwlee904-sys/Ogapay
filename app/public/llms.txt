@@ -1,6 +1,6 @@
 # OgaPay
 
-> A Nigerian marketplace for paid tasks and freelance services. People earn by completing tasks or selling services; businesses post jobs and pay only for work they approve. Payments in Naira or USDC, held in escrow.
+> A Nigerian marketplace for paid tasks and freelance services. People earn by completing tasks or selling services; businesses post jobs and pay only for work they approve. Payments in Naira or USDC, paid when work is approved.
 
 Website: https://ogapay.app
 Operator: OGA-P INTEGRATED SERVICES LIMITED, Nigeria
@@ -9,7 +9,7 @@ Official channels: https://x.com/Ogapayhq, https://t.me/ogapayhq (no other accou
 
 ## How it works
 
-- Posting a job: the poster sets a brief, the proof required, the reward per worker and the number of workers. The budget plus a 10% platform fee is locked in escrow before anyone starts. Workers keep 100% of the reward shown.
+- Posting a job: the poster sets a brief, the proof required, the reward per worker and the number of workers. The budget plus a 10% platform fee is reserved before anyone starts. Workers keep 100% of the reward shown.
 - Doing a job: workers take a job, submit proof, and are paid into their OgaPay wallet when the poster approves. Work the poster leaves unreviewed is approved automatically, after 3 days at most.
 - Cancelling: a job nobody has taken can be cancelled; the budget and fee go back to the poster.
 - Requirements a poster can set: verified identity (KYC level), minimum OgaScore, minimum rank, a connected X account.
@@ -52,9 +52,9 @@ Auth: `Authorization: Bearer oga_live_...` (create a key on the developer page; 
 - GET /my/transactions: your wallet history (page, limit)
 
 With write access:
-- POST /jobs: post a job, a contest or a members-only community job; the budget and 10% fee go from your wallet into escrow (30 an hour per key)
+- POST /jobs: post a job, a contest or a members-only community job; the budget and 10% fee are reserved from your balance (30 an hour per key)
 - GET /jobs/:id/submissions: work sent for your job, with the proof
-- POST /submissions/:id/approve: pay the worker from escrow (rating?, feedback?)
+- POST /submissions/:id/approve: pay the worker from the job's budget (rating?, feedback?)
 - POST /submissions/:id/reject: reason required; the place opens again
 - POST /jobs/:id/winners: pay a contest's winners after it ends, 1st place first
 - POST /jobs/:id/cancel: cancel a job nobody has taken; budget and fee come back

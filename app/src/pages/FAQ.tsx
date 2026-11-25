@@ -13,8 +13,8 @@ export type Topic = { id: string; title: string; items: QA[] }
 export const TOPICS: Topic[] = [
   {
     id: 'basics', title: 'Platform basics', items: [
-      { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid from escrow once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
-      { q: 'How does it work end to end?', a: 'A poster funds a task, and the budget is locked in escrow. Workers apply and submit proof. The poster approves, rejects or disputes each submission. Approved work is paid straight from escrow into the worker\'s wallet, and any unused budget goes back to the poster.' },
+      { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
+      { q: 'How does it work end to end?', a: 'A poster funds a task, and the budget is reserved. Workers apply and submit proof. The poster approves, rejects or disputes each submission. Approved work is paid from the job budget to the worker\'s wallet, and any unused budget goes back to the poster.' },
       { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet, a connected X account or a blue tick on X. To withdraw money you need to verify your identity (Level 1 or above).' },
       { q: 'Can I earn and post jobs from the same account?', a: 'Yes. One account can do both. Your earnings, the jobs you post and your wallet all live in the same place.' },
       { q: 'Is OgaPay only for Nigeria?', a: 'Anyone can sign up and earn. Naira deposits and bank withdrawals work with Nigerian banks; everyone else can deposit and withdraw in USDC on Solana.' },
@@ -25,7 +25,7 @@ export const TOPICS: Topic[] = [
       { q: 'What kinds of tasks can I do?', a: 'Social tasks (follows, reposts, comments, community joins), app testing, surveys, research, data entry, writing, translation, design and video review. Each card shows the reward per worker, how many places are left, requirements and time left.' },
       { q: 'How do I complete a task?', a: 'Open the job, read the brief carefully, tap Take a place (or Enter contest), do the work, then press Send work with the proof it asks for, such as a screenshot, link or file. Check the requirements first: submissions that don\'t follow the brief are rejected.' },
       { q: 'What does "Available for me" show?', a: 'It hides jobs that are full, past their deadline, jobs you have already submitted to, and jobs whose requirements you don\'t meet.' },
-      { q: 'When do I get paid?', a: 'As soon as the poster approves your submission, the reward moves from escrow into your OgaPay wallet. If the poster doesn\'t review it, they get a reminder a day after you submit, and your work is approved and paid automatically 3 days (72 hours) after you sent it.' },
+      { q: 'When do I get paid?', a: 'As soon as the poster approves your submission, the reward is added to your OgaPay balance. If the poster doesn\'t review it, they get a reminder a day after you submit, and your work is approved and paid automatically 3 days (72 hours) after you sent it.' },
       { q: 'I sent my work by mistake. Can I change it?', a: 'Yes, within an hour of sending it and before the poster reviews it. Open the job and tap "Take it back to edit": you keep your place, fix your work and send it again. Sending it again counts as a fresh send. Once the poster has approved or rejected it, or a contest\'s entries have closed, it can\'t be taken back.' },
       { q: 'What if a poster never reviews my work?', a: 'You still get paid. Work left unreviewed for 24 hours is flagged to our moderation team and the poster is reminded; anything still unreviewed 3 days after you submitted it is approved and paid automatically.' },
       { q: 'What is a payout check?', a: "Some social jobs use a payout check: do the task, send your proof, then wait out the check the poster picked (5 minutes, 30 minutes, 1 hour, 6 hours or 24 hours). When it ends we look at your X post again: it must still be up, be from your connected X account, and still reply to or quote the job's post. A longer check means your result comes later, not that your work failed. Passing means you are eligible, not guaranteed paid: the places are still limited and the poster still approves the work. Likes and follows can't be checked automatically, so the poster reviews them." },
@@ -48,16 +48,16 @@ export const TOPICS: Topic[] = [
       { q: 'What is the difference between Challenge and Selection mode?', a: 'Challenge pays every approved submission, up to the number of places you set. Selection is for one-off projects: people apply, and you choose one person to do the work and receive the full reward.' },
       { q: 'Can I limit who takes part?', a: 'Yes. You can require KYC, a minimum OgaScore, a minimum worker rank, a connected wallet, a connected X account or a blue tick on X, and you can post only to your own community.' },
       { q: 'How do I review submissions?', a: 'Open the job and choose View submissions (or use Manage jobs). Approve pays the worker immediately; Reject returns that place to the pool with your note.' },
-      { q: 'Can I cancel a job?', a: 'Yes, as long as nobody has started on it. The escrowed budget is returned to your wallet. If people have already submitted, review their work first.' },
+      { q: 'Can I cancel a job?', a: 'Yes, as long as nobody has started on it. The reserved budget is returned to your balance. If people have already submitted, review their work first.' },
       { q: 'Can I edit a job after posting?', a: 'You can request edits to the description, requirements and deadline. The reward can\'t be lowered once people have started applying.' },
     ],
   },
   {
-    id: 'fees', title: 'Escrow and fees', items: [
-      { q: 'How does escrow protect me?', a: 'When a job is funded, reward × places is locked in escrow. Workers can see the money is there before they start, and posters only pay for work they approve.' },
+    id: 'fees', title: 'Job budgets and fees', items: [
+      { q: 'How is a job budget protected?', a: 'When a job is funded, reward × places is reserved. Workers can see the money is there before they start, and posters only pay for work they approve.' },
       { q: 'What are the fees?', a: 'Posters pay a 10% platform fee on the task budget, charged once when the job is funded. Workers keep 100% of the reward shown. Withdrawals cost 1.5% (minimum ₦100) to a bank account. Withdrawing to a crypto wallet has no fee. Transfers between OgaPay users are free.' },
       { q: 'Worked example', a: 'You want 100 people to follow and repost a launch at ₦200 each. Rewards come to ₦20,000, the fee is ₦2,000, so you fund ₦22,000. Each approved worker receives the full ₦200.' },
-      { q: 'What happens to unused budget?', a: 'If a job expires or is cancelled, whatever is left in escrow goes back to your wallet.' },
+      { q: 'What happens to unused budget?', a: 'If a job expires or is cancelled, whatever is left of the budget goes back to your balance.' },
     ],
   },
   {
@@ -134,8 +134,8 @@ export const TOPICS: Topic[] = [
     id: 'safety', title: 'Safety & payments', items: [
       { q: 'Will OgaPay ever ask for my password or codes?', a: 'No. OgaPay staff will never ask for your password, your 2FA or email codes, or your crypto wallet\'s seed phrase or private key, in chat, by email or on Telegram. Anyone who asks is trying to take your account.' },
       { q: 'Which channels are really OgaPay?', a: 'This website (ogapay.app), @Ogapayhq on X, t.me/ogapayhq on Telegram and the email address support@ogapay.app. Other accounts using our name, including t.me/ogapay, are not us.' },
-      { q: 'Someone asked me to pay to get a job.', a: 'That\'s a scam. Workers never pay to take a job on OgaPay: the reward is already locked in escrow by the poster before the job goes live. Don\'t send money, and report the person.' },
-      { q: 'Someone wants to pay me, or be paid, outside OgaPay.', a: 'Keep payments on OgaPay. Outside the platform there is no escrow, no buyer protection and no record we can check, so we can\'t help you get money back.' },
+      { q: 'Someone asked me to pay to get a job.', a: 'That\'s a scam. Workers never pay to take a job on OgaPay: the reward is already reserved by the poster before the job goes live. Don\'t send money, and report the person.' },
+      { q: 'Someone wants to pay me, or be paid, outside OgaPay.', a: 'Keep payments on OgaPay. Outside the platform there is no reserved budget, no buyer protection and no record we can check, so we can\'t help you get money back.' },
       { q: 'Someone sent me a screenshot of a payment.', a: 'Only trust your own OgaPay wallet. Screenshots are easy to fake. Money for a job, a sale or a send shows in your Wallet transactions.' },
       { q: 'How do I report a scam, a fake job or a bad user?', a: 'Report the job from its page, or the person from their profile, or open a ticket on the Support page. Add links and screenshots so our team can act quickly.' },
       { q: 'Can I have more than one OgaPay account?', a: 'No. One account per person. Accounts that share a bank account, a phone number or an ID number are linked and checked by our team: their bonuses are held and their withdrawals wait for a review until it\'s cleared.' },
@@ -145,7 +145,7 @@ export const TOPICS: Topic[] = [
       { q: 'What fees will I pay?', a: 'Posting a job or hiring someone: a 10% fee added on top of the budget, charged once when you fund it. Doing work: none, you keep 100% of the reward. Withdrawals: 1.5% to a bank (minimum ₦100), and no fee to a crypto wallet. Sending to another OgaPay user and selling in the store: free.' },
       { q: 'How do ranks work?', a: 'Everyone starts as Beginner. Intermediate needs 10 approved jobs. Advanced needs 50 jobs and a 4.0 rating from at least 5 different posters, Expert 200 jobs and 4.5 from 20 posters, and Legend 500 jobs and 4.8 from 50 posters. When you qualify you claim the next rank on the Ranks page, one step at a time. Most accounts get it at once; some are checked by our team first.' },
       { q: 'What gets an account a warning?', a: 'Spam or low-effort work, fake or edited proof, copied or AI-written work where the job asks for your own words, and breaking the site rules (bots, scripts or extra accounts). A 1st warning is only a warning, a 2nd within 30 days lowers your rank, and a 3rd stops you taking new jobs until an admin reviews it.' },
-      { q: 'Can a poster keep my work and not pay?', a: 'The reward is locked in escrow before you start. Work the poster doesn\'t review is approved and paid automatically 3 days after you sent it. If your work is rejected and you followed the brief, ask OgaPay for a second look from the Submit work page within 7 days, and our team checks it.' },
+      { q: 'Can a poster keep my work and not pay?', a: 'The reward is reserved before you start. Work the poster doesn\'t review is approved and paid automatically 3 days after you sent it. If your work is rejected and you followed the brief, ask OgaPay for a second look from the Submit work page within 7 days, and our team checks it.' },
       { q: 'Should I turn on two-factor authentication?', a: 'Yes. With 2FA on, withdrawals and sends to other users ask for the 6-digit code from your authenticator app, so a stolen password alone can\'t move your money. Turn it on in Settings, Security, and keep your backup codes somewhere safe.' },
       { q: 'How are the bonus rules kept fair?', a: 'Each person gets the ₦1,000 first job bonus once (after verifying and finishing a first paid job), and an inviter\'s ₦500 is only paid when the friend finishes 3 real paid jobs for other people. Bursts of sign-ups from one inviter, and accounts sharing a bank, phone or ID, are flagged; their bonuses are held until our team checks them.' },
       { q: 'Is my store payment safe?', a: 'Yes. Your payment is held until you press Confirm received, or 3 days after the seller marks the order delivered. Report a problem before then and the payment stays on hold while OgaPay decides. Orders not delivered within 14 days are refunded automatically.' },
@@ -154,7 +154,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'developers', title: 'Developers and API', items: [
-      { q: 'Can my app or AI agent use OgaPay?', a: 'Yes. With an API key from the Developer page, your app or agent can list open jobs and read your own jobs, submissions, balance and transactions. A key you create with write access can also post jobs (paid from your wallet into escrow), approve or reject work and cancel jobs. No key can withdraw or send money.' },
+      { q: 'Can my app or AI agent use OgaPay?', a: 'Yes. With an API key from the Developer page, your app or agent can list open jobs and read your own jobs, submissions, balance and transactions. A key you create with write access can also post jobs (paid from your balance), approve or reject work and cancel jobs. No key can withdraw or send money.' },
       { q: 'How do I get an API key?', a: 'Turn on Developer Mode in Settings, then create a key. Keys start with oga_ and are shown only once, so store yours safely. Each key can have its own rate limit and monthly spend cap.' },
       { q: 'I think my key leaked. What now?', a: 'Revoke it in Settings straight away and create a new one. Revoked keys stop working immediately.' },
     ],

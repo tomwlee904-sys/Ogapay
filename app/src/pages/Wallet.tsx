@@ -292,12 +292,12 @@ export default function Wallet() {
                           <span className="wl-tx-amt">
                             <b className={v ? 'void' : cr ? 'in' : ''}>{v ? '' : cr ? '+' : '−'}{money(amt, t.currency)}</b>
                             {wd ? <span className={`wl-pill ${PAYOUT_PILL[wd]}`}>{PAYOUT_LABEL[wd]}</span>
-                              : (p || v || held) && <span className={`wl-pill ${v ? 'bad' : held ? 'hold' : 'wait'}`}>{held ? 'In escrow' : statusLabel(t.status)}</span>}
+                              : (p || v || held) && <span className={`wl-pill ${v ? 'bad' : held ? 'hold' : 'wait'}`}>{held ? 'Reserved' : statusLabel(t.status)}</span>}
                           </span>
                         </button>
                         {open === t.id && (
                           <div className="wl-tx-more">
-                            <div><span>Status</span><b>{wd ? [PAYOUT_LABEL[wd], payoutNote(t)].filter(Boolean).join('. ') : held ? (isStoreHeld(t) ? 'Held until you confirm you received the order' : 'Held in escrow for your job') : statusLabel(t.status)}</b></div>
+                            <div><span>Status</span><b>{wd ? [PAYOUT_LABEL[wd], payoutNote(t)].filter(Boolean).join('. ') : held ? (isStoreHeld(t) ? 'Held until you confirm you received the order' : 'Reserved for your job') : statusLabel(t.status)}</b></div>
                             <div><span>Date</span><b>{new Date(t.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</b></div>
                             {Number(t.fee || 0) > 0 && <div><span>Fee</span><b>{money(Number(t.fee), t.currency)}</b></div>}
                             {usefulNote(t) && <div><span>Note</span><b>{usefulNote(t)}</b></div>}

@@ -28,7 +28,7 @@ const SECTIONS: { title: string; guides: Guide[] }[] = [
     title: 'Hiring and selling',
     guides: [
       { icon: 'square-plus', title: 'Posting a job', desc: 'Writing the brief, choosing who can take part, and reviewing work.', to: '/faq#posting' },
-      { icon: 'shield-check', title: 'Escrow and fees', desc: 'How your budget is held, the 10% fee, and what happens to unused money.', to: '/faq#fees' },
+      { icon: 'shield-check', title: 'Job budgets and fees', desc: 'How your budget is held, the 10% fee, and what happens to unused money.', to: '/faq#fees' },
       { icon: 'building-store', title: 'Buying and selling in the store', desc: 'Buyer protection, when sellers are paid, and reporting a problem.', to: '/faq#store' },
     ],
   },

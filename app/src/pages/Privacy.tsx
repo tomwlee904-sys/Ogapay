@@ -77,7 +77,7 @@ export default function Privacy() {
               <h2><span>02</span>How we use it</h2>
               <ul>
                 <li>To create and run your account and show your public profile.</li>
-                <li>To hold job budgets in escrow, pay workers, process deposits, withdrawals and transfers, and share vault revenue with $PAY holders.</li>
+                <li>To reserve job budgets, pay workers, process deposits, withdrawals and transfers, and share vault revenue with $PAY holders.</li>
                 <li>To verify your identity (KYC) and to prevent fraud, abuse and duplicate accounts.</li>
                 <li>To send you notifications and emails about your jobs, payments and account.</li>
                 <li>To answer support tickets and resolve disputes.</li>

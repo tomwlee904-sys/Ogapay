@@ -224,7 +224,7 @@ const PATHS: PathDef[] = [
     tabs: [
       {
         label: "Earn", eyebrow: "Put your skills to work", heading: "Your first paid task starts here.",
-        lead: "Pick a task that fits your skills, do the work and send your proof. The reward is held in escrow and lands in your wallet once it's approved.",
+        lead: "Pick a task that fits your skills, do the work and send your proof. The reward is reserved and lands in your balance once it's approved.",
         cta: { label: "Browse jobs", to: "/tasks" },
         steps: [
           ["Create your account", "Free, and it takes under a minute."],
@@ -234,7 +234,7 @@ const PATHS: PathDef[] = [
       },
       {
         label: "Create a job", eyebrow: "Hire real people", heading: "Post a job in a few minutes.",
-        lead: "Say what needs doing, set the reward per person and the proof you want. Your budget sits in escrow and is paid out as you approve work.",
+        lead: "Say what needs doing, set the reward per person and the proof you want. Your budget is reserved and paid out as you approve work.",
         cta: { label: "Create a job", to: "/create" },
         steps: [
           ["Fund your wallet", "Pay in by bank transfer."],

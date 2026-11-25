@@ -65,7 +65,7 @@ export default function Writer() {
           </Link>
           <Link to="/faq#earning" className="up-card wr2-card">
             <i className="ti ti-help-circle" />
-            <div><strong>How paid jobs work</strong><span>Applying, submitting proof and getting paid from escrow.</span></div>
+            <div><strong>How paid jobs work</strong><span>Applying, submitting proof and getting paid.</span></div>
           </Link>
           <Link to="/workers?category=writing" className="up-card wr2-card">
             <i className="ti ti-users" />

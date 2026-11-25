@@ -102,7 +102,7 @@ export default function Terms() {
             <section id="posting">
               <h2><span>{n('posting')}</span>Posting jobs</h2>
               <ul>
-                <li><b>You pay up front.</b> When you post a job, the reward for every place plus our platform fee (currently 10% of the rewards) is taken from your wallet. The rewards are held in escrow until work is approved. Amounts are rounded to the kobo (or 6 decimal places for USDC and SOL).</li>
+                <li><b>You pay up front.</b> When you post a job, the reward for every place plus our platform fee (currently 10% of the rewards) is taken from your wallet. The rewards are reserved until work is approved. Amounts are rounded to the kobo (or 6 decimal places for USDC and SOL).</li>
                 <li><b>Who can take part.</b> You can limit a job to verified people, people with a connected X account or a blue tick on X, a connected wallet, a minimum rank or OgaScore, a minimum verified audience (see Creators), or members of a community you run. Requirements are checked when someone applies; they don't guarantee the quality of the work.</li>
                 <li><b>Review work promptly.</b> When a worker submits, you approve or reject it. We remind you 24 hours after a submission; if you still haven't reviewed it 72 hours after it was sent, it is approved automatically and the worker is paid.</li>
                 <li><b>Rejecting work.</b> Only reject work that doesn't meet what your job asked for, and say why. Rejections can be reported and reviewed.</li>
@@ -200,7 +200,7 @@ export default function Terms() {
               <h2><span>{n('developers')}</span>Developers and AI agents</h2>
               <ul>
                 <li>You can create API keys in Settings to let your app or AI agent use OgaPay for you. You are responsible for everything done with your keys, as if you had done it yourself.</li>
-                <li>A key with write access can post jobs paid from your wallet into escrow, approve or reject work and cancel jobs. No key can withdraw money or send it to other users.</li>
+                <li>A key with write access can post jobs paid from your balance, approve or reject work and cancel jobs. No key can withdraw money or send it to other users.</li>
                 <li>Keep keys secret and revoke a key at once if it may have leaked. Respect the rate limits and spending caps; we may limit or revoke keys that are abused or that put other users at risk.</li>
               </ul>
             </section>

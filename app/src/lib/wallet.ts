@@ -87,8 +87,11 @@ export const usefulNote = (t: Tx) => {
     const i = d.indexOf(': ')
     return i >= 0 ? d.slice(i + 2).trim() : ''
   }
-  return d && !/^(deposit via|withdrawal via|escrow for task|usdc deposit)/i.test(d) ? d : ''
+  return d && !/^(deposit via|withdrawal via|escrow for task|budget for task|usdc deposit)/i.test(d) ? noEscrowWord(d) : ''
 }
+
+// Older payment lines say "Escrow refund" etc.: shown with the words used now (2026-11-25)
+export const noEscrowWord = (d: string) => d.replace(/escrow refunded/gi, 'Budget refunded').replace(/escrow refund/gi, 'Budget refund').replace(/escrow(ed)?/gi, 'reserved budget')
 
 // Amounts are stored positive; the direction comes from the balance change, then
 // the P2P metadata, then the type
@@ -130,7 +133,7 @@ export function txTitle(t: Tx) {
     case 'REFUND': return 'Refund'
     case 'PLATFORM_FEE': return 'Fee'
     case 'STORE_PURCHASE': return cr ? 'Store sale' : 'Store purchase'
-    case 'ESCROW': return cr ? 'Released from escrow' : 'Held in escrow'
+    case 'ESCROW': return cr ? 'Released' : 'Reserved for a job'
     case 'SYSTEM_CREDIT': return 'Credit'
     case 'SYSTEM_DEBIT': return 'Debit'
     default: return up(t.type).replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) || 'Transaction'

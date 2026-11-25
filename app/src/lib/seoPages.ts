@@ -133,7 +133,7 @@ export const SEO_PAGES: SeoPage[] = [
     path: '/jobs/design',
     tab: 'Design jobs',
     title: 'Graphic design jobs in Nigeria: logos, flyers and more | OgaPay',
-    description: 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC through escrow.',
+    description: 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC when the work is approved.',
     eyebrow: 'Design jobs',
     h1: 'Graphic design jobs in Nigeria',
     category: 'DESIGN',
@@ -142,7 +142,7 @@ export const SEO_PAGES: SeoPage[] = [
       'The money is held before you start, so you are paid when your design is approved. Use only images you made or are free to use.',
     ],
     faqs: [
-      ['Can I sell my design services too?', 'Yes. You can list a service in the OgaPay Store, and buyers pay through escrow.'],
+      ['Can I sell my design services too?', 'Yes. You can list a service in the OgaPay Store, and buyers pay through OgaPay.'],
       ['How do I get paid?', PAY],
     ],
   },
