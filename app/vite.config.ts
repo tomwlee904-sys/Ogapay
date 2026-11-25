@@ -19,7 +19,7 @@ export default defineConfig({
       manifest: {
         name: "OgaPay - Nigeria's Microtask Marketplace",
         short_name: 'OgaPay',
-        description: 'Earn in Naira or USDC doing paid jobs, or hire people for yours. Money held in escrow until work is approved.',
+        description: 'Earn in Naira or USDC doing paid jobs, or hire people for yours. Paid when work is approved.',
         theme_color: '#111111',
         background_color: '#111111',
         display: 'standalone',

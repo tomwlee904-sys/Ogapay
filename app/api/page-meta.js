@@ -8,7 +8,7 @@ import { injectHead } from './profile-meta.js'
 
 const API = (process.env.OGAPAY_API_URL || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '')
 const SITE = 'https://ogapay.app'
-const CARD = `${SITE}/og-image.png` // the site's 1200×630 card
+const CARD = `${SITE}/og-image.png?v=2` // the site's 1200×630 card
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const clip = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s)
