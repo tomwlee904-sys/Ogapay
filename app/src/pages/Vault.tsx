@@ -178,7 +178,7 @@ export default function Vault() {
     setClaiming(true); setNote(null)
     try {
       const r = await apiRequest<any>('/vault/claim', { method: 'POST' })
-      setNote({ ok: true, text: r?.claimed ? `${naira(r.totalNgp)} added to your wallet.` : 'Nothing to claim right now.' })
+      setNote({ ok: true, text: r?.claimed ? `${naira(r.totalNgp)} added to your balance.` : 'Nothing to claim right now.' })
       loadMine()
     } catch (e: any) { setNote({ ok: false, text: e?.message || 'Claim failed' }) }
     setClaiming(false)

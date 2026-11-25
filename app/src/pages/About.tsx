@@ -97,7 +97,7 @@ export default function About() {
 
         <section className="ab2-sec">
           <h2>Your money</h2>
-          <p>Your wallet holds Naira, USDC and SOL. USDC and SOL run on Solana.</p>
+          <p>Your balance can be in Naira, USDC and SOL. USDC and SOL run on Solana.</p>
           <div className="ui-card ab2-money">
             <div><span>Add money</span><b>Bank transfer, or USDC</b></div>
             <div><span>Your own account number</span><b>After you verify your identity</b></div>
