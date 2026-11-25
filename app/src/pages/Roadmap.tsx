@@ -26,7 +26,7 @@ const phases = [
     status: "done",
     items: [
       "Wallet in Naira, USDC and SOL",
-      "Deposits by card or bank transfer, and your own account number",
+      "Deposits by bank transfer to your own Flutterwave account number",
       "Withdrawals to Nigerian banks and crypto wallets",
       "Free transfers between OgaPay users",
       "Identity verification levels: NIN, a photo of your ID, documents",

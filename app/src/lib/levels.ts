@@ -5,7 +5,7 @@ import { withdrawLimit } from './wallet'
 // server's: withdrawal limits (wallet.routes ngnWithdrawLimit) and the account
 // number (flutterwave createVirtualAccount) need Level 1 or above; sending money
 // and the first job bonus need it by NIN or ID, not only the bank check
-// (wallet.service verifiedById); adding money by card or USSD needs nothing.
+// (wallet.service verifiedById); adding money by bank app or USSD needs nothing.
 
 export type Level = { tier: number; name: string; short: string; how: string; limit: number }
 
@@ -24,7 +24,7 @@ export const levelsFor = (didit: boolean, ninInstant = false, bank = false): Lev
   { tier: 3, name: 'Level 3', short: 'Approved by our team', how: 'Ask our team through support. No documents needed', limit: withdrawLimit(3) },
 ]
 
-// What any level (1+) lets you do, on top of adding money by card or USSD
+// What any level (1+) lets you do, on top of adding money by bank app or USSD
 export const UNLOCKS = 'withdraw to your bank and get your own account number'
 // What needs Level 1 by NIN or ID (Level 2 by an ID photo counts too), not only
 // the bank check. Said the same way everywhere (Dashboard, Verification, Send).

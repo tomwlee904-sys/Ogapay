@@ -8,10 +8,12 @@ import type { PushState } from './push'
 //   2. Before you start  (the rules; new accounts need them to take a place on a job)
 //   3. Get job alerts    (only where push alerts can be turned on)
 //   4. Verify Level 1    (only below Level 1)
-//   5. Connect X         (only while X isn't connected; many jobs are on X, ver-18)
+//   5. Payment services disclaimer (every new member, right after Verify Level 1;
+//      wording from OgaPay's lawyer, 2026-11-25: keep it word for word)
+//   6. Connect X         (only while X isn't connected; many jobs are on X, ver-18)
 // The server keeps onboardingCompletedAt and rulesAcceptedAt, so it shows once, whatever the device.
 
-export type WelcomeStep = 'invite' | 'rules' | 'alerts' | 'verify' | 'x'
+export type WelcomeStep = 'invite' | 'rules' | 'alerts' | 'verify' | 'disclaimer' | 'x'
 
 // GET /users/me/welcome (also `welcome` in GET /users/me)
 export interface WelcomeState {
@@ -51,6 +53,7 @@ export function welcomeSteps(w: WelcomeState, push: PushState | null): WelcomeSt
   if (w.rules && !w.rules.acceptedAt) steps.push('rules')
   if (push === 'off') steps.push('alerts') // already on, blocked or not possible here: skipped
   if (w.level1 === false) steps.push('verify')
+  steps.push('disclaimer') // always shown once, after Verify Level 1
   if (w.xConnected === false) steps.push('x') // last, skippable
   return steps
 }

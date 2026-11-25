@@ -582,7 +582,7 @@ export default function StorePayment() {
                 )}
 
                 <section className="ui-card ui-card-pad">
-                  <h1 className="sc-h"><i className="ti ti-credit-card" aria-hidden="true" /> Payment details</h1>
+                  <h1 className="sc-h"><i className="ti ti-wallet" aria-hidden="true" /> Payment details</h1>
                   <div className="sc-amount">
                     <span>Total to pay</span>
                     <b>{money(total, item.currency)}</b>
@@ -621,13 +621,13 @@ export default function StorePayment() {
                       ? <>You need <b>{money(short, item.currency)}</b> more. </>
                       : null}
                     {item.currency === 'NGN'
-                      ? 'Top up by card or bank transfer (or to your own OgaPay account number once you’re verified). The money lands in your wallet and you come back here to pay.'
+                      ? 'Top up by bank transfer (to your own Flutterwave account number once you’re verified), or with your bank app or USSD. The money lands in your wallet and you come back here to pay.'
                       : `Send ${item.currency} to your OgaPay wallet address. It lands in your wallet and you come back here to pay.`}
                   </p>
                   <div className="sc-methods">
                     {item.currency === 'NGN' ? (
                       <>
-                        <span><i className="ti ti-credit-card" aria-hidden="true" /> Card</span>
+                        <span><i className="ti ti-device-mobile" aria-hidden="true" /> Bank app / USSD</span>
                         <span><i className="ti ti-building-bank" aria-hidden="true" /> Bank transfer</span>
                         <span><i className="ti ti-currency-dollar" aria-hidden="true" /> USDC</span>
                       </>

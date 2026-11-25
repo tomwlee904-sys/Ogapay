@@ -902,7 +902,7 @@ export default function CampaignWizard() {
             cursor: "pointer",
           }}
         >
-          <i className="ti ti-credit-card" aria-hidden="true" /> Top up wallet
+          <i className="ti ti-plus" aria-hidden="true" /> Top up wallet
         </button>
       </div>
       ) : (

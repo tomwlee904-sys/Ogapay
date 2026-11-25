@@ -148,7 +148,7 @@ export function txDetail(t: Tx) {
   const d = String(t.description || '')
   if (up(t.type) === 'DEPOSIT') {
     if (/DVA/i.test(d)) return 'Bank transfer'
-    if (up(t.provider) === 'FLUTTERWAVE' || up(t.provider) === 'PAYSTACK') return 'Card, USSD or bank app'
+    if (up(t.provider) === 'FLUTTERWAVE' || up(t.provider) === 'PAYSTACK') return 'Bank app or USSD'
     if (t.currency === 'USDC') return 'USDC on Solana'
     return ''
   }

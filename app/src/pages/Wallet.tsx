@@ -19,7 +19,7 @@ import InfoTip from '../components/InfoTip'
 // Wallet, top to bottom: the balance (with what's on hold and on its way), your
 // verification level and what it lets you withdraw, money in (your OgaPay
 // account number) beside money out (your own bank), then the history with the
-// lifetime totals from the server. Adding money by card has its own page.
+// lifetime totals from the server. Adding money has its own page.
 
 const PAGE = 30
 const isWithdrawal = (t: Tx) => String(t.type || '').toUpperCase() === 'WITHDRAWAL'

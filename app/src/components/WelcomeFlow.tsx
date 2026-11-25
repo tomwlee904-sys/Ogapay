@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Sheet from './wallet/Sheet'
 import { useToast } from './Toast'
 import { apiRequest } from '../lib/api'
@@ -17,6 +17,7 @@ const TITLES: Record<WelcomeStep, string> = {
   rules: 'Before you start',
   alerts: 'Get job alerts',
   verify: 'Verify Level 1',
+  disclaimer: 'Payment services',
   x: 'Connect X',
 }
 
@@ -43,6 +44,9 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
   })
   const body = useRef<HTMLDivElement>(null)
   const step = steps[at]
+  const navigate = useNavigate()
+  // "Verify now" shows the disclaimer first, then goes to Verification
+  const [toVerify, setToVerify] = useState(false)
 
   // A new step: keyboard and screen-reader users start at its top
   const first = useRef(true)
@@ -149,7 +153,19 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
             <p className="wf-text">For the {show(1000, 'NGN')} first job bonus, verify with your NIN and finish your first paid job. You can withdraw it once you've earned {show(5000, 'NGN')} from jobs.</p>
             <div className="ui-actions wf-actions">
               <button type="button" className="ui-btn ui-btn-ghost" onClick={next}>Later</button>
-              <Link to="/settings/verification" className="ui-btn ui-btn-dark" onClick={onFinish}>Verify now</Link>
+              {steps[at + 1] === 'disclaimer'
+                ? <button type="button" className="ui-btn ui-btn-dark" onClick={() => { setToVerify(true); next() }}>Verify now</button>
+                : <Link to="/settings/verification" className="ui-btn ui-btn-dark" onClick={onFinish}>Verify now</Link>}
+            </div>
+          </>
+        )}
+
+        {/* The lawyer's wording (2026-11-25): keep it word for word */}
+        {step === 'disclaimer' && (
+          <>
+            <p className="wf-text"><b>Payment Services Disclaimer:</b> OgaPay operates solely as a marketplace platform connecting hirers and earners. OgaPay does not provide escrow, payment gateway, wallet or custodial services, nor does it receive, hold or exercise control over users' funds. All payments are processed through an independent third-party payment service provider into an account maintained and controlled solely by that provider, to which OgaPay has no access. Payment processing and disbursement are subject to the provider's applicable terms and procedures.</p>
+            <div className="ui-actions wf-actions">
+              <button type="button" className="ui-btn ui-btn-dark" onClick={() => { if (toVerify) { onFinish(); navigate('/settings/verification') } else next() }}>I understand</button>
             </div>
           </>
         )}

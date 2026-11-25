@@ -39,7 +39,7 @@ export default function Deposit() {
     return m === 'card' || m === 'usdc' ? m : 'bank'
   })
   const [amount, setAmount] = useState(() => { const a = Number(params.get('amount')); return a > 0 ? String(Math.ceil(a)) : '' })
-  // Card payments go through Flutterwave only (Paystack removed 2026-11-19)
+  // Bank app / USSD payments go through Flutterwave only (Paystack removed 2026-11-19; no card payments 2026-11-25)
   const provider = 'FLUTTERWAVE'
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
@@ -178,8 +178,8 @@ export default function Deposit() {
   }
 
   const METHODS: { id: Method; icon: string; title: string; text: string; tag?: string }[] = [
-    { id: 'bank', icon: 'ti-building-bank', title: 'Bank transfer', text: 'Send to your own OgaPay account number from any bank app.' },
-    { id: 'card', icon: 'ti-credit-card', title: 'Card, USSD or bank app', text: 'Pay now with a Nigerian card, USSD code or your bank app.' },
+    { id: 'bank', icon: 'ti-building-bank', title: 'Bank transfer', text: 'Send to your own Flutterwave account number from any bank.' },
+    { id: 'card', icon: 'ti-device-mobile', title: 'Bank app or USSD', text: 'Pay now with your bank app or a USSD code.' },
     { id: 'usdc', icon: 'ti-currency-dollar', title: 'USDC on Solana', text: 'From Phantom, Backpack or Solflare.' },
   ]
 
@@ -218,10 +218,10 @@ export default function Deposit() {
                   <div className="dp-lock">
                     <i className="ti ti-shield-check" />
                     <h3>Verify your identity to get your account number</h3>
-                    <p>Banks need your NIN or BVN before they can open an account number in your name. Until then, you can pay by card, USSD or bank app.</p>
+                    <p>Banks need your NIN or BVN before they can open an account number in your name. Until then, you can pay with your bank app or USSD.</p>
                     <div className="ui-actions" style={{ justifyContent: 'center' }}>
                       <Link className="ui-btn ui-btn-dark" to="/settings/verification">Verify now</Link>
-                      <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setMethod('card')}>Pay by card instead</button>
+                      <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setMethod('card')}>Pay with bank app or USSD instead</button>
                     </div>
                   </div>
                 ) : dva ? (
@@ -254,7 +254,7 @@ export default function Deposit() {
               </>
             ) : method === 'card' ? (
               <>
-                <h2>Card, USSD or bank app</h2>
+                <h2>Bank app or USSD</h2>
                 <p>You'll pay on Flutterwave's secure page, then come back here.</p>
                 <div className="wl-field">
                   <label className="ui-label" htmlFor="dp-amt">Amount</label>

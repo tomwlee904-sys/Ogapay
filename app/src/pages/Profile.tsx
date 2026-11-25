@@ -968,7 +968,7 @@ export default function Profile() {
                   <details className="pw-fold" open={moneyIn} onToggle={e => setMoneyIn((e.currentTarget as HTMLDetailsElement).open)}>
                     <summary>
                       <span className="wl-dir in pw-fold-ic"><i className="ti ti-arrow-down-left" aria-hidden="true" /></span>
-                      <span className="pw-fold-m"><b>Money in</b><small>Your OgaPay account number for transfers</small></span>
+                      <span className="pw-fold-m"><b>Money in</b><small>Your Flutterwave account number for transfers</small></span>
                       <i className="ti ti-chevron-down pw-fold-chev" aria-hidden="true" />
                     </summary>
                     <div className="pw-fold-b"><VirtualAccountCard flush /></div>

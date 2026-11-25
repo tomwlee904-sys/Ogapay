@@ -476,7 +476,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         {!inWalletApp && inAppNote}
         {noticeLine}{errorLine}
         <div className="si-options">
-          <Option name="Continue with wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
+          <Option name="Continue with web3" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
             icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
           {!inWalletApp && !inApp && googleOption}
           <Option name="Email" desc="Sign in or create an account with your email" onClick={() => go('email')}

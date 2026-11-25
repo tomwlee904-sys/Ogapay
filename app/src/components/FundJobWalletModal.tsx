@@ -71,7 +71,7 @@ export default function FundJobWalletModal({
     tx_ref: txRef,
     amount: shortfall,
     currency: 'NGN' as const,
-    payment_options: 'card,ussd,mobilemoney,banktransfer' as const,
+    payment_options: 'banktransfer,ussd,mobilemoney' as const, // no card payments (2026-11-25)
     customer: {
       email: customerEmail,
       phone_number: customerPhone,

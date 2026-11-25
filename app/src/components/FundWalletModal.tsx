@@ -233,7 +233,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
   }
 
 
-  // Card, USSD or bank app: the Add money page takes it from here and brings
+  // Bank app or USSD: the Add money page takes it from here and brings
   // people back to where they were
   function payByCard() {
     const amt = Math.ceil(parseFloat(ngnAmount) || 0);
@@ -361,7 +361,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
           ) : (
             <>
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
-                Transfer to your own account number below, or pay by card, USSD or bank app.
+                Transfer to your own Flutterwave account number below, or pay with your bank app or USSD.
               </p>
               <VirtualAccountCard />
               <div style={{ marginBottom: 20 }}>
@@ -369,7 +369,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
                 <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => { setNgnAmount(e.target.value); setError(''); }} />
               </div>
               <button style={{ ...BTN, background: 'var(--accent)', color: 'var(--on-accent)', width: '100%', justifyContent: 'center' }} onClick={payByCard}>
-                Pay by card, USSD or bank app
+                Pay with bank app or USSD
               </button>
             </>
           )}

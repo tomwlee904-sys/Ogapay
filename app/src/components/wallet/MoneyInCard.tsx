@@ -37,7 +37,7 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
   return (
     <section className="ui-card wl-sec wl-dir-card" aria-labelledby="wl-in">
       <div className="wl-dir-label"><span className="wl-dir in"><i className="ti ti-arrow-down-left" /></span> Money in</div>
-      <h2 id="wl-in" className="wl-dir-title">Your OgaPay account number</h2>
+      <h2 id="wl-in" className="wl-dir-title">Your Flutterwave account number</h2>
       {dva === undefined ? (
         <div className="ui-sk" style={{ height: 78, borderRadius: 12 }} />
       ) : dva ? (
@@ -60,10 +60,10 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
         </>
       ) : (
         <>
-          <p className="wl-note wl-dir-note">Verify your identity to get your own account number. Until then you can add money by card or USSD.</p>
+          <p className="wl-note wl-dir-note">Verify your identity to get your own account number. Until then you can add money with your bank app or USSD.</p>
           <div className="wl-dir-actions">
             <Link className="ui-btn ui-btn-ghost" to="/settings/verification">Verify now</Link>
-            {!embedded && <Link className="wl-link" to="/deposit">Add money by card</Link>}
+            {!embedded && <Link className="wl-link" to="/deposit">Add money with bank app or USSD</Link>}
           </div>
         </>
       )}

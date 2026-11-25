@@ -99,7 +99,7 @@ export default function About() {
           <h2>Your money</h2>
           <p>Your wallet holds Naira, USDC and SOL. USDC and SOL run on Solana.</p>
           <div className="ui-card ab2-money">
-            <div><span>Add money</span><b>Card or bank transfer, or USDC</b></div>
+            <div><span>Add money</span><b>Bank transfer, or USDC</b></div>
             <div><span>Your own account number</span><b>After you verify your identity</b></div>
             <div><span>Withdraw</span><b>To a Nigerian bank from ₦5,000 (fee 1.5%, at least ₦100), paid every Thursday, or to a crypto wallet (no fee)</b></div>
             <div><span>Posting a job</span><b>10% fee on the budget; workers keep the full reward</b></div>
